@@ -1,4 +1,4 @@
-# Trade Visibility
+# Trade Site Audit and Content Agent
 
 本地单工作区工作台目前包含站点只读审计、企业事实确认、采购问题集版本管理，以及基于已确认公开事实生成改稿和人工审批。生成结果保存在版本化变更记录中；当前不包含 Git/CMS 发布、自动写入或持续监控。
 
