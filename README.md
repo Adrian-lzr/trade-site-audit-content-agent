@@ -2,6 +2,19 @@
 
 本地单工作区工作台目前包含站点只读审计、企业事实确认、采购问题集版本管理，以及基于已确认公开事实生成改稿和人工审批。生成结果保存在版本化变更记录中；当前不包含 Git/CMS 发布、自动写入或持续监控。
 
+## 功能概览
+
+- 对获授权的网站进行只读采集与规则审计，保存页面快照和审计结果。
+- 管理有来源的企业事实及版本化采购问题集，生成内容时只使用已确认且可公开的事实。
+- 生成可审阅的页面改稿，由人工批准或退回；不会自动写回客户网站。
+- 默认通过本地合成 Fixture 演示，不需要模型凭据；可选配置 OpenAI-compatible 模型网关。
+
+## 界面预览
+
+![Trade Visibility 桌面工作台](output/playwright/trade-visibility-desktop.png)
+
+[移动端工作台截图](output/playwright/trade-visibility-mobile.png)
+
 ## 运行组件
 
 - API：`backend.app:app`，默认 `http://127.0.0.1:8000`；启动时执行 Alembic 迁移并确保演示工作区存在。
