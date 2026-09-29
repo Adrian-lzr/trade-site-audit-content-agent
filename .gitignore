@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+*.egg-info/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Node and TypeScript build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Browser automation state (keep output/playwright screenshots tracked)
+.playwright-cli/
+.playwright-mcp/
+output/playwright/*.log
