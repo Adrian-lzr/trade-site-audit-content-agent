@@ -1,13 +1,13 @@
 # 第 1 阶段：运行与验收状态
 
-本文按当前仓库实现记录可用操作、已完成的针对性验证及尚未验收的内容（最后核对：2026-09-28）。进程拆分为 API、Worker、可选 Fixture 和 Web；本地任务消费要求 API 与 Worker 连接同一个数据库。
+本文按当前仓库实现记录可用操作、已完成的针对性验证及尚未验收的内容（最后核对：2026-09-29）。进程拆分为 API、Worker、可选 Fixture 和 Web；本地任务消费要求 API 与 Worker 连接同一个数据库。
 
 ## 当前能力
 
 - `apps/web` 是 React/Vite 工作台，默认端口 `5173`，将 `/api` 代理到 `127.0.0.1:8000`。
 - FastAPI 入口为 `uvicorn backend.app:app --reload --port 8000`；启动时由 `init_db()` 应用 Alembic 迁移并确保 `demo-workspace` 存在。
 - 持久任务由独立命令 `python -m backend.worker` 消费。先等待 API 完成迁移并通过 health 检查，再启动 Worker；API 不在 lifespan 中启动 Worker，Worker 也不执行数据库迁移。
-- `backend/models.py` 定义 Workspace、Site、Page、PageSnapshot、Job、审计结果、版本化 Fact 和变更审批数据；首次迁移为 `backend/migrations/versions/0001_initial.py`，当前迁移 head 为 `0006_fact_visibility`。
+- `backend/models.py` 定义 Workspace、Site、Page、PageSnapshot、Job、审计结果、版本化 Fact、变更审批、版本化采购问题集及内容生成任务数据；首次迁移为 `backend/migrations/versions/0001_initial.py`，当前迁移 head 为 `0008_content_generation_tasks`。
 - Fixture 命令为 `python -m backend.fixture_server --port 8765`，只监听本机 loopback；注册 loopback 站点需要在 API 与 Worker 进程显式设置 `ALLOW_LOOPBACK=true`。
 - 默认数据库为 SQLite。根 `docker-compose.yml` 只启动 PostgreSQL，不启动 API、Worker 或 Web。
 - 根 `Makefile` 提供 `api`、`worker`、`fixture`、`web`、`db-migrate`、`test`、`web-build` 和 `health` 入口；长运行目标仍需分别在终端启动。
@@ -17,8 +17,8 @@
 
 | 项目 | 已有证据 | 尚未验收 |
 | --- | --- | --- |
-| Python 测试 | Python 3.12 venv 使用 `backend/requirements.lock`；最近完整运行 `backend/.venv/Scripts/python.exe -m pytest backend/tests -q` 为 27 passed、45 warnings，覆盖审计、事实可见性、审批版本冲突和发布前置条件 | 警告来自 Starlette/httpx 与 Alembic 弃用提示；测试通过不代表 PostgreSQL、自然租约过期或并发压力已验收 |
-| SQLite 迁移 | 空库可从 `0001` 升到 `0006_fact_visibility`；旧事实由迁移保守回填为 `internal_only`，另含租约、合成来源标记、版本化规则、事实、变更审批和 outbox 表 | PostgreSQL 迁移未运行 |
+| Python 测试 | Python 3.12 venv 使用 `backend/requirements.lock`；最近完整运行 `backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests -q` 为 57 passed、82 warnings，覆盖审计、事实可见性、审批版本冲突、发布前置条件、采购问题集和内容生成 | 本轮 82 条警告均为 Alembic `path_separator` 弃用提示；测试通过不代表 PostgreSQL、自然租约过期或并发压力已验收 |
+| SQLite 迁移 | 空库可从 `0001` 升到 `0008_content_generation_tasks`；旧事实由迁移保守回填为 `internal_only`，另含租约、合成来源标记、版本化规则、事实、变更审批、outbox、版本化采购问题集、页面映射和内容生成任务表 | PostgreSQL 迁移未运行 |
 | 本地演示 | 独立 API、Worker、Fixture、Web 进程端到端通过；任务 succeeded，页面快照带 hash 与 `is_synthetic=true`，并产生 `TITLE_MISSING` | 当前验证为本机隔离 SQLite 演示，不代表生产部署验收 |
 | 真实 HTTPS 只读检测 | 在已获站点访问授权、限定采集范围和遵守访问频率的前提下，2026-09-28 对 `https://example.com` 完成一次只读检测：job `succeeded`、HTTP `200`、内容 hash `ff67a9d764d6a2367a187734e697f6a53217db9a21c101d410a113ca871a299d`，12 条规则均执行，其中 1 条为 `needs_review` | 这是一次授权范围内的可复现采样，不代表搜索引擎收录、排名、AI 引用或业务增长；真实客户站点需重新确认授权和范围 |
 | API 兼容入口与页面摘要 | `/health` 直接端点和 `/api/health` 均返回 `status: ok`；页面列表摘要包含规则总数、失败、需复核和未知计数 | 未在 PostgreSQL 浏览器演示中复核 |
@@ -32,7 +32,7 @@
 
 本轮只读复核（2026-09-28）：API `8001` 的 `/health` 返回 `status: ok`；工作台 `5174` 的 API 代理请求成功。已登记的 `https://example.com` 有 2 个既有审计 job，均为 `succeeded`，各采集 1 页、HTTP `200`，执行 12 条规则并各有 1 条 `needs_review`；两份快照内容 hash 相同。本轮未发起新的公网采集请求，也未调用发布接口。演示工作区的事实 API 返回 1 条已确认事实，其 `visibility` 为 `internal_only`。
 
-本轮后端完整测试为 27 passed、45 warnings，`npm --prefix apps/web run build` 通过。Playwright 在桌面 1440×1000 和移动端 390×900 检查工作台；相关 API 请求成功，浏览器无 console error。事实导入弹窗默认选中“仅内部”。另在 390×844 检查窄视口：页面没有横向溢出，弹窗可纵向滚动，滚动到底后提交按钮完整可见；未提交表单。截图保存在 `output/playwright/trade-visibility-fact-visibility-desktop.png` 和 `output/playwright/trade-visibility-fact-visibility-mobile.png`。Compose 配置未执行（当前环境没有 Docker CLI）。
+本轮后端完整测试为 57 passed、82 warnings；82 条警告均为 Alembic `path_separator` 弃用提示。该测试使用 `backend/tests/conftest.py` 创建的临时 SQLite 库，网络测试只使用本机 fixture 或 `MockTransport`。`npm --prefix apps/web run build`、Playwright 桌面/移动检查以及 Compose 记录仍是 2026-09-28 的历史结果，本轮未重跑。Compose 配置未执行（当前环境没有 Docker CLI）。
 
 ## 本地启动
 
