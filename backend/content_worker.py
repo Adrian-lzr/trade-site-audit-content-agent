@@ -12,17 +12,20 @@ from sqlalchemy import select, update
 
 from .config import settings
 from .content_workflow import (
+    MAX_SNAPSHOT_CONTEXT_LENGTH,
     SQLAlchemyContentWorkflowRepository,
     build_content_workflow,
     content_workflow_input,
     workflow_config,
 )
 from .database import SessionLocal
+from .knowledge import runtime_guidance
 from .model_gateway import FixtureModelDraftGateway, ModelGatewayConfig, OpenAICompatibleDraftGateway
-from .models import ContentGenerationItem, ContentGenerationTask, Page, ProcurementQuestion, utcnow
+from .models import ContentGenerationItem, ContentGenerationTask, Page, PageSnapshot, ProcurementQuestion, ProcurementQuestionSetVersion, ProcurementQuestionSet, Site, utcnow
 
 
 CONTENT_LEASE = timedelta(minutes=5)
+_COMPLETED_ITEM_STATUSES = frozenset({"succeeded", "awaiting_review", "needs_information"})
 
 
 @contextmanager
@@ -65,9 +68,28 @@ def configured_draft_gateway():
     return OpenAICompatibleDraftGateway(ModelGatewayConfig.from_env())
 
 
-def _procurement_context(db, item: ContentGenerationItem) -> dict[str, str]:
+def _item_scope(db, task: ContentGenerationTask, item: ContentGenerationItem) -> tuple[ProcurementQuestion, Page]:
     question = db.get(ProcurementQuestion, item.question_id)
     page = db.get(Page, item.page_id)
+    site = db.get(Site, task.site_id)
+    version = db.get(ProcurementQuestionSetVersion, task.question_set_version_id)
+    question_set = db.get(ProcurementQuestionSet, version.question_set_id) if version else None
+    if (
+        site is None or site.workspace_id != task.workspace_id
+        or version is None or version.state != "frozen" or question_set is None
+        or question_set.workspace_id != task.workspace_id or question_set.site_id != task.site_id
+        or question is None or question.question_set_version_id != version.id
+        or page is None or page.site_id != task.site_id
+    ):
+        raise RuntimeError("content item references data outside the task workspace and site")
+    return question, page
+
+
+def _procurement_context(db, item: ContentGenerationItem, task: ContentGenerationTask | None = None) -> dict[str, str]:
+    task = task or db.get(ContentGenerationTask, item.task_id)
+    if task is None:
+        raise RuntimeError("content item task is no longer available")
+    question, page = _item_scope(db, task, item)
     if question is None or page is None:
         raise RuntimeError("content item procurement context is no longer available")
     return {
@@ -121,10 +143,18 @@ class ContentGenerationWorker:
             return task.id, token
 
     def _renew(self, db, task_id: int, token: str) -> None:
+        now = utcnow()
         changed = db.execute(
             update(ContentGenerationTask)
-            .where(ContentGenerationTask.id == task_id, ContentGenerationTask.status == "running", ContentGenerationTask.lease_token == token)
-            .values(lease_expires_at=utcnow() + self.lease_duration)
+            .execution_options(synchronize_session=False)
+            .where(
+                ContentGenerationTask.id == task_id,
+                ContentGenerationTask.status == "running",
+                ContentGenerationTask.lease_token == token,
+                ContentGenerationTask.lease_expires_at.is_not(None),
+                ContentGenerationTask.lease_expires_at > now,
+            )
+            .values(lease_expires_at=now + self.lease_duration)
         )
         if not changed.rowcount:
             raise RuntimeError("content task lease was lost")
@@ -135,24 +165,40 @@ class ContentGenerationWorker:
             if task is None or task.lease_token != token:
                 return
             items = list(db.scalars(select(ContentGenerationItem).where(ContentGenerationItem.task_id == task_id).order_by(ContentGenerationItem.id)).all())
-            repository = SQLAlchemyContentWorkflowRepository(SessionLocal)
+            repository = SQLAlchemyContentWorkflowRepository(
+                SessionLocal,
+                persist_guard=lambda persist_db: self._renew(persist_db, task_id, token),
+            )
             owns_gateway = self.gateway is None
             gateway = self.gateway or configured_draft_gateway()
             try:
                 with checkpoint_saver() as saver:
                     graph = build_content_workflow(repository, gateway, saver)
                     for item in items:
+                        # A task lease can expire after an item has committed its
+                        # revision and item status but before the batch is finalized.
+                        # Replaying those items would call the model again even
+                        # though their durable workflow state is already terminal.
+                        if item.status in _COMPLETED_ITEM_STATUSES:
+                            continue
                         self._renew(db, task_id, token)
                         item.thread_id = item.thread_id or _thread_id(task_id, item.id)
                         if hasattr(task, "generation_source"):
                             task.generation_source = "model_api" if isinstance(gateway, OpenAICompatibleDraftGateway) else "fixture"
                         db.commit()
+                        procurement_context = _procurement_context(db, item, task)
                         initial = content_workflow_input(
                             workspace_id=task.workspace_id,
                             site_id=task.site_id,
                             change_request_id=item.change_request_id,
                             request_summary=item.request_summary,
-                            procurement_context=_procurement_context(db, item),
+                            procurement_context=procurement_context,
+                            external_guidance=runtime_guidance({
+                                **procurement_context,
+                                "request_summary": item.request_summary,
+                            }),
+                            snapshot_context=self._snapshot_context(db, item, task),
+                            snapshot_hash=item.snapshot_hash,
                             required_fact_ids=(
                                 json.loads(item.required_fact_ids_json)
                                 if isinstance(item.required_fact_ids_json, str)
@@ -168,11 +214,18 @@ class ContentGenerationWorker:
                                 or ("awaiting_review" if result.get("__interrupt__") else "needs_information")
                             )
                         except Exception as exc:
+                            # A lease can be reclaimed while a provider call is
+                            # in flight. Only the current owner may record a
+                            # failed item; an expired token must leave the
+                            # replacement worker's state untouched.
+                            self._renew(db, task_id, token)
                             item.status = "failed"
                             task.last_error = str(exc)[:2000]
                             db.commit()
                             raise
+                        self._renew(db, task_id, token)
                         db.commit()
+                self._renew(db, task_id, token)
                 statuses = {item.status for item in items}
                 if "failed" in statuses:
                     task.status = "failed"
@@ -190,6 +243,19 @@ class ContentGenerationWorker:
                     close = getattr(gateway, "close", None)
                     if callable(close):
                         close()
+
+    @staticmethod
+    def _snapshot_context(db, item: ContentGenerationItem, task: ContentGenerationTask | None = None) -> str:
+        task = task or db.get(ContentGenerationTask, item.task_id)
+        if task is None:
+            raise RuntimeError("content item task is no longer available")
+        _, page = _item_scope(db, task, item)
+        snapshot = db.get(PageSnapshot, item.snapshot_id)
+        if snapshot is None or snapshot.page_id != page.id or snapshot.content_hash != item.snapshot_hash:
+            raise RuntimeError("content item snapshot is no longer available")
+        # HTML is untrusted input. Keep a bounded excerpt for baseline context;
+        # the workflow and model prompt explicitly prohibit treating it as instructions.
+        return (snapshot.content or "")[:MAX_SNAPSHOT_CONTEXT_LENGTH]
 
     def run_once(self) -> bool:
         self.recover_interrupted()

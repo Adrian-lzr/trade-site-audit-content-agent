@@ -1,0 +1,3 @@
+subject,predicate,value,unit,source_id,source_locator,visibility,valid_from,valid_until
+Browser smoke,working_pressure,16,bar,synthetic-browser,fixture-sheet.xlsx#pressure,public,,
+Browser smoke,material,stainless steel,,synthetic-browser,fixture-sheet.xlsx#material,internal_only,,

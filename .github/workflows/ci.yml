@@ -39,3 +39,27 @@ jobs:
         run: npm ci --prefix apps/web
       - name: Build web app
         run: npm run build --prefix apps/web
+
+  evaluation-and-runtime-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.lock
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements.lock
+      - name: Run offline evaluation tests
+        run: python -m pytest -p no:cacheprovider evals/tests -q
+      - name: Run container source gate
+        run: python scripts/container_build_check.py
+      - name: Render Compose profiles
+        env:
+          POSTGRES_PASSWORD: ci-only-validation-secret
+        run: python scripts/local_compose_check.py
+      - name: Check patch whitespace
+        run: git diff --check

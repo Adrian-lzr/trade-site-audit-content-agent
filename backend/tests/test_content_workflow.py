@@ -22,6 +22,7 @@ from backend.content_workflow import (
     workflow_config,
 )
 from backend.database import SessionLocal
+from backend.model_gateway import FixtureModelDraftGateway
 from backend.models import ChangeRequest, ChangeRevision, Fact, Site, Workspace, utcnow
 
 
@@ -141,6 +142,52 @@ def test_missing_confirmed_fact_returns_needs_information_without_calling_gatewa
     assert result["missing_fact_ids"] == [11]
     assert gateway.requests == []
     assert repository.persist_calls == 0
+
+
+def test_fixture_no_topic_match_returns_needs_information_without_saving_a_revision(valve_fact):
+    repository = MemoryContentRepository([valve_fact])
+    gateway = FixtureModelDraftGateway()
+    graph = build_content_workflow(repository, gateway, InMemorySaver())
+    initial = _initial_state()
+    initial["procurement_context"] = {
+        "question": "What should I compare when choosing between different industrial valve types?",
+        "product": "Industrial valves",
+        "use_case": "industrial flow control",
+        "buyer_role": "design engineer",
+    }
+
+    result = graph.invoke(initial, config=workflow_config("content-change:48"))
+
+    assert result["status"] == WorkflowStatus.needs_information.value
+    assert result["missing_fact_ids"] == []
+    assert "no directly relevant confirmed supplier facts" in result["validation_summary"][0].casefold()
+    assert "__interrupt__" not in result
+    assert repository.persist_calls == 0
+
+
+def test_external_guidance_is_passed_to_gateway_and_versions_generation_identity(valve_fact):
+    repository = MemoryContentRepository([valve_fact])
+    gateway = FixtureDraftGateway([_valid_fixture_draft()])
+    base = _initial_state()
+    first_guidance = {
+        "id": "google-search-essentials",
+        "summary": "Do not claim guaranteed rankings.",
+        "source_url": "https://developers.google.com/search/docs/essentials",
+        "source_date": "2025-12-10",
+    }
+    changed_guidance = {**first_guidance, "summary": "Never present rankings as guaranteed."}
+    first_graph = build_content_workflow(repository, gateway, InMemorySaver())
+    second_graph = build_content_workflow(repository, gateway, InMemorySaver())
+
+    first = dict(base, external_guidance=[first_guidance])
+    second = dict(base, external_guidance=[changed_guidance])
+    first_graph.invoke(first, config=workflow_config("stable-thread"))
+    second_graph.invoke(second, config=workflow_config("stable-thread"))
+
+    assert gateway.requests[0].external_guidance == (first_guidance,)
+    assert gateway.requests[1].external_guidance == (changed_guidance,)
+    assert gateway.requests[0].generation_id != gateway.requests[1].generation_id
+    assert ":knowledge:" in gateway.requests[0].generation_id
 
 
 def test_invalid_numeric_claim_gets_one_repair_attempt(valve_fact):

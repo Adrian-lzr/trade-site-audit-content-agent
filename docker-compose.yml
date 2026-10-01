@@ -1,19 +1,118 @@
+name: trade-visibility
+
 services:
   postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-trade_visibility}
       POSTGRES_USER: ${POSTGRES_USER:-trade_visibility}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local}
+      # Keep the password mandatory. Set it in .env or the shell before compose up.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5434}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trade_visibility} -d ${POSTGRES_DB:-trade_visibility}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
-      retries: 10
+      retries: 12
+      start_period: 5s
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-trade_visibility}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-trade_visibility}
+      CRAWLER_TIMEOUT: ${CRAWLER_TIMEOUT:-10}
+      CRAWLER_MAX_REDIRECTS: ${CRAWLER_MAX_REDIRECTS:-5}
+      FIXTURE_PORT: ${FIXTURE_PORT:-8765}
+      # Loopback crawling remains opt-in, including in the demo profile.
+      ALLOW_LOOPBACK: ${ALLOW_LOOPBACK:-false}
+      LOCAL_AUTH_MODE: ${LOCAL_AUTH_MODE:-demo}
+      VISIBILITY_MAX_RUN_BUDGET_USD: ${VISIBILITY_MAX_RUN_BUDGET_USD:-0}
+      VISIBILITY_DAILY_BUDGET_USD: ${VISIBILITY_DAILY_BUDGET_USD:-0}
+      VISIBILITY_RAW_RETENTION_DAYS: ${VISIBILITY_RAW_RETENTION_DAYS:-30}
+      VISIBILITY_RAW_MAX_BYTES: ${VISIBILITY_RAW_MAX_BYTES:-200000}
+    command: ["sh", "-c", "python -m alembic -c backend/alembic.ini upgrade head && exec uvicorn backend.app:app --host 0.0.0.0 --port 8000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+      # The optional fixture shares this network namespace and is still local-only.
+      - "127.0.0.1:${FIXTURE_PORT:-8765}:${FIXTURE_PORT:-8765}"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-trade_visibility}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-trade_visibility}
+      CRAWLER_TIMEOUT: ${CRAWLER_TIMEOUT:-10}
+      CRAWLER_MAX_REDIRECTS: ${CRAWLER_MAX_REDIRECTS:-5}
+      FIXTURE_PORT: ${FIXTURE_PORT:-8765}
+      ALLOW_LOOPBACK: ${ALLOW_LOOPBACK:-false}
+      MODEL_GATEWAY_BASE_URL: ${MODEL_GATEWAY_BASE_URL:-}
+      MODEL_GATEWAY_API_KEY: ${MODEL_GATEWAY_API_KEY:-}
+      MODEL_GATEWAY_MODEL: ${MODEL_GATEWAY_MODEL:-}
+      MODEL_GATEWAY_TIMEOUT_SECONDS: ${MODEL_GATEWAY_TIMEOUT_SECONDS:-30}
+      MODEL_GATEWAY_MAX_TOKENS: ${MODEL_GATEWAY_MAX_TOKENS:-2048}
+      VISIBILITY_PROVIDER_URL: ${VISIBILITY_PROVIDER_URL:-}
+      VISIBILITY_PROVIDER_API_KEY: ${VISIBILITY_PROVIDER_API_KEY:-}
+      VISIBILITY_PROVIDER_MODEL: ${VISIBILITY_PROVIDER_MODEL:-}
+      VISIBILITY_PROVIDER_TIMEOUT: ${VISIBILITY_PROVIDER_TIMEOUT:-20}
+      VISIBILITY_INPUT_PRICE_PER_1K: ${VISIBILITY_INPUT_PRICE_PER_1K:-0}
+      VISIBILITY_OUTPUT_PRICE_PER_1K: ${VISIBILITY_OUTPUT_PRICE_PER_1K:-0}
+      VISIBILITY_MAX_RUN_BUDGET_USD: ${VISIBILITY_MAX_RUN_BUDGET_USD:-0}
+      VISIBILITY_DAILY_BUDGET_USD: ${VISIBILITY_DAILY_BUDGET_USD:-0}
+      VISIBILITY_RAW_RETENTION_DAYS: ${VISIBILITY_RAW_RETENTION_DAYS:-30}
+      VISIBILITY_RAW_MAX_BYTES: ${VISIBILITY_RAW_MAX_BYTES:-200000}
+    command: ["python", "-m", "backend.worker"]
+    depends_on:
+      api:
+        condition: service_healthy
+    # Sharing the API namespace lets the explicitly loopback-only fixture be
+    # reached as 127.0.0.1 from both API and Worker containers.
+    network_mode: service:api
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${WEB_PORT:-5173}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped
+
+  fixture:
+    profiles: ["demo"]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["python", "-m", "backend.fixture_server", "--host", "127.0.0.1", "--port", "${FIXTURE_PORT:-8765}"]
+    depends_on:
+      api:
+        condition: service_healthy
+    network_mode: service:api
+    restart: unless-stopped
 
 volumes:
   postgres_data:

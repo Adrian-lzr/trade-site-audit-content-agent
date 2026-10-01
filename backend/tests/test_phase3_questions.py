@@ -5,8 +5,9 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
-from backend.app import app
+from backend.app import KNOWLEDGE_ENTRIES, app
 from backend.database import SessionLocal
+from backend.knowledge import curated_entries, select_guidance
 from backend.models import Page, PageSnapshot, utcnow
 
 
@@ -32,6 +33,56 @@ SYNTHETIC_DEMO_VALVE_QUESTIONS = (
     "What questions should a buyer ask when comparing valve options for water treatment?",
     "How can a buyer check whether a proposed valve configuration matches the stated duty?",
 )
+
+SYNTHETIC_DEMO_VALVE_GUIDANCE = (
+    "valve-selection-input-checklist",
+    "valve-selection-input-checklist",
+    "valve-selection-input-checklist",
+    "valve-selection-input-checklist",
+    "rfq-page-content-checklist",
+    "valve-drawing-installation-maintenance-checklist",
+    "valve-drawing-installation-maintenance-checklist",
+    "valve-test-record-applicability-checklist",
+    "product-document-applicability-checklist",
+    "valve-selection-input-checklist",
+    "valve-drawing-installation-maintenance-checklist",
+    "valve-drawing-installation-maintenance-checklist",
+    "rfq-page-content-checklist",
+    "rfq-page-content-checklist",
+    "rfq-page-content-checklist",
+    "valve-actuator-input-checklist",
+    "valve-drawing-installation-maintenance-checklist",
+    "valve-drawing-installation-maintenance-checklist",
+    "valve-selection-input-checklist",
+    "valve-selection-input-checklist",
+)
+
+
+def test_synthetic_valve_question_set_retrieves_topic_specific_guidance():
+    entries = curated_entries(KNOWLEDGE_ENTRIES)
+
+    assert len(SYNTHETIC_DEMO_VALVE_QUESTIONS) == len(SYNTHETIC_DEMO_VALVE_GUIDANCE) == 20
+    for question, expected_guidance in zip(SYNTHETIC_DEMO_VALVE_QUESTIONS, SYNTHETIC_DEMO_VALVE_GUIDANCE, strict=True):
+        selected = select_guidance(
+            entries,
+            {
+                "question": question,
+                "request_summary": "Prepare a concise buyer FAQ.",
+                "product": "Industrial valves",
+                "use_case": "Industrial flow control",
+                "buyer_role": "Project engineer",
+                "purchase_stage": "Supplier selection",
+                "target_market": "To be confirmed",
+                "language": "English",
+            },
+            limit=8,
+        )
+        ids = {entry["id"] for entry in selected}
+
+        assert expected_guidance in ids, f"{question!r} did not retrieve {expected_guidance}: {sorted(ids)}"
+        assert "eu-pressure-equipment-directive" not in ids, f"{question!r} assumed an unconfirmed EU market"
+        assert "uk-trade-tariff" not in ids, f"{question!r} assumed an unconfirmed UK market"
+        assert "usitc-hts" not in ids, f"{question!r} assumed an unconfirmed US market"
 
 
 def _workspace(client: TestClient, name: str) -> dict:
@@ -217,6 +268,6 @@ def test_site_page_listing_exposes_stable_page_id_for_mappings():
                 )
             )
             db.commit()
-        response = client.get(f"/api/sites/{site['id']}/pages")
+        response = client.get(f"/api/sites/{site['id']}/pages?workspace_id={workspace['id']}")
         assert response.status_code == 200
         assert response.json()[0]["page_id"] == page.id

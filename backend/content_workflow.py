@@ -16,13 +16,22 @@ from langgraph.types import RunnableConfig, interrupt
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from .models import ChangeRequest, ChangeRevision, ChangeState, Fact, FactStatus, FactVisibility, utcnow
+from .models import (
+    ChangeRequest,
+    ChangeRevision,
+    ChangeState,
+    Fact,
+    FactStatus,
+    FactVisibility,
+    utcnow,
+)
 
 
 MAX_REQUIRED_FACTS = 100
 MAX_SUMMARY_LENGTH = 800
 MAX_DRAFT_JSON_LENGTH = 40_000
 MAX_FIELD_TEXT_LENGTH = 12_000
+MAX_SNAPSHOT_CONTEXT_LENGTH = 12_000
 
 # Keep this allowlist aligned with app.ALLOWED_CHANGE_FIELDS. Drafts are still
 # rechecked by the existing change API before approval or publication.
@@ -47,6 +56,9 @@ class ContentWorkflowState(TypedDict, total=False):
     change_request_id: int
     request_summary: str
     procurement_context: dict[str, str]
+    external_guidance: list[dict[str, str]]
+    snapshot_context: str
+    snapshot_hash: str
     required_fact_ids: list[int]
     fact_ids: list[int]
     fact_versions: list[dict[str, int | str]]
@@ -98,14 +110,22 @@ class DraftRequest:
     request_summary: str
     facts: tuple[ConfirmedFact, ...]
     procurement_context: Mapping[str, str] = field(default_factory=dict)
+    external_guidance: tuple[Mapping[str, str], ...] = ()
+    snapshot_context: str = ""
+    snapshot_hash: str = ""
     repair_issues: tuple[str, ...] = ()
     previous_fields: Mapping[str, Any] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class DraftNeedsInformation:
+    summary: str
 
 
 class DraftGateway(Protocol):
     """Gateway implementations must return the same draft for a repeated generation_id."""
 
-    def draft(self, request: DraftRequest) -> Mapping[str, Any]: ...
+    def draft(self, request: DraftRequest) -> Mapping[str, Any] | DraftNeedsInformation: ...
 
 
 class ContentWorkflowRepository(Protocol):
@@ -142,8 +162,14 @@ class StaleFactsError(WorkflowConflict):
 class SQLAlchemyContentWorkflowRepository:
     """Persistence adapter for the current Fact and ChangeRevision tables."""
 
-    def __init__(self, session_factory: Callable[[], Session] | sessionmaker[Session]):
+    def __init__(
+        self,
+        session_factory: Callable[[], Session] | sessionmaker[Session],
+        *,
+        persist_guard: Callable[[Session], None] | None = None,
+    ):
         self._session_factory = session_factory
+        self._persist_guard = persist_guard
 
     def get_confirmed_public_facts(self, workspace_id: int, fact_ids: Sequence[int]) -> Sequence[ConfirmedFact]:
         ids = sorted(set(fact_ids))
@@ -180,6 +206,8 @@ class SQLAlchemyContentWorkflowRepository:
         canonical_facts = _canonical_fact_versions(fact_versions)
         _validate_fact_versions_shape(canonical_facts)
         with self._session_factory() as db:
+            if self._persist_guard is not None:
+                self._persist_guard(db)
             change = db.get(ChangeRequest, change_request_id)
             if change is None or change.workspace_id != workspace_id or change.site_id != site_id:
                 raise WorkflowConflict("change request is outside the requested workspace and site")
@@ -209,10 +237,13 @@ class SQLAlchemyContentWorkflowRepository:
                     raise WorkflowConflict("generation_id was already used for a different or stale revision")
                 return RevisionReference(existing_generation.id, existing_generation.content_hash)
             if previous is not None and previous.content_hash == content_hash:
-                if previous.generation_id not in (None, generation_id):
-                    raise WorkflowConflict("matching revision is bound to a different generation")
-                previous.generation_id = generation_id
-                db.commit()
+                # A replay may have a richer snapshot context hash than an
+                # older checkpoint input. The canonical revision hash still
+                # proves the persisted content is identical, so keep one
+                # revision and avoid creating a duplicate.
+                if previous.generation_id is None:
+                    previous.generation_id = generation_id
+                    db.commit()
                 return RevisionReference(previous.id, previous.content_hash)
 
             existing_number = db.scalar(
@@ -297,6 +328,9 @@ def content_workflow_input(
     request_summary: str,
     required_fact_ids: Sequence[int],
     procurement_context: Mapping[str, str] | None = None,
+    external_guidance: Sequence[Mapping[str, str]] | None = None,
+    snapshot_context: str = "",
+    snapshot_hash: str = "",
 ) -> ContentWorkflowState:
     summary = request_summary.strip()
     if not summary or len(summary) > MAX_SUMMARY_LENGTH:
@@ -329,12 +363,45 @@ def content_workflow_input(
             raise ValueError(f"procurement_context.{name} exceeds the maximum length")
         if cleaned:
             context[name] = cleaned
+    guidance: list[dict[str, str]] = []
+    for raw_entry in external_guidance or ():
+        if not isinstance(raw_entry, Mapping):
+            raise ValueError("external_guidance entries must be objects")
+        entry: dict[str, str] = {}
+        for name in (
+            "id", "title", "summary", "scope", "market_scope", "source_url",
+            "source_date", "accessed_at", "last_verified_at", "freshness_policy",
+            "source_kind", "topic_tags", "license",
+        ):
+            value = raw_entry.get(name, "")
+            if value is None:
+                value = ""
+            if not isinstance(value, str):
+                raise ValueError("external_guidance fields must be text")
+            cleaned = value.strip()
+            if len(cleaned) > 4000:
+                raise ValueError("external_guidance field exceeds the maximum length")
+            if cleaned:
+                entry[name] = cleaned
+        if not entry.get("id") or not entry.get("summary"):
+            raise ValueError("external_guidance entries require id and summary")
+        guidance.append(entry)
+    if len(guidance) > 8:
+        raise ValueError("external_guidance must contain at most 8 entries")
+    if not isinstance(snapshot_context, str):
+        raise ValueError("snapshot_context must be text")
+    snapshot_context = snapshot_context[:MAX_SNAPSHOT_CONTEXT_LENGTH]
+    if not isinstance(snapshot_hash, str):
+        raise ValueError("snapshot_hash must be text")
     return {
         "workspace_id": workspace_id,
         "site_id": site_id,
         "change_request_id": change_request_id,
         "request_summary": summary,
         "procurement_context": context,
+        "external_guidance": guidance,
+        "snapshot_context": snapshot_context,
+        "snapshot_hash": snapshot_hash,
         "required_fact_ids": ids,
         "repair_attempts": 0,
         "status": WorkflowStatus.retrieving_facts.value,
@@ -383,6 +450,13 @@ def build_content_workflow(
         return _generate_draft(state, config, repository, gateway, repair=True)
 
     def validate_draft(state: ContentWorkflowState) -> dict[str, Any]:
+        if state.get("status") == WorkflowStatus.needs_information.value:
+            return {
+                "validation_passed": False,
+                "validation_summary": state.get("validation_summary", []),
+                "candidate_validation_summary": [],
+                "status": WorkflowStatus.needs_information.value,
+            }
         candidate_issues = state.get("candidate_validation_summary", [])
         if candidate_issues:
             return {
@@ -549,16 +623,30 @@ def _generate_draft(
 
     repair_attempts = state.get("repair_attempts", 0) + (1 if repair else 0)
     thread_id = str(config.get("configurable", {}).get("thread_id", state["change_request_id"]))
+    thread_key = hashlib.sha256(thread_id.encode("utf-8")).hexdigest()[:32]
+    snapshot_hash = state.get("snapshot_hash") or hashlib.sha256(state.get("snapshot_context", "").encode("utf-8")).hexdigest()
+    external_guidance = state.get("external_guidance", [])
+    guidance_hash = hashlib.sha256(_canonical_json(external_guidance).encode("utf-8")).hexdigest()[:16] if external_guidance else ""
+    generation_id = f"thread:{thread_key}:snapshot:{snapshot_hash}:draft:{repair_attempts}"
+    if guidance_hash:
+        generation_id += f":knowledge:{guidance_hash}"
     request = DraftRequest(
-        generation_id=f"{thread_id}:draft:{repair_attempts}",
+        generation_id=generation_id,
         change_request_id=state["change_request_id"],
         request_summary=state["request_summary"],
         facts=tuple(facts),
         procurement_context=state.get("procurement_context", {}),
+        external_guidance=tuple(state.get("external_guidance", [])),
+        snapshot_context=state.get("snapshot_context", ""),
+        snapshot_hash=snapshot_hash,
         repair_issues=tuple(state.get("validation_summary", ())) if repair else (),
         previous_fields=previous_fields,
     )
     candidate = gateway.draft(request)
+    if isinstance(candidate, DraftNeedsInformation):
+        update = _needs_information_update([], candidate.summary)
+        update["repair_attempts"] = repair_attempts
+        return update
     if not isinstance(candidate, Mapping):
         issues = ["The draft gateway did not return a structured field object."]
         return _candidate_failure(issues, repair_attempts)
@@ -627,6 +715,7 @@ def _needs_information_update(missing_fact_ids: Sequence[int], summary: str) -> 
     return {
         "missing_fact_ids": sorted(set(missing_fact_ids)),
         "validation_summary": [summary],
+        "candidate_validation_summary": [],
         "validation_passed": False,
         "status": WorkflowStatus.needs_information.value,
     }

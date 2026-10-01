@@ -11,7 +11,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from .audit_rules import RULES, RULE_VERSION, evaluate_snapshot, parse_document
-from .crawler import CrawlError, CrawlResult, FixtureCrawler, normalize_path
+from .crawler import CrawlError, CrawlResult, FixtureCrawler, is_sitemap_url, normalize_path
 from .models import AuditFinding, AuditRuleResult, Job, JobStatus, Page, PageSnapshot, Site, utcnow
 
 
@@ -221,14 +221,14 @@ def execute_claimed_job(db: Session, job_id: int, lease_token: str, crawler: Fix
             key, separator, value = line.partition(":")
             if separator and key.strip().lower() == "sitemap" and value.strip():
                 candidate = urljoin(robots_url, value.strip())
-                if _site_origin_key(candidate) == _site_origin_key(base_url) and urlsplit(candidate).path.rsplit("/", 1)[-1].lower().startswith("sitemap") and urlsplit(candidate).path.lower().endswith(".xml"):
+                if _site_origin_key(candidate) == _site_origin_key(base_url) and is_sitemap_url(candidate):
                     sitemap_url = candidate
                 else:
                     sitemap_url = candidate
                 break
         sitemap_url = sitemap_url or urljoin(base_url.rstrip("/") + "/", "sitemap.xml")
         sitemap: dict = {"url": sitemap_url, "status_code": None, "content": "", "error": None}
-        if _site_origin_key(sitemap_url) != _site_origin_key(base_url) or not urlsplit(sitemap_url).path.rsplit("/", 1)[-1].lower().startswith("sitemap") or not urlsplit(sitemap_url).path.lower().endswith(".xml"):
+        if _site_origin_key(sitemap_url) != _site_origin_key(base_url) or not is_sitemap_url(sitemap_url):
             sitemap["error"] = "advertised sitemap URL is not a same-origin sitemap XML resource"
         else:
             _renew_lease(db, job_id, lease_token)

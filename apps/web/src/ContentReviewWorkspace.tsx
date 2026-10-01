@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, ArrowUpRight, Check, ChevronDown, CircleHelp, FileCheck2, FileText, LoaderCircle, Plus, RefreshCw, Send, ShieldCheck } from "lucide-react";
+import { AlertCircle, ArrowUpRight, Check, ChevronDown, CircleHelp, FileCheck2, FileText, LoaderCircle, Plus, RefreshCw, Search, Send, ShieldCheck, BookOpen } from "lucide-react";
 import {
   createContentGenerationTask,
   decideChangeApproval,
@@ -8,6 +8,7 @@ import {
   getProcurementQuestionSet,
   listContentGenerationTasks,
   listFacts,
+  listKnowledgeEntries,
   listPages,
   listProcurementQuestionSets,
   listSites,
@@ -20,6 +21,7 @@ import {
   ContentGenerationTask,
   ContentGenerationTaskSummary,
   ContentGenerationItem,
+  KnowledgeEntry,
 } from "./api";
 
 type TaskDraftItem = {
@@ -33,6 +35,48 @@ type TaskDraftItem = {
 
 function messageOf(error: unknown) {
   return error instanceof Error ? error.message : "发生未知错误";
+}
+
+function knowledgeSourceKindLabel(value: string) {
+  return ({
+    official_guidance: "官方指导",
+    official_regulator: "官方监管机构",
+    official_trade_portal: "官方贸易查询",
+    intergovernmental_data: "政府间组织数据",
+    standards_body: "标准机构",
+    internal_heuristic: "内部启发式",
+  } as Record<string, string>)[value] || value;
+}
+
+function knowledgeSourceDateLabel(value: string) {
+  if (value === "continuously maintained") return "持续维护";
+  if (value === "continuously updated") return "持续更新";
+  return value;
+}
+
+function knowledgeFreshnessLabel(value: string) {
+  return value === "revalidate_before_use" ? "使用前复核" : value;
+}
+
+function knowledgeSearchMatches(entry: KnowledgeEntry, query: string) {
+  const text = [entry.title, entry.summary, entry.scope, entry.market_scope, entry.claim_type, entry.source_kind, entry.topic_tags]
+    .join(" ")
+    .toLocaleLowerCase();
+  const needle = query.trim().toLocaleLowerCase();
+  if (!needle) return true;
+  const marketAliases: Record<string, string[]> = {
+    "united kingdom": ["united kingdom", "uk", "britain", "英国"],
+    uk: ["united kingdom", "uk", "britain", "英国"],
+    "united states": ["united states", "u.s.", "usa", "america", "美国"],
+    usa: ["united states", "u.s.", "usa", "america", "美国"],
+    us: ["united states", "u.s.", "usa", "america", "美国"],
+    "european union": ["european union", "eu", "欧盟"],
+    eu: ["european union", "eu", "欧盟"],
+    germany: ["germany", "deutschland", "德国", "european union", "欧盟"],
+    france: ["france", "法国", "european union", "欧盟"],
+  };
+  const aliases = marketAliases[needle];
+  return aliases ? aliases.some((term) => text.includes(term)) : text.includes(needle);
 }
 
 function asDate(value?: string | null) {
@@ -80,6 +124,8 @@ function taskStatus(status: string) {
     failed: "失败",
     needs_information: "需要补充资料",
     awaiting_review: "等待人工审核",
+    approved: "已通过",
+    rejected: "已退回修改",
   };
   return labels[status] || status;
 }
@@ -105,9 +151,11 @@ function statusClass(status: string) {
 export function ContentReviewWorkspace({
   workspaceKey,
   onDirtyChange,
+  onOpenFactLibrary,
 }: {
   workspaceKey: string;
   onDirtyChange?: (hasUnsavedDraft: boolean) => void;
+  onOpenFactLibrary?: () => void;
 }) {
   const [sites, setSites] = useState<Site[]>([]);
   const [siteId, setSiteId] = useState("");
@@ -140,6 +188,10 @@ export function ContentReviewWorkspace({
   const [approvalComments, setApprovalComments] = useState<Record<number, string>>({});
   const [busyAction, setBusyAction] = useState("");
   const [notice, setNotice] = useState("");
+  const [knowledgeEntries, setKnowledgeEntries] = useState<KnowledgeEntry[]>([]);
+  const [knowledgeLoading, setKnowledgeLoading] = useState(true);
+  const [knowledgeError, setKnowledgeError] = useState("");
+  const [knowledgeSearch, setKnowledgeSearch] = useState("");
 
   const hasUnsavedDraft = draftItems.length > 0;
   const onDirtyChangeRef = useRef(onDirtyChange);
@@ -153,11 +205,42 @@ export function ContentReviewWorkspace({
   const latestPageList = useMemo(() => newestSnapshots(pages), [pages]);
   const pagesById = useMemo(() => new Map(latestPageList.map((page) => [page.page_id as number, page])), [latestPageList]);
   const eligibleFacts = useMemo(() => facts.filter((fact) => isFactCurrent(fact)), [facts]);
+  const mappedQuestionsWithSnapshot = querySetVersion?.questions.filter((question) => pageChoices(question).length > 0).length || 0;
+  const questionSetReady = Boolean(querySetVersion?.state === "frozen" && querySetVersion.questions.length > 0);
+  const questionSetReadinessState = questionSetsLoading || querySetVersionLoading
+    ? "loading"
+    : questionSetsError || querySetVersionError
+      ? "error"
+      : questionSetReady ? "ready" : "attention";
+  const snapshotReadinessState = pagesLoading || querySetVersionLoading
+    ? "loading"
+    : pagesError ? "error" : mappedQuestionsWithSnapshot > 0 ? "ready" : "attention";
+  const factsReadinessState = factsLoading ? "loading" : factsError ? "error" : eligibleFacts.length > 0 ? "ready" : "attention";
+  const questionSetReadinessText = questionSetsLoading || querySetVersionLoading
+    ? "正在读取冻结版本。"
+    : questionSetsError ? "问题集读取失败，请刷新资料后重试。"
+      : querySetVersionError && !querySetVersion ? querySetVersionError
+        : questionSetReady ? `v${querySetVersion!.version} 已冻结，包含 ${querySetVersion!.questions.length} 个问题。`
+          : querySetVersion ? "当前版本未冻结，不能创建内容任务。" : "选择问题集后检查冻结状态。";
+  const snapshotReadinessText = pagesLoading || querySetVersionLoading
+    ? "正在检查问题对应的页面快照。"
+    : pagesError ? "页面快照读取失败，请刷新资料后重试。"
+      : !querySetVersion ? "选择有冻结版本的问题集后检查页面映射。"
+        : mappedQuestionsWithSnapshot > 0 ? `${mappedQuestionsWithSnapshot} 个问题关联了带内容校验值的页面快照。`
+          : "关联页面还没有可用快照；请到站点与审计完成采集后刷新资料。";
+  const factsReadinessText = factsLoading
+    ? "正在读取企业事实。"
+    : factsError ? "企业事实读取失败，请刷新资料后重试。"
+      : eligibleFacts.length > 0 ? `${eligibleFacts.length} 条事实已确认、可公开且当前有效。`
+        : "没有符合条件的事实；需先导入，并确认其可公开且处于有效期内。";
   const filteredFacts = useMemo(() => {
     const needle = factSearch.trim().toLowerCase();
     if (!needle) return eligibleFacts;
     return eligibleFacts.filter((fact) => `${fact.subject} ${fact.predicate} ${fact.value || ""} ${fact.source_id}`.toLowerCase().includes(needle));
   }, [eligibleFacts, factSearch]);
+  const filteredKnowledgeEntries = useMemo(() => {
+    return knowledgeEntries.filter((entry) => knowledgeSearchMatches(entry, knowledgeSearch));
+  }, [knowledgeEntries, knowledgeSearch]);
 
   useEffect(() => {
     onDirtyChangeRef.current?.(hasUnsavedDraft);
@@ -206,6 +289,20 @@ export function ContentReviewWorkspace({
   }, []);
 
   useEffect(() => { void refreshSites(); }, [refreshSites]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setKnowledgeLoading(true);
+    setKnowledgeError("");
+    void listKnowledgeEntries().then((entries) => {
+      if (!cancelled) setKnowledgeEntries(entries);
+    }).catch((error) => {
+      if (!cancelled) setKnowledgeError(messageOf(error));
+    }).finally(() => {
+      if (!cancelled) setKnowledgeLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const refreshTasks = useCallback(async (activeSite = siteId) => {
     if (!activeSite) return [];
@@ -430,7 +527,7 @@ export function ContentReviewWorkspace({
     setBusyAction(`submit-${item.id}`);
     setTaskDetailError("");
     try {
-      await submitChangeForApproval(change.id, change.version);
+      await submitChangeForApproval(change.id, change.version, workspaceKey);
       await loadTask(taskDetail!.id);
       setNotice(`变更 #${change.id} 已提交人工审核。`);
     } catch (error) {
@@ -456,6 +553,7 @@ export function ContentReviewWorkspace({
     try {
       await decideChangeApproval({
         changeId: change.id,
+        workspaceKey,
         reviewer: reviewer.trim(),
         decision,
         revisionId: revision.id,
@@ -496,6 +594,47 @@ export function ContentReviewWorkspace({
       </select><ChevronDown size={15} aria-hidden="true" /></div>
       {selectedSite && <span className={`proc-site-badge ${selectedSite.is_synthetic ? "synthetic" : ""}`}>{selectedSite.is_synthetic ? "合成演示站点" : "真实站点"}</span>}
       {!sitesLoading && sites.length === 0 && !sitesError && <span className="proc-site-help">请先登记站点并完成页面采集。</span>}
+    </section>
+
+    {!sitesLoading && !sitesError && sites.length > 0 && <section className="content-readiness" aria-labelledby="content-readiness-title">
+      <div className="content-readiness-heading"><h2 id="content-readiness-title">创建前检查</h2><span>3 项条件</span></div>
+      <ul className="content-readiness-list">
+        <li className={`content-readiness-item ${questionSetReadinessState}`}>
+          <span className="content-readiness-icon" aria-hidden="true">{questionSetReadinessState === "ready" ? <Check size={14} /> : questionSetReadinessState === "loading" ? <LoaderCircle size={14} className="spin" /> : questionSetReadinessState === "error" ? <AlertCircle size={14} /> : <CircleHelp size={14} />}</span>
+          <span className="content-readiness-copy"><strong>冻结的问题集</strong><span>{questionSetReadinessText}</span></span>
+        </li>
+        <li className={`content-readiness-item ${snapshotReadinessState}`}>
+          <span className="content-readiness-icon" aria-hidden="true">{snapshotReadinessState === "ready" ? <FileCheck2 size={14} /> : snapshotReadinessState === "loading" ? <LoaderCircle size={14} className="spin" /> : snapshotReadinessState === "error" ? <AlertCircle size={14} /> : <CircleHelp size={14} />}</span>
+          <span className="content-readiness-copy"><strong>可用页面快照</strong><span>{snapshotReadinessText}</span></span>
+        </li>
+        <li className={`content-readiness-item facts ${factsReadinessState}`}>
+          <span className="content-readiness-icon" aria-hidden="true">{factsReadinessState === "ready" ? <ShieldCheck size={14} /> : factsReadinessState === "loading" ? <LoaderCircle size={14} className="spin" /> : factsReadinessState === "error" ? <AlertCircle size={14} /> : <CircleHelp size={14} />}</span>
+          <span className="content-readiness-copy"><strong>可公开的当前事实</strong><span>{factsReadinessText}</span><small>创建任务后，系统还会校验所选事实是否与问题相关。</small></span>
+          {eligibleFacts.length === 0 && !factsLoading && <button className="content-readiness-link" type="button" onClick={onOpenFactLibrary} disabled={!onOpenFactLibrary}>前往事实库 <ArrowUpRight size={13} /></button>}
+        </li>
+      </ul>
+    </section>}
+
+    <section className="knowledge-panel" aria-labelledby="knowledge-panel-title">
+      <div className="knowledge-panel-heading">
+        <div><span className="knowledge-panel-icon" aria-hidden="true"><BookOpen size={15} /></span><div><h2 id="knowledge-panel-title">写作边界参考</h2><p>外部指导用于核对政策与来源边界，不是企业事实。</p></div></div>
+        <span className="knowledge-panel-count">{knowledgeLoading ? "读取中" : `${filteredKnowledgeEntries.length}/${knowledgeEntries.length} 条`}</span>
+      </div>
+      {knowledgeError && <div className="content-inline-note warning" role="alert"><AlertCircle size={14} /><span>知识参考读取失败：{knowledgeError}</span></div>}
+      {!knowledgeLoading && !knowledgeError && <>
+      <label className="knowledge-search"><Search size={14} aria-hidden="true" /><input type="search" aria-label="筛选知识来源、主题或市场" placeholder="筛选来源、主题或市场" value={knowledgeSearch} onChange={(event) => setKnowledgeSearch(event.target.value)} /></label>
+      <div className="knowledge-entry-list">{filteredKnowledgeEntries.map((entry) => <details className="knowledge-entry" key={entry.id}>
+        <summary><strong>{entry.title}</strong><span>{knowledgeSourceDateLabel(entry.source_date)}</span></summary>
+        <p>{entry.summary}</p>
+        <div className="knowledge-entry-scope"><strong>知识类型</strong><span>{entry.entry_type === "external_guidance" ? "外部指导（非企业事实）" : entry.entry_type}</span></div>
+        <div className="knowledge-entry-scope"><strong>来源类型</strong><span>{knowledgeSourceKindLabel(entry.source_kind)}</span></div>
+        <div className="knowledge-entry-scope"><strong>市场范围</strong><span>{entry.market_scope}</span></div>
+        <div className="knowledge-entry-scope"><strong>适用范围</strong><span>{entry.scope}</span></div>
+        <div className="knowledge-entry-tags">{entry.topic_tags.split(",").filter(Boolean).map((tag) => <span key={tag}>{tag.trim()}</span>)}</div>
+        <div className="knowledge-entry-source"><span>{entry.license} · 最近核验：{entry.last_verified_at} · {knowledgeFreshnessLabel(entry.freshness_policy)}</span>{entry.source_url && <a href={entry.source_url} target="_blank" rel="noreferrer">打开来源 <ArrowUpRight size={12} /></a>}</div>
+      </details>)}</div>
+      {filteredKnowledgeEntries.length === 0 && <div className="knowledge-empty">没有匹配的来源</div>}
+      </>}
     </section>
 
     {!sitesLoading && !sitesError && sites.length > 0 && <div className="content-review-grid">
@@ -622,6 +761,8 @@ function ReviewItem({
 }) {
   const change = item.change_request;
   const revision = change.revision;
+  const terminalApprovalState = ["approved", "rejected"].includes(change.state) ? change.state : null;
+  const displayStatus = terminalApprovalState || item.status;
   const approvedFactVersions = revision?.fact_versions || [];
   const factsById = new Map(facts.map((fact) => [fact.id, fact]));
   const showFacts = approvedFactVersions.map((reference) => {
@@ -632,7 +773,7 @@ function ReviewItem({
   const canDecide = item.status === "awaiting_review" && change.state === "pending_approval" && Boolean(revision);
 
   return <article className="content-review-item">
-    <div className="content-review-item-head"><div><span className={`content-status ${statusClass(item.status)}`}>{taskStatus(item.status)}</span><strong>{item.question}</strong></div><small>{item.canonical_url}</small></div>
+    <div className="content-review-item-head"><div><span className={`content-status ${statusClass(displayStatus)}`}>{taskStatus(displayStatus)}</span><strong>{item.question}</strong></div><small>{item.canonical_url}</small></div>
     <div className="content-review-binding"><span>原始页面快照</span><code>#{item.snapshot_id} · {item.snapshot_hash}</code><span>工作流 thread_id</span><code>{item.thread_id}</code></div>
     <p className="content-review-summary">{item.request_summary}</p>
     {item.status === "needs_information" && <div className="content-inline-note warning"><CircleHelp size={14} /><span>缺少可用信息或事实已失效。请刷新任务与企业事实，核对来源后再处理。</span></div>}
@@ -653,7 +794,7 @@ function ReviewItem({
     {change.approvals.length > 0 && <div className="content-approval-history"><strong>审核记录</strong>{change.approvals.map((approval) => <div key={approval.id}><span className={`content-status ${statusClass(approval.decision)}`}>{approval.decision === "approved" ? "已通过" : "已退回"}</span><span>{approval.reviewer} · {asDate(approval.created_at)}</span>{approval.comment && <small>{approval.comment}</small>}</div>)}</div>}
     {canSubmit && <div className="content-review-actions"><p>检查页面快照、建议字段和事实来源后，提交至人工审核队列。</p><button className="button button-primary small" type="button" onClick={onSubmit} disabled={busyAction !== ""}>{busyAction === `submit-${item.id}` ? <LoaderCircle size={13} className="spin" /> : <Send size={13} />}提交审核</button></div>}
     {canDecide && <div className="content-review-decision"><label className="field-label">审核意见<textarea value={comment} onChange={(event) => onComment(event.target.value)} rows={2} maxLength={2000} placeholder="可选；退回时说明修改原因" disabled={busyAction !== ""} /></label><div><button className="button button-secondary small" type="button" onClick={() => onDecide("rejected")} disabled={busyAction !== ""}>{busyAction === `rejected-${item.id}` ? <LoaderCircle size={13} className="spin" /> : null}退回修改</button><button className="button button-primary small" type="button" onClick={() => onDecide("approved")} disabled={busyAction !== ""}>{busyAction === `approved-${item.id}` ? <LoaderCircle size={13} className="spin" /> : <Check size={13} />}通过</button></div></div>}
-    {!canSubmit && !canDecide && item.status === "awaiting_review" && <div className="content-inline-note"><ShieldCheck size={14} /><span>{changeStatus(change.state)}。请刷新任务状态以获取最新审核记录。</span></div>}
+    {!canSubmit && !canDecide && item.status === "awaiting_review" && !terminalApprovalState && <div className="content-inline-note"><ShieldCheck size={14} /><span>{changeStatus(change.state)}。请刷新任务状态以获取最新审核记录。</span></div>}
     {item.status !== "awaiting_review" && !["needs_information", "failed"].includes(item.status) && !revision && <div className="content-inline-note"><LoaderCircle size={14} className={item.status === "running" || item.status === "queued" ? "spin" : ""} /><span>后台任务尚未返回可审核改稿。刷新任务状态查看进度。</span></div>}
   </article>;
 }

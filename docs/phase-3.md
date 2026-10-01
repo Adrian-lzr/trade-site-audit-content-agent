@@ -7,9 +7,11 @@
 - `facts` 保存工作区、系列与父版本、主体、属性、值、单位、来源标识和定位、可见性、状态、版本及有效期等信息。版本追加保存，不覆盖历史值。
 - 导入事实初始为 `proposed`。事实工作台支持确认或拒绝；只有当前 `confirmed`、`public` 且处于有效期内的事实，才可作为公开改稿的输入。确认事实本身不会更改可见性。
 - 改稿记录绑定事实 ID 与版本。任务创建、生成中和发布预检均会检查工作区、版本、可见性和当前有效状态；条件变化时任务不会把该事实作为可用依据继续生成。
+- 生成任务同时绑定页面快照 ID、内容 hash 和有界的原文上下文；原文只作为不可信基线提供给 Fixture/模型网关，不能成为事实证据或工具指令。页面基线变化会生成新的幂等键，避免复用旧草稿。
 - 来源定位随事实版本保存。审核工作台会显示所引用的事实版本；存在 HTTP(S) 定位时可打开来源。
+- 工作台支持下载 `apps/web/public/fact-import-template.csv` 并批量导入 CSV。接口限制文件 1 MB、最多 200 行；整批先校验后写入，任何错误都会回滚，导入结果全部保持 `proposed`。外部规则、阀门采购资料清单和市场边界摘要见 [`docs/knowledge-base.md`](knowledge-base.md)：Worker 根据采购问题、改稿要求及目标市场检索最多 8 条，作为独立、不可信的指导上下文传给模型；它们不作为企业事实，不能支持产品声明。
 
-事实接口的 workspace 校验是数据归属检查，不是登录、成员角色或生产授权系统。
+事实记录自身的 workspace 校验是数据归属约束；对应业务路由另有本地 Membership 角色检查。两者都不是生产登录或受信任身份系统。
 
 ## 采购问题与页面绑定
 
@@ -31,7 +33,7 @@
 
 - 默认无网络路径：未设置 `MODEL_GATEWAY_API_KEY` 时，Worker 使用可重复的本地 Fixture gateway；该路径用于合成演示和测试，不调用外部模型。
 - 可选模型路径：配置 `MODEL_GATEWAY_BASE_URL`、`MODEL_GATEWAY_API_KEY` 和 `MODEL_GATEWAY_MODEL` 后，Worker 使用 OpenAI-compatible Chat Completions 接口。超时、请求/响应大小和 token 数有配置上限；密钥不会随任务或前端请求传递。
-- 内容任务由 `python -m backend.worker` 与页面审计任务共享 Worker 进程和数据库；内容任务有独立租约。LangGraph checkpoint 使用当前 SQLite 或 PostgreSQL 数据库对应的 saver。API 必须先完成迁移并健康，再启动 Worker。
+- 内容任务由 `python -m backend.worker` 与页面审计任务共享 Worker 进程和数据库；内容任务有独立租约，租约过期后旧 Worker 不能续租或继续写入。LangGraph checkpoint 使用当前 SQLite 或 PostgreSQL 数据库对应的 saver。API 必须先完成迁移并健康，再启动 Worker。
 - 主要实现位于 `backend/content_workflow.py`、`backend/content_worker.py`、`backend/model_gateway.py`；迁移 `0008_content_generation_tasks` 增加任务与条目记录。
 
 ## 验证入口
@@ -48,6 +50,6 @@ npm --prefix apps/web run build
 ## 边界与未完成项
 
 - 当前实现覆盖本地生成、差异查看和人工审批决定。审批通过只更新变更和审批记录，不等于发布。
-- 未接入 CMS/API 写入、Git 分支/commit/PR、部署、上线后复查或自动回滚；当前没有自动发布流程。
+- Phase 3 本身不会执行发布；Phase 4 已在隔离本地 Git 仓库中提供分支/commit、部署回调、对象复查和 SHA 保护回滚演练。CMS/API 页面写入、远程 PR、真实部署和线上复查仍属于后续边界。
 - 模型输出的约束检查不能取代人工核实所有事实、声明或目标市场合规性。
-- 工作区归属检查与审核人文本标识不提供身份认证、角色授权或客户级安全隔离。PostgreSQL 与生产多租户授权仍需单独验证。
+- 工作区归属检查和代表性审核/审计路由的 Membership 授权已实现；`X-Local-User` 仍是本地 actor assertion，不是生产身份凭据。完整 API 覆盖、可信 IdP/gateway、PostgreSQL 并发和生产多租户授权仍需单独验收。

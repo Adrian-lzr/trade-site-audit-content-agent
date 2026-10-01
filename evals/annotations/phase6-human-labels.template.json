@@ -1,0 +1,45 @@
+{
+  "dataset_version": "phase6-human-labels-v1",
+  "annotation_status": "template_pending_review",
+  "label_schema_version": "1.1",
+  "holdout_policy": "Freeze the holdout before strategy comparison.",
+  "holdout_frozen_at": "",
+  "holdout_case_ids": [],
+  "strategies": [
+    "original",
+    "ordinary_rewrite",
+    "fact_constrained_rewrite"
+  ],
+  "comparison": {
+    "page_ids": [],
+    "question_ids": [],
+    "question_set_version": "",
+    "model_version": "",
+    "prompt_version": ""
+  },
+  "cases": [
+    {
+      "case_id": "replace-with-stable-case-id",
+      "strategy": "original",
+      "split": "dev",
+      "page_id": "replace-with-page-id",
+      "buyer_question_id": "replace-with-question-id",
+      "source_snapshot": {
+        "html_sha256": "",
+        "facts_sha256": "",
+        "source_locator": ""
+      },
+      "annotator": "",
+      "annotated_at": "",
+      "labels": {
+        "factual_consistency": null,
+        "procurement_question_coverage": null,
+        "readability": null,
+        "actionability": null
+      },
+      "decision": null,
+      "decision_reason": "",
+      "notes": ""
+    }
+  ]
+}

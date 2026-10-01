@@ -1,6 +1,6 @@
 # Trade Site Audit and Content Agent
 
-本地单工作区工作台目前包含站点只读审计、企业事实确认、采购问题集版本管理，以及基于已确认公开事实生成改稿和人工审批。生成结果保存在版本化变更记录中；当前不包含 Git/CMS 发布、自动写入或持续监控。
+本地单工作区工作台目前包含站点只读审计、企业事实确认、采购问题集版本管理，以及基于已确认公开事实生成改稿和人工审批。生成结果保存在版本化变更记录中；当前只支持显式隔离本地 Git 仓库中的审查提交和回滚演练，不包含远程 Git/CMS 发布、真实线上自动写入或持续监控。
 
 ## 功能概览
 
@@ -23,6 +23,12 @@
 - Web：Vite 工作台，默认 `http://127.0.0.1:5173`，将 `/api` 请求代理到本机 API。
 - 数据库：默认 SQLite（`sqlite:///./backend.db`）；根目录 Compose 只启动 PostgreSQL 16。
 - 内容改稿默认使用不访问网络的本地 Fixture gateway。启用 OpenAI-compatible 模型时，需在 Worker 环境显式设置 `MODEL_GATEWAY_BASE_URL`、`MODEL_GATEWAY_API_KEY` 和 `MODEL_GATEWAY_MODEL`；详见[第 3 阶段状态](docs/phase-3.md)。
+- 可见性监测默认使用离线 fixture。启用真实的结构化可见性来源时，需在 Worker 环境显式设置 `VISIBILITY_PROVIDER_URL`、`VISIBILITY_PROVIDER_API_KEY` 和可选的 `VISIBILITY_PROVIDER_MODEL`；缺少 endpoint 或凭据时样本状态为 `unavailable`，不会伪装成线上成功。
+- API 为每个请求返回 `X-Request-ID` 并输出脱敏的结构化 HTTP 事件日志；Provider request ID、运行 ID、成本和模型元数据会保留用于排查，凭据和原始正文不会进入日志。可通过 `VISIBILITY_MAX_RUN_BUDGET_USD`、`VISIBILITY_DAILY_BUDGET_USD`、`VISIBILITY_RAW_RETENTION_DAYS` 和 `VISIBILITY_RAW_MAX_BYTES` 配置单次/工作区预算及原始证据保留边界。
+
+### 本地授权边界
+
+工作区范围的业务读写路由支持 Membership 角色检查以及跨工作区校验；健康检查、知识库和创建工作区等公开/引导接口除外。默认 `LOCAL_AUTH_MODE=demo` 保留匿名本地演示；设置为 `required` 或 `strict` 时，受检查路由缺少身份上下文返回 `401`，角色不足返回 `403`。`X-Local-User` 等请求头只是本地 actor 断言，不是安全凭据；生产认证和用户目录仍需接入受信任的身份系统。
 
 ## 准备环境
 
@@ -85,9 +91,11 @@ npm run dev
 
 ### PostgreSQL（可选）
 
+需要一次启动 PostgreSQL、API、Worker、Web 和可选本地 Fixture 时，参见[`容器运行说明`](docs/container-runtime.md)；Compose 要求通过环境变量提供 `POSTGRES_PASSWORD`，并默认只绑定本机回环地址。
+
 ```powershell
 docker compose up -d postgres
-$env:DATABASE_URL = "postgresql+psycopg://trade_visibility:change-me-local@127.0.0.1:5432/trade_visibility"
+$env:DATABASE_URL = "postgresql+psycopg://trade_visibility:change-me-local@127.0.0.1:5434/trade_visibility"
 python -m alembic -c backend/alembic.ini upgrade head
 ```
 
@@ -105,6 +113,12 @@ Get-Content .\trade_visibility.sql | docker compose exec -T postgres psql -U tra
 ## 本地 Fixture 演示
 
 Fixture 仅绑定 loopback，用于无 key 的确定性演示。需在本地演示用的 API 与 Worker 进程中显式启用 `ALLOW_LOOPBACK`；不要把它当作生产服务。
+
+### 企业事实批量导入
+
+站点工作台的“企业事实”区域提供 CSV 模板下载和批量导入。模板字段为 `subject,predicate,value,unit,source_id,source_locator,visibility,valid_from,valid_until`；单批最多 200 行、文件不超过 1 MB。导入会先完整校验，成功后所有行仍是 `proposed`，不会自动确认或公开；任一行无效时整批回滚。内部资料可在 `source_locator` 中记录文件名和段落/表格定位，只有 HTTP(S) 定位会显示可点击链接。
+
+外部 SEO、来源治理、阀门采购资料和目标市场边界见 [`docs/knowledge-base.md`](docs/knowledge-base.md)。当前 29 条只读 external guidance 可按市场/声明类型查询；Worker 会按采购问题、改稿要求和目标市场选择最多 8 条作为独立的政策/资料边界上下文传给模型，不把它们当企业 Fact。执行器、测试记录、图纸和维护清单属于内部资料完整性启发式，不是外部标准或工程结论；企业规格、证书、价格、交期和市场授权仍须由当前已确认且可公开的工作区事实支持，动态政策及贸易查询入口使用前要重新核验。
 
 终端 A：
 
@@ -135,15 +149,15 @@ python -m backend.worker
 
 ```powershell
 $site = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/sites -ContentType 'application/json' -Body (@{ workspace_id = 'demo-workspace'; name = 'local fixture'; origin = 'http://127.0.0.1:8765'; allowed_paths = @('/'); is_synthetic = $true } | ConvertTo-Json)
-$run = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/sites/$($site.id)/audit-runs" -ContentType 'application/json' -Body '{}'
-do { Start-Sleep -Seconds 1; $run = Invoke-RestMethod "http://127.0.0.1:8000/api/audit-runs/$($run.id)" } while ($run.status -in @('queued', 'running'))
-Invoke-RestMethod "http://127.0.0.1:8000/api/sites/$($site.id)/pages"
+$run = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/sites/$($site.id)/audit-runs?workspace_id=demo-workspace" -ContentType 'application/json' -Body '{}'
+do { Start-Sleep -Seconds 1; $run = Invoke-RestMethod "http://127.0.0.1:8000/api/audit-runs/$($run.id)?workspace_id=demo-workspace" } while ($run.status -in @('queued', 'running'))
+Invoke-RestMethod "http://127.0.0.1:8000/api/sites/$($site.id)/pages?workspace_id=demo-workspace"
 ```
 
 第 1 阶段的页面采集流程和历史验证记录见[第 1 阶段状态](docs/phase-1.md)；其中的测试计数和迁移版本不是当前验收结果，应以最近一次命令输出与当前代码为准。
 企业事实、采购问题冻结、内容生成和人工审核的操作边界见[第 3 阶段状态](docs/phase-3.md)。
 
-版本化变更、审批 outbox 与发布限制见[第 4 阶段状态](docs/phase-4.md)。审核通过不会自动发布；Git PR 发布器、outbox Worker、CMS 写入、部署复查和回滚仍未接入。
+版本化变更、审批 outbox 与发布限制见[第 4 阶段状态](docs/phase-4.md)。审核通过后可排入 outbox；在显式配置隔离本地 Git 仓库时，Worker 会生成可审查的本地分支和 commit。该适配器不 push、不创建远程 PR、不写 CMS，也不代表线上部署成功。
 
 ## 内容改稿演示
 
@@ -161,13 +175,13 @@ Invoke-RestMethod "http://127.0.0.1:8000/api/sites/$($site.id)/pages"
 ## 验证命令
 
 ```powershell
-python -m pytest backend/tests -q
+backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests -q
 npm --prefix apps/web run build
 ```
 
 Phase 3 内容任务的专项测试文件及其覆盖边界见[第 3 阶段状态](docs/phase-3.md)。不要用历史测试计数代替当前命令输出。
 
-健康检查由 `/health` 与 `/api/health` 提供；页面列表摘要 `/api/sites/{site_id}/pages` 返回规则总数、失败、待复核和未知结果数量。
+健康检查由 `/health` 与 `/api/health` 提供；`fixture_available` 会实际探测 `127.0.0.1:FIXTURE_PORT`，不会在 Fixture 未启动时误报可用。页面列表摘要 `/api/sites/{site_id}/pages` 返回规则总数、失败、待复核和未知结果数量。
 
 ## 公开站点只读检测
 
@@ -176,3 +190,14 @@ Phase 3 内容任务的专项测试文件及其覆盖边界见[第 3 阶段状�
 历史授权演示记录（2026-09-28）：job 状态为 `succeeded`，页面 HTTP 状态为 `200`，内容 hash 为 `ff67a9d764d6a2367a187734e697f6a53217db9a21c101d410a113ca871a299d`，共执行 12 条规则，其中 1 条为 `needs_review`。这只是一次只读采样证据，不代表当前线上状态、搜索引擎收录、排名、AI 引用或业务增长。
 
 GitHub 参考项目、许可证核对和选择性借鉴边界见[参考项目选择记录](docs/reference-selection.md)。
+
+## Phase 5/6 交付入口
+
+- [Phase 5 可见性监测状态](docs/phase-5.md)：Provider 能力、原始回答/引用保存、预算和 fixture 边界。
+- [Phase 6 评测与交付说明](docs/phase-6.md)：工程门禁、离线评测、ADR、演示脚本和已知限制。
+- [Phase 6 实测报告](docs/phase-6-report.md)：本轮测试、两个公开站点的只读采样和未完成验收项。
+- [生产验收闸门](docs/production-acceptance.md)：真实 Provider、站点授权、人工评测、备份恢复、镜像、身份、回滚、CRM 和远程发布证据的只读检查。
+- [本地 readiness 与备份恢复说明](docs/local-readiness.md)：隔离 Git 发布/回滚、Compose 边界和临时 PostgreSQL 恢复演练。
+- [评测结果](evals/artifacts/phase6-evaluation.json) 与 [人工标注格式](evals/annotations/README.md)：合成 fixture 与待人工复核数据明确分开。
+- [架构图](docs/architecture.md)、[架构决策记录](docs/adr/) 与 [五分钟演示脚本](docs/demo-script.md)。
+- [依赖与许可证边界](docs/licenses.md)、[许可证清单](docs/license-inventory.md) 与 [据实项目条目](docs/resume-entry.md)。

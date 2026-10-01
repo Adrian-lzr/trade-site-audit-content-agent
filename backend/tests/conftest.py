@@ -19,6 +19,7 @@ def clean_database():
     from alembic.config import Config
     from backend.database import SessionLocal
     from backend.models import (
+        AuditEvent,
         AuditFinding,
         AuditRuleResult,
         ChangeApproval,
@@ -28,6 +29,7 @@ def clean_database():
         ContentGenerationTask,
         Fact,
         Job,
+        Membership,
         OutboxEvent,
         Page,
         PageSnapshot,
@@ -37,13 +39,19 @@ def clean_database():
         ProcurementQuestionSetVersion,
         PublicationAttempt,
         Site,
+        VisibilityRun,
+        VisibilitySample,
         Workspace,
     )
 
     command.upgrade(Config("backend/alembic.ini"), "head")
     with SessionLocal() as db:
         for model in (
+            AuditEvent,
+            Membership,
             OutboxEvent,
+            VisibilitySample,
+            VisibilityRun,
             PublicationAttempt,
             ChangeApproval,
             ContentGenerationItem,

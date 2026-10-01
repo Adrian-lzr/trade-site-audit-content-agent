@@ -1,0 +1,417 @@
+{
+  "database": "temporary_sqlite_deleted_after_run",
+  "generated_at": "2026-10-01T06:38:58.974256+00:00",
+  "limitations": [
+    "This is a bounded HTML/robots/sitemap sample, not a full-site crawl.",
+    "The run does not measure search ranking, consumer AI citations, traffic, leads, or revenue.",
+    "No publication, CMS write, PR, or deployment endpoint was called."
+  ],
+  "mode": "live_https_readonly",
+  "origins": [
+    {
+      "direct_control_checks": [
+        {
+          "content_bytes": 80235,
+          "error": null,
+          "final_url": "https://zoogo.club",
+          "method": "GET",
+          "path": "/",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": "Compact Fitness Equipment Manufacturer | ZOOGO ChinaExpandToggle MenuExpand"
+        },
+        {
+          "content_bytes": 111,
+          "error": null,
+          "final_url": "https://zoogo.club/robots.txt",
+          "method": "GET",
+          "path": "/robots.txt",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": null
+        },
+        {
+          "content_bytes": 614,
+          "error": null,
+          "final_url": "https://zoogo.club/wp-sitemap.xml",
+          "method": "GET",
+          "path": "/wp-sitemap.xml",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": null
+        }
+      ],
+      "findings": 0,
+      "job_id": 1,
+      "origin": "https://zoogo.club",
+      "page_limit": 20,
+      "pages": [
+        {
+          "content_hash": "9ac5427ef0fb89e684f9cd4043d9b13184e1f8174f02bd388e0b1327b770ad67",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Compact Fitness Equipment Manufacturer | ZOOGO ChinaExpandToggle MenuExpand",
+          "url": "https://zoogo.club/"
+        },
+        {
+          "content_hash": "89bc3cc424a7d629c242955d8cce3142d1adc6126369ee222f4bf7c26dacc154",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Wholesale Fitness Equipment Manufacturer | ZOOGOExpandToggle MenuExpand",
+          "url": "https://zoogo.club/products/"
+        },
+        {
+          "content_hash": "42bb27947906b5d8ad1983a8fee7f76d3795676157f25959c570b2ed9e0765ac",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Wholesale Under-Desk Mini Elliptical Trainers | ZOOGO FactoryExpandToggle MenuExpand",
+          "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+        },
+        {
+          "content_hash": "a8bf90268ebdc353c6cf9b528828f0e234255a24bb08e87e67dce65b3f55f518",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Hydraulic Stepper Wholesale & OEM Supplier | ZOOGOExpandToggle MenuExpand",
+          "url": "https://zoogo.club/product-categories/mechanical-steppers/"
+        },
+        {
+          "content_hash": "f56cb37ac650d00f52c793d3e918804e7ef49b7d198aef3470b1bf2e76980a59",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Vibration Plate Wholesale Manufacturer & OEM Supplier | ZOOGOExpandToggle MenuExpand",
+          "url": "https://zoogo.club/product-categories/vibration-plates/"
+        },
+        {
+          "content_hash": "2ffa56d7211cab850a29fbaa281d5cbb9c718c45fcaecdae086364f58f99a4f7",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Fitness Equipment OEM & Private Label ManufacturerExpandToggle MenuExpand",
+          "url": "https://zoogo.club/oem-odm/"
+        },
+        {
+          "content_hash": "6f86310eeb6f14258f729bd0f810729445632e35ab8775cdc65573870666dbe6",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Wholesale Fitness Equipment FAQs | MOQ, OEM & Lead TimeExpandToggle MenuExpand",
+          "url": "https://zoogo.club/faq/"
+        },
+        {
+          "content_hash": "d7524b7e932d69d3174d4de0bee97469046ee2fe32913de0fb32e2ed96319b24",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "B2B Fitness Equipment Sourcing Guides | ZOOGOExpandToggle MenuExpand",
+          "url": "https://zoogo.club/blog/"
+        },
+        {
+          "content_hash": "a73adde34ba81ab526124ea232e18323cdd8eed365dc277bb879fdde37dc7d87",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Quality Control & Certificate Support | ZOOGO FactoryExpandToggle MenuExpand",
+          "url": "https://zoogo.club/quality-certifications/"
+        },
+        {
+          "content_hash": "a8697687741101f42a38e042d183a2c683f38ac3144189057ee709d9b1d5d823",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "About ZOOGO | Compact Fitness Equipment FactoryExpandToggle MenuExpand",
+          "url": "https://zoogo.club/about-us/"
+        },
+        {
+          "content_hash": "e76e9473ccf55e5a886bb03ca8cbae633fa4990eea0b623b72146b201135af89",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Contact ZOOGO for Wholesale Fitness Equipment QuotesExpandToggle MenuExpand",
+          "url": "https://zoogo.club/contact/"
+        },
+        {
+          "content_hash": "8984e600089b3d9c80c0daecfd6118cc0ac2c70179a12541c6970ef9015d3332",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "CE & PSE Certificates | Fitness Equipment Compliance \u2014 ZOOGOExpandToggle MenuExpand",
+          "url": "https://zoogo.club/certificates/"
+        },
+        {
+          "content_hash": "35a6b9d689fb4cc4dc8eb16518aa53a334cbc8e4f9f0b683a0ae6977c720883b",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Source Under-Desk Elliptical Trainers from China | B2B GuideExpandToggle MenuExpand",
+          "url": "https://zoogo.club/how-to-source-under-desk-elliptical-trainers-from-china/"
+        },
+        {
+          "content_hash": "c945ef357ee6a0dba3eed668823248c9bcca3a389711a00ce336bdf463ee4542",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Vibration Plate Wholesale Distributor Checklist | ZOOGO FactoryExpandToggle MenuExpand",
+          "url": "https://zoogo.club/vibration-plate-wholesale-distributors-bulk-order-checklist/"
+        },
+        {
+          "content_hash": "ed1a5658ce50d4301c31ddddcd27dcd2fbdf128e00fff015eb6e6567b7fcca75",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Mini Stepper OEM & Private Label Guide | ZOOGO China FactoryExpandToggle MenuExpand",
+          "url": "https://zoogo.club/mini-stepper-oem-private-label-moq-customization-and-lead-time/"
+        },
+        {
+          "content_hash": "f7df985fd20ce263ed2db286c90deecac28ba9d70b9477ec778b7c3165becacd",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Stepper Tension Spring Replacement Parts | OEM \u2014 ZOOGOExpandToggle MenuExpand",
+          "url": "https://zoogo.club/products/resistance-band-tension-spring-accessory-01/"
+        },
+        {
+          "content_hash": "71cc813ac2457bb0cbdf4758d362fa3e8be23dc11b2e0039aaac5ca339281ca7",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Contact ZOOGO for Wholesale Fitness Equipment QuotesExpandToggle MenuExpand",
+          "url": "https://zoogo.club/contact/?product=Resistance%20Band%20Tension%20Spring%20Accessory%20for%20Steppers%20%26%23038%3B%20Ellipticals"
+        },
+        {
+          "content_hash": "5d9555998a7725bf27c56311e02e80a5ce0630cc77cd984421ed0e97c2a77687",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Light-Commercial Hydraulic Stepper | OEM \u2014 ZOOGO ST-03ExpandToggle MenuExpand",
+          "url": "https://zoogo.club/products/compact-mechanical-mini-stepper-model-03/"
+        },
+        {
+          "content_hash": "8b190b0fcc39014610507dcd89cfe8c99e5f37b866bc1cc2be0e86f8e00e5d8b",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Contact ZOOGO for Wholesale Fitness Equipment QuotesExpandToggle MenuExpand",
+          "url": "https://zoogo.club/contact/?product=Compact%20Hydraulic%20Stepper%20for%20Home%20and%20Light%20Commercial"
+        },
+        {
+          "content_hash": "11bf20f8cb0f7d4eef0ad5304b01951f9731bda7f0ec2f66901ce31522b48ea4",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Reinforced Frame Hydraulic Stepper | Wholesale \u2014 ZOOGO ST-02ExpandToggle MenuExpand",
+          "url": "https://zoogo.club/products/compact-mechanical-mini-stepper-model-02/"
+        }
+      ],
+      "pages_sampled": 20,
+      "robots": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogo.club/robots.txt"
+      },
+      "rule_result_count": 240,
+      "rule_status_counts": {
+        "needs_review": 31,
+        "not_applicable": 12,
+        "pass": 182,
+        "unknown": 15
+      },
+      "sitemap": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogo.club/wp-sitemap.xml"
+      },
+      "status": "succeeded"
+    },
+    {
+      "direct_control_checks": [
+        {
+          "content_bytes": 73798,
+          "error": null,
+          "final_url": "https://zoogosports.com",
+          "method": "GET",
+          "path": "/",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": "Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO"
+        },
+        {
+          "content_bytes": 122,
+          "error": null,
+          "final_url": "https://zoogosports.com/robots.txt",
+          "method": "GET",
+          "path": "/robots.txt",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": null
+        },
+        {
+          "content_bytes": 931,
+          "error": null,
+          "final_url": "https://zoogosports.com/sitemap_index.xml",
+          "method": "GET",
+          "path": "/sitemap_index.xml",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": null
+        }
+      ],
+      "findings": 0,
+      "job_id": 2,
+      "origin": "https://zoogosports.com",
+      "page_limit": 20,
+      "pages": [
+        {
+          "content_hash": "2329c12ebe88b6e4d236bfa7b77cd90d9e6719837678f12da159d77d99c55a18",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO",
+          "url": "https://zoogosports.com/"
+        },
+        {
+          "content_hash": "9f3d614e4b990b24d84f86b31554b0c5b1b055792fc65d115bed1f2c8c79eef7",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Wholesale Massage Equipment Catalog | ZOOGO",
+          "url": "https://zoogosports.com/products/"
+        },
+        {
+          "content_hash": "8b152170ee48df1b579f4acd012853dca5de1b58106b5c2b445ad2c2612aef22",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Knee Massagers Wholesale & OEM | ZOOGO",
+          "url": "https://zoogosports.com/product-categories/knee-massagers/"
+        },
+        {
+          "content_hash": "69422ccfee1b204e59516fe61e5cb9f2ad54831f24452eb0b9fba64ff4b37c7f",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Hand Massagers Wholesale & OEM | ZOOGO",
+          "url": "https://zoogosports.com/product-categories/hand-massagers/"
+        },
+        {
+          "content_hash": "5393454d099aae436259af455c58f19479639a74f0f462349fddffad9d386e41",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Lumbar Massagers Wholesale & OEM | ZOOGO",
+          "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+        },
+        {
+          "content_hash": "f98aae48280a0aed7075cd4f235f01fdbf971aee6e52fea2a792dabe09e2d832",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Massage Device OEM & ODM Supplier | ZOOGO",
+          "url": "https://zoogosports.com/oem-odm/"
+        },
+        {
+          "content_hash": "f855ac348556574c82745f30e1fc250e4bfa5c172c87a1f72db75854ac7afda9",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Massage Device Quality Control & Compliance | ZOOGO",
+          "url": "https://zoogosports.com/quality-compliance/"
+        },
+        {
+          "content_hash": "53b124e386448e56315b8cc4771b02452c3bf3f64cf9318430eda08f80ed4385",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Massage Device Factory in Yongkang | ZOOGO",
+          "url": "https://zoogosports.com/about-us/"
+        },
+        {
+          "content_hash": "6d9f66aaa40b4d20749ef2441f34895b5880044961b6511aa70beb720f03b3fd",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Massage Device MOQ, OEM & Wholesale FAQ | ZOOGO",
+          "url": "https://zoogosports.com/faq/"
+        },
+        {
+          "content_hash": "3d21f309a14c5504441ba47bd03764da91b5cbd25ec39824d61cfc503c4c8468",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Request a Wholesale Massage Device Quote | ZOOGO",
+          "url": "https://zoogosports.com/request-a-quote/"
+        },
+        {
+          "content_hash": "d8058aab2783cfd32f39192cedecae9a880274bae62b1efd44d16c602525ad57",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Request a Wholesale Massage Device Quote | ZOOGO",
+          "url": "https://zoogosports.com/request-a-quote/?product=Lumbar%20Massager%20ST-1206%20%28EMS%20Traction%29"
+        },
+        {
+          "content_hash": "f9507e92b26bed8f6b6e053915166eb0c96641d896fa6a3d56782d5ea1bdb4ff",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Electric Hand Massager ST-1803 (Finger Stretch) Wholesale & OEM | ZOOGO",
+          "url": "https://zoogosports.com/product/electric-hand-massager-b/"
+        },
+        {
+          "content_hash": "79476522a5587f1507680d2a5e7d501e9b2d12297312d60770a51e89fbd78f53",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Request a Wholesale Massage Device Quote | ZOOGO",
+          "url": "https://zoogosports.com/request-a-quote/?product=Electric%20Hand%20Massager%20ST-1803%20%28Finger%20Stretch%29"
+        },
+        {
+          "content_hash": "a327ba44fabb2c2792909eda17f8054d41e2d6582809cf03f35fe231d4bf180a",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Electric Hand Massager ST-1802 (Mitten Style) Wholesale & OEM | ZOOGO",
+          "url": "https://zoogosports.com/product/electric-hand-massager-a/"
+        },
+        {
+          "content_hash": "b2196a3d826ec8accc0330715e2c5324f031832c0e29db884521843186309268",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Request a Wholesale Massage Device Quote | ZOOGO",
+          "url": "https://zoogosports.com/request-a-quote/?product=Electric%20Hand%20Massager%20ST-1802%20%28Mitten%20Style%29"
+        },
+        {
+          "content_hash": "29c315d2a603704a386e89bb0ee90b3cfbd153e4dce6b6f7df37dfc7434109d3",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Electric Knee Massager ST-1102 Wholesale & OEM | ZOOGO",
+          "url": "https://zoogosports.com/product/electric-knee-massager/"
+        },
+        {
+          "content_hash": "3cc24faa6d00057b48d81133908b2827e2553b427b1184607f4e575ac3dd2c18",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Request a Wholesale Massage Device Quote | ZOOGO",
+          "url": "https://zoogosports.com/request-a-quote/?product=Electric%20Knee%20Massager%20ST-1102"
+        },
+        {
+          "content_hash": "202e21fa72507be0b53ee3fd9e0391e6f2654a5193c114282c35ec48c86f07cb",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Insights - ZOOGOContinueContinueContinueContinueContinueContinueContinueContinueContinueContinueNext",
+          "url": "https://zoogosports.com/insights/"
+        },
+        {
+          "content_hash": "82f7517d058de383ecbb81597c74408b2a4cf755705dd9933f7eb9b6242c7a73",
+          "content_type": "text/html",
+          "status_code": 404,
+          "title": "Email Protection | Cloudflare",
+          "url": "https://zoogosports.com/cdn-cgi/l/email-protection"
+        },
+        {
+          "content_hash": "e4355d69e05c1d73575488f7ede0700e3e0f49fbe1dc934395374f718c6d2a5d",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Privacy Policy - ZOOGO",
+          "url": "https://zoogosports.com/privacy-policy/"
+        }
+      ],
+      "pages_sampled": 20,
+      "robots": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogosports.com/robots.txt"
+      },
+      "rule_result_count": 240,
+      "rule_status_counts": {
+        "fail": 20,
+        "needs_review": 26,
+        "not_applicable": 18,
+        "pass": 168,
+        "unknown": 8
+      },
+      "sitemap": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogosports.com/sitemap_index.xml"
+      },
+      "status": "succeeded"
+    }
+  ]
+}

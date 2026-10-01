@@ -11,11 +11,13 @@ from functools import partial
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
+from .config import settings
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Serve the site-audit HTTP fixture")
     parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--port", type=int, default=settings.fixture_port)
     args = parser.parse_args()
     directory = Path(__file__).resolve().parent.parent / "demo-site"
     handler = partial(SimpleHTTPRequestHandler, directory=str(directory))

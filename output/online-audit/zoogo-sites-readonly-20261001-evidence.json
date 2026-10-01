@@ -1,0 +1,2816 @@
+{
+  "database": "temporary_sqlite_deleted_after_run",
+  "generated_at": "2026-10-01T06:44:39.509146+00:00",
+  "limitations": [
+    "This is a bounded HTML/robots/sitemap sample, not a full-site crawl.",
+    "The run does not measure search ranking, consumer AI citations, traffic, leads, or revenue.",
+    "No publication, CMS write, PR, or deployment endpoint was called."
+  ],
+  "mode": "live_https_readonly",
+  "origins": [
+    {
+      "direct_control_checks": [
+        {
+          "content_bytes": 80235,
+          "error": null,
+          "final_url": "https://zoogo.club",
+          "method": "GET",
+          "path": "/",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": "Compact Fitness Equipment Manufacturer | ZOOGO ChinaExpandToggle MenuExpand"
+        },
+        {
+          "content_bytes": 111,
+          "error": null,
+          "final_url": "https://zoogo.club/robots.txt",
+          "method": "GET",
+          "path": "/robots.txt",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": null
+        },
+        {
+          "content_bytes": 614,
+          "error": null,
+          "final_url": "https://zoogo.club/wp-sitemap.xml",
+          "method": "GET",
+          "path": "/wp-sitemap.xml",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": null
+        }
+      ],
+      "finding_details": [],
+      "findings": 0,
+      "job_id": 1,
+      "origin": "https://zoogo.club",
+      "page_limit": 3,
+      "pages": [
+        {
+          "content_hash": "9ac5427ef0fb89e684f9cd4043d9b13184e1f8174f02bd388e0b1327b770ad67",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Compact Fitness Equipment Manufacturer | ZOOGO ChinaExpandToggle MenuExpand",
+          "url": "https://zoogo.club/"
+        },
+        {
+          "content_hash": "fcb990e8b1fa8ddd555f13e5a776d2a8928b6c2be35606f28769c5de078730e4",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Wholesale Fitness Equipment Manufacturer | ZOOGOExpandToggle MenuExpand",
+          "url": "https://zoogo.club/products/"
+        },
+        {
+          "content_hash": "42bb27947906b5d8ad1983a8fee7f76d3795676157f25959c570b2ed9e0765ac",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Wholesale Under-Desk Mini Elliptical Trainers | ZOOGO FactoryExpandToggle MenuExpand",
+          "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+        }
+      ],
+      "pages_sampled": 3,
+      "robots": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogo.club/robots.txt"
+      },
+      "rule_result_count": 36,
+      "rule_results": [
+        {
+          "evidence": {
+            "redirect_chain": [],
+            "status_code": 200,
+            "url": "https://zoogo.club/"
+          },
+          "message": "The page returned a successful HTTP response through a validated redirect chain.",
+          "remediation_hint": "Check the expected page response and validated redirect chain.",
+          "rule_id": "http_status_redirect",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "robots_missing": false,
+            "robots_url": "https://zoogo.club/robots.txt",
+            "status_code": 200,
+            "url": "https://zoogo.club/"
+          },
+          "message": "robots.txt does not block this expected public page.",
+          "remediation_hint": "Review robots.txt and the intended crawl policy for this URL.",
+          "rule_id": "robots_access",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "expected_indexable": true,
+            "meta_directives": [
+              "max-image-preview:large"
+            ],
+            "x_robots_tag": ""
+          },
+          "message": "Index directives agree with the configured expectation.",
+          "remediation_hint": "Align robots meta and X-Robots-Tag with the configured indexability policy.",
+          "rule_id": "index_directives",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "entry_count": 5,
+            "sampled_page_count": 0,
+            "url": "https://zoogo.club/wp-sitemap.xml"
+          },
+          "message": "The sitemap XML is valid and its sampled URLs are on the configured origin.",
+          "remediation_hint": "Publish a valid same-origin sitemap and include canonical public URLs.",
+          "rule_id": "sitemap_validity",
+          "scope": "site_sample",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "canonical": "https://zoogo.club/",
+            "target_status": 200
+          },
+          "message": "The canonical URL is valid, on the preferred origin, and its target is successful or self-referential.",
+          "remediation_hint": "Use one valid canonical URL on the configured preferred origin and verify its target.",
+          "rule_id": "canonical_target",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "title",
+            "value": "Compact Fitness Equipment Manufacturer | ZOOGO ChinaExpandToggle MenuExpand"
+          },
+          "message": "The HTML title is present.",
+          "remediation_hint": "Add a concise, page-specific HTML title.",
+          "rule_id": "title_present",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "duplicate_groups": [],
+            "sampled_titled_pages": 3
+          },
+          "message": "No duplicate titles were found in the frozen sample.",
+          "remediation_hint": "Review repeated titles and make them distinguish the represented pages.",
+          "rule_id": "duplicate_titles",
+          "scope": "site_sample",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "meta[name=description]",
+            "value": "ZOOGO is a Yongkang factory making mini elliptical trainers, steppers and vibration plates. Factory price, flexible MOQ, OEM supported. Get a wholesale quote."
+          },
+          "message": "A non-empty meta description is present.",
+          "remediation_hint": "Consider adding a page-specific meta description for search snippets.",
+          "rule_id": "meta_description",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "h1_count": 3,
+            "headings": [
+              "Compact Fitness Equipment Manufacturer",
+              "In-House Assembly & Testing",
+              "Mini Elliptical Trainers & Steppers"
+            ]
+          },
+          "message": "The page has no H1 or has multiple H1 elements; review its heading hierarchy manually.",
+          "remediation_hint": "Review the main heading structure; this heuristic is not a ranking penalty.",
+          "rule_id": "heading_structure",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "needs_review",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "broken_links": [],
+            "checked_links": 93,
+            "inconclusive_links": [
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mechanical-steppers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/vibration-plates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/blog/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/quality-certifications/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/certificates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/products/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/quality-certifications/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/products/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mechanical-steppers/"
+              }
+            ],
+            "results": [
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mechanical-steppers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/vibration-plates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/blog/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/quality-certifications/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/certificates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/products/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/quality-certifications/"
+              }
+            ]
+          },
+          "message": "At least one sampled internal-link request was inconclusive; it is not counted as a broken page.",
+          "remediation_hint": "Repair confirmed broken in-scope internal links; retry inconclusive network checks.",
+          "rule_id": "internal_links",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "unknown",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "image_count": 9,
+            "missing_alt_count": 0
+          },
+          "message": "Every captured image has an alt attribute.",
+          "remediation_hint": "Review images without alt attributes and provide appropriate text or an empty decorative alt.",
+          "rule_id": "image_alt",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "objects_checked": 2,
+            "required_field_profile": [
+              "article",
+              "blogposting",
+              "breadcrumblist",
+              "faqpage",
+              "localbusiness",
+              "newsarticle",
+              "organization",
+              "product",
+              "webpage",
+              "website"
+            ],
+            "structured_names": [
+              "ZOOGO"
+            ],
+            "visible_labels": [
+              "Compact Fitness Equipment Manufacturer | ZOOGO ChinaExpandToggle MenuExpand",
+              "Compact Fitness Equipment Manufacturer",
+              "In-House Assembly & Testing",
+              "Mini Elliptical Trainers & Steppers"
+            ]
+          },
+          "message": "JSON-LD syntax, supported required fields, and sampled visible labels are consistent.",
+          "remediation_hint": "Correct invalid or incomplete JSON-LD and manually verify it against visible page content.",
+          "rule_id": "jsonld_consistency",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "redirect_chain": [],
+            "status_code": 200,
+            "url": "https://zoogo.club/products/"
+          },
+          "message": "The page returned a successful HTTP response through a validated redirect chain.",
+          "remediation_hint": "Check the expected page response and validated redirect chain.",
+          "rule_id": "http_status_redirect",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "robots_missing": false,
+            "robots_url": "https://zoogo.club/robots.txt",
+            "status_code": 200,
+            "url": "https://zoogo.club/products/"
+          },
+          "message": "robots.txt does not block this expected public page.",
+          "remediation_hint": "Review robots.txt and the intended crawl policy for this URL.",
+          "rule_id": "robots_access",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "expected_indexable": true,
+            "meta_directives": [
+              "max-image-preview:large"
+            ],
+            "x_robots_tag": ""
+          },
+          "message": "Index directives agree with the configured expectation.",
+          "remediation_hint": "Align robots meta and X-Robots-Tag with the configured indexability policy.",
+          "rule_id": "index_directives",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "entry_count": 5,
+            "sampled_page_count": 0,
+            "url": "https://zoogo.club/wp-sitemap.xml"
+          },
+          "message": "The sitemap XML is valid and its sampled URLs are on the configured origin.",
+          "remediation_hint": "Publish a valid same-origin sitemap and include canonical public URLs.",
+          "rule_id": "sitemap_validity",
+          "scope": "site_sample",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "canonical": "https://zoogo.club/products/",
+            "target_status": 200
+          },
+          "message": "The canonical URL is valid, on the preferred origin, and its target is successful or self-referential.",
+          "remediation_hint": "Use one valid canonical URL on the configured preferred origin and verify its target.",
+          "rule_id": "canonical_target",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "title",
+            "value": "Wholesale Fitness Equipment Manufacturer | ZOOGOExpandToggle MenuExpand"
+          },
+          "message": "The HTML title is present.",
+          "remediation_hint": "Add a concise, page-specific HTML title.",
+          "rule_id": "title_present",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "duplicate_groups": [],
+            "sampled_titled_pages": 3
+          },
+          "message": "No duplicate titles were found in the frozen sample.",
+          "remediation_hint": "Review repeated titles and make them distinguish the represented pages.",
+          "rule_id": "duplicate_titles",
+          "scope": "site_sample",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "meta[name=description]",
+            "value": "Browse factory-supplied mini ellipticals, hydraulic steppers and vibration plates. Request MOQ, lead time, OEM options and export packaging details."
+          },
+          "message": "A non-empty meta description is present.",
+          "remediation_hint": "Consider adding a page-specific meta description for search snippets.",
+          "rule_id": "meta_description",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "h1_count": 1,
+            "heading": "Wholesale Fitness Products for Importers & Distributors"
+          },
+          "message": "Exactly one H1 was found; this structural check is not a ranking guarantee.",
+          "remediation_hint": "Review the main heading structure; this heuristic is not a ranking penalty.",
+          "rule_id": "heading_structure",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "broken_links": [],
+            "checked_links": 153,
+            "inconclusive_links": [
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mechanical-steppers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/vibration-plates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/blog/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/quality-certifications/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/certificates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/quality-certifications/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mechanical-steppers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/vibration-plates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              }
+            ],
+            "results": [
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mechanical-steppers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/vibration-plates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/blog/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/quality-certifications/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/certificates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              }
+            ]
+          },
+          "message": "At least one sampled internal-link request was inconclusive; it is not counted as a broken page.",
+          "remediation_hint": "Repair confirmed broken in-scope internal links; retry inconclusive network checks.",
+          "rule_id": "internal_links",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "unknown",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "image_count": 11,
+            "missing_alt_count": 0
+          },
+          "message": "Every captured image has an alt attribute.",
+          "remediation_hint": "Review images without alt attributes and provide appropriate text or an empty decorative alt.",
+          "rule_id": "image_alt",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "objects_checked": 3,
+            "supported_required_field_profile": [
+              "article",
+              "blogposting",
+              "breadcrumblist",
+              "faqpage",
+              "localbusiness",
+              "newsarticle",
+              "organization",
+              "product",
+              "webpage",
+              "website"
+            ],
+            "unsupported_types": [
+              "CollectionPage"
+            ]
+          },
+          "message": "Some JSON-LD types are outside the deterministic required-field profile.",
+          "remediation_hint": "Correct invalid or incomplete JSON-LD and manually verify it against visible page content.",
+          "rule_id": "jsonld_consistency",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/products/",
+          "status": "needs_review",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "redirect_chain": [],
+            "status_code": 200,
+            "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+          },
+          "message": "The page returned a successful HTTP response through a validated redirect chain.",
+          "remediation_hint": "Check the expected page response and validated redirect chain.",
+          "rule_id": "http_status_redirect",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "robots_missing": false,
+            "robots_url": "https://zoogo.club/robots.txt",
+            "status_code": 200,
+            "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+          },
+          "message": "robots.txt does not block this expected public page.",
+          "remediation_hint": "Review robots.txt and the intended crawl policy for this URL.",
+          "rule_id": "robots_access",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "expected_indexable": true,
+            "meta_directives": [
+              "max-image-preview:large"
+            ],
+            "x_robots_tag": ""
+          },
+          "message": "Index directives agree with the configured expectation.",
+          "remediation_hint": "Align robots meta and X-Robots-Tag with the configured indexability policy.",
+          "rule_id": "index_directives",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "entry_count": 5,
+            "sampled_page_count": 0,
+            "url": "https://zoogo.club/wp-sitemap.xml"
+          },
+          "message": "The sitemap XML is valid and its sampled URLs are on the configured origin.",
+          "remediation_hint": "Publish a valid same-origin sitemap and include canonical public URLs.",
+          "rule_id": "sitemap_validity",
+          "scope": "site_sample",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+          },
+          "message": "The page does not declare a canonical URL; no canonical target can be assessed.",
+          "remediation_hint": "Use one valid canonical URL on the configured preferred origin and verify its target.",
+          "rule_id": "canonical_target",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "not_applicable",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "title",
+            "value": "Wholesale Under-Desk Mini Elliptical Trainers | ZOOGO FactoryExpandToggle MenuExpand"
+          },
+          "message": "The HTML title is present.",
+          "remediation_hint": "Add a concise, page-specific HTML title.",
+          "rule_id": "title_present",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "duplicate_groups": [],
+            "sampled_titled_pages": 3
+          },
+          "message": "No duplicate titles were found in the frozen sample.",
+          "remediation_hint": "Review repeated titles and make them distinguish the represented pages.",
+          "rule_id": "duplicate_titles",
+          "scope": "site_sample",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "meta[name=description]",
+            "value": "Compare ZOOGO mini elliptical trainer models for wholesale and OEM orders. Factory-direct MOQ, remote-control options, low-profile designs and custom packaging."
+          },
+          "message": "A non-empty meta description is present.",
+          "remediation_hint": "Consider adding a page-specific meta description for search snippets.",
+          "rule_id": "meta_description",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "h1_count": 1,
+            "heading": "Mini Elliptical Trainers"
+          },
+          "message": "Exactly one H1 was found; this structural check is not a ranking guarantee.",
+          "remediation_hint": "Review the main heading structure; this heuristic is not a ranking penalty.",
+          "rule_id": "heading_structure",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "broken_links": [],
+            "checked_links": 125,
+            "inconclusive_links": [
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mechanical-steppers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/vibration-plates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/blog/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/quality-certifications/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/certificates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/quality-certifications/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mechanical-steppers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/vibration-plates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/quality-certifications/"
+              }
+            ],
+            "results": [
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/mechanical-steppers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/product-categories/vibration-plates/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/blog/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/quality-certifications/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/contact/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogo.club/certificates/"
+              }
+            ]
+          },
+          "message": "At least one sampled internal-link request was inconclusive; it is not counted as a broken page.",
+          "remediation_hint": "Repair confirmed broken in-scope internal links; retry inconclusive network checks.",
+          "rule_id": "internal_links",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "unknown",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "image_count": 5,
+            "missing_alt_count": 0
+          },
+          "message": "Every captured image has an alt attribute.",
+          "remediation_hint": "Review images without alt attributes and provide appropriate text or an empty decorative alt.",
+          "rule_id": "image_alt",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "objects_checked": 3,
+            "supported_required_field_profile": [
+              "article",
+              "blogposting",
+              "breadcrumblist",
+              "faqpage",
+              "localbusiness",
+              "newsarticle",
+              "organization",
+              "product",
+              "webpage",
+              "website"
+            ],
+            "unsupported_types": [
+              "CollectionPage"
+            ]
+          },
+          "message": "Some JSON-LD types are outside the deterministic required-field profile.",
+          "remediation_hint": "Correct invalid or incomplete JSON-LD and manually verify it against visible page content.",
+          "rule_id": "jsonld_consistency",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+          "status": "needs_review",
+          "version": "1.0.0"
+        }
+      ],
+      "rule_status_counts": {
+        "needs_review": 3,
+        "not_applicable": 1,
+        "pass": 29,
+        "unknown": 3
+      },
+      "sitemap": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogo.club/wp-sitemap.xml"
+      },
+      "status": "succeeded"
+    },
+    {
+      "direct_control_checks": [
+        {
+          "content_bytes": 73798,
+          "error": null,
+          "final_url": "https://zoogosports.com",
+          "method": "GET",
+          "path": "/",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": "Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO"
+        },
+        {
+          "content_bytes": 122,
+          "error": null,
+          "final_url": "https://zoogosports.com/robots.txt",
+          "method": "GET",
+          "path": "/robots.txt",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": null
+        },
+        {
+          "content_bytes": 0,
+          "error": "_ssl.c:993: The handshake operation timed out",
+          "final_url": "https://zoogosports.com/sitemap_index.xml",
+          "method": "GET",
+          "path": "/sitemap_index.xml",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 0,
+          "title": null
+        }
+      ],
+      "finding_details": [],
+      "findings": 0,
+      "job_id": 2,
+      "origin": "https://zoogosports.com",
+      "page_limit": 3,
+      "pages": [
+        {
+          "content_hash": "17e0bac14282cf706f6c9ed2d28c3f860e75b15c861baa00c8ba9d0a654233bc",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO",
+          "url": "https://zoogosports.com/"
+        },
+        {
+          "content_hash": "275777600e5156db2512614d67d5e71a7cc70c65fae73b89d114ace817c5fdcb",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Wholesale Massage Equipment Catalog | ZOOGO",
+          "url": "https://zoogosports.com/products/"
+        },
+        {
+          "content_hash": "17e3ccd3180718f59f9df0f282e6a7b9425b06f39d8b973b9440b1df7cbf3fc7",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Knee Massagers Wholesale & OEM | ZOOGO",
+          "url": "https://zoogosports.com/product-categories/knee-massagers/"
+        }
+      ],
+      "pages_sampled": 3,
+      "robots": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogosports.com/robots.txt"
+      },
+      "rule_result_count": 36,
+      "rule_results": [
+        {
+          "evidence": {
+            "redirect_chain": [],
+            "status_code": 200,
+            "url": "https://zoogosports.com/"
+          },
+          "message": "The page returned a successful HTTP response through a validated redirect chain.",
+          "remediation_hint": "Check the expected page response and validated redirect chain.",
+          "rule_id": "http_status_redirect",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "robots_missing": false,
+            "robots_url": "https://zoogosports.com/robots.txt",
+            "status_code": 200,
+            "url": "https://zoogosports.com/"
+          },
+          "message": "robots.txt does not block this expected public page.",
+          "remediation_hint": "Review robots.txt and the intended crawl policy for this URL.",
+          "rule_id": "robots_access",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "expected_indexable": true,
+            "meta_directives": [
+              "index, follow, max-snippet:-1, max-video-preview:-1, max-image-preview:large"
+            ],
+            "x_robots_tag": ""
+          },
+          "message": "Index directives agree with the configured expectation.",
+          "remediation_hint": "Align robots meta and X-Robots-Tag with the configured indexability policy.",
+          "rule_id": "index_directives",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "entry_count": 5,
+            "sampled_page_count": 0,
+            "url": "https://zoogosports.com/sitemap_index.xml"
+          },
+          "message": "The sitemap XML is valid and its sampled URLs are on the configured origin.",
+          "remediation_hint": "Publish a valid same-origin sitemap and include canonical public URLs.",
+          "rule_id": "sitemap_validity",
+          "scope": "site_sample",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "canonical": "https://zoogosports.com/",
+            "target_status": 200
+          },
+          "message": "The canonical URL is valid, on the preferred origin, and its target is successful or self-referential.",
+          "remediation_hint": "Use one valid canonical URL on the configured preferred origin and verify its target.",
+          "rule_id": "canonical_target",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "title",
+            "value": "Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO"
+          },
+          "message": "The HTML title is present.",
+          "remediation_hint": "Add a concise, page-specific HTML title.",
+          "rule_id": "title_present",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "duplicate_groups": [],
+            "sampled_titled_pages": 3
+          },
+          "message": "No duplicate titles were found in the frozen sample.",
+          "remediation_hint": "Review repeated titles and make them distinguish the represented pages.",
+          "rule_id": "duplicate_titles",
+          "scope": "site_sample",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "meta[name=description]",
+            "value": "ZOOGO manufactures knee, hand, and lumbar massage devices in Yongkang, China. Wholesale, private label, and OEM/ODM programs with confirmed specifications."
+          },
+          "message": "A non-empty meta description is present.",
+          "remediation_hint": "Consider adding a page-specific meta description for search snippets.",
+          "rule_id": "meta_description",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "h1_count": 1,
+            "heading": "Knee, Hand & Lumbar Massage Devices from the Manufacturer"
+          },
+          "message": "Exactly one H1 was found; this structural check is not a ranking guarantee.",
+          "remediation_hint": "Review the main heading structure; this heuristic is not a ranking penalty.",
+          "rule_id": "heading_structure",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "broken_links": [],
+            "checked_links": 139,
+            "inconclusive_links": [
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/products/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/knee-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/products/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              }
+            ],
+            "results": [
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/product-categories/knee-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/products/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/knee-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              }
+            ]
+          },
+          "message": "At least one sampled internal-link request was inconclusive; it is not counted as a broken page.",
+          "remediation_hint": "Repair confirmed broken in-scope internal links; retry inconclusive network checks.",
+          "rule_id": "internal_links",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "unknown",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "image_count": 11,
+            "missing_alt_count": 0
+          },
+          "message": "Every captured image has an alt attribute.",
+          "remediation_hint": "Review images without alt attributes and provide appropriate text or an empty decorative alt.",
+          "rule_id": "image_alt",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "mismatches": [
+              "Knee, Hand &amp; Lumbar Massage Device Manufacturer | ZOOGO"
+            ],
+            "structured_names": [
+              "ZOOGO",
+              "ZOOGO",
+              "Knee, Hand &amp; Lumbar Massage Device Manufacturer | ZOOGO"
+            ],
+            "visible_labels": [
+              "Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO",
+              "Knee, Hand & Lumbar Massage Devices from the Manufacturer"
+            ]
+          },
+          "message": "Structured names differ from visible page labels and require human comparison.",
+          "remediation_hint": "Correct invalid or incomplete JSON-LD and manually verify it against visible page content.",
+          "rule_id": "jsonld_consistency",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/",
+          "status": "needs_review",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "redirect_chain": [],
+            "status_code": 200,
+            "url": "https://zoogosports.com/products/"
+          },
+          "message": "The page returned a successful HTTP response through a validated redirect chain.",
+          "remediation_hint": "Check the expected page response and validated redirect chain.",
+          "rule_id": "http_status_redirect",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "robots_missing": false,
+            "robots_url": "https://zoogosports.com/robots.txt",
+            "status_code": 200,
+            "url": "https://zoogosports.com/products/"
+          },
+          "message": "robots.txt does not block this expected public page.",
+          "remediation_hint": "Review robots.txt and the intended crawl policy for this URL.",
+          "rule_id": "robots_access",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "expected_indexable": true,
+            "meta_directives": [
+              "index, follow, max-snippet:-1, max-video-preview:-1, max-image-preview:large"
+            ],
+            "x_robots_tag": ""
+          },
+          "message": "Index directives agree with the configured expectation.",
+          "remediation_hint": "Align robots meta and X-Robots-Tag with the configured indexability policy.",
+          "rule_id": "index_directives",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "entry_count": 5,
+            "sampled_page_count": 0,
+            "url": "https://zoogosports.com/sitemap_index.xml"
+          },
+          "message": "The sitemap XML is valid and its sampled URLs are on the configured origin.",
+          "remediation_hint": "Publish a valid same-origin sitemap and include canonical public URLs.",
+          "rule_id": "sitemap_validity",
+          "scope": "site_sample",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "canonical": "https://zoogosports.com/products/",
+            "target_status": 200
+          },
+          "message": "The canonical URL is valid, on the preferred origin, and its target is successful or self-referential.",
+          "remediation_hint": "Use one valid canonical URL on the configured preferred origin and verify its target.",
+          "rule_id": "canonical_target",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "title",
+            "value": "Wholesale Massage Equipment Catalog | ZOOGO"
+          },
+          "message": "The HTML title is present.",
+          "remediation_hint": "Add a concise, page-specific HTML title.",
+          "rule_id": "title_present",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "duplicate_groups": [],
+            "sampled_titled_pages": 3
+          },
+          "message": "No duplicate titles were found in the frozen sample.",
+          "remediation_hint": "Review repeated titles and make them distinguish the represented pages.",
+          "rule_id": "duplicate_titles",
+          "scope": "site_sample",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "meta[name=description]",
+            "value": "Browse the wholesale massage equipment catalog: knee, hand, and lumbar massagers with confirmed specifications. Submit quantity and market for a quotation."
+          },
+          "message": "A non-empty meta description is present.",
+          "remediation_hint": "Consider adding a page-specific meta description for search snippets.",
+          "rule_id": "meta_description",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "h1_count": 1,
+            "heading": "Wholesale Massage Equipment Catalog"
+          },
+          "message": "Exactly one H1 was found; this structural check is not a ranking guarantee.",
+          "remediation_hint": "Review the main heading structure; this heuristic is not a ranking penalty.",
+          "rule_id": "heading_structure",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "broken_links": [],
+            "checked_links": 136,
+            "inconclusive_links": [
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/knee-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              }
+            ],
+            "results": [
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/product-categories/knee-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/knee-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              }
+            ]
+          },
+          "message": "At least one sampled internal-link request was inconclusive; it is not counted as a broken page.",
+          "remediation_hint": "Repair confirmed broken in-scope internal links; retry inconclusive network checks.",
+          "rule_id": "internal_links",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "unknown",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "image_count": 4,
+            "missing_alt_count": 0
+          },
+          "message": "Every captured image has an alt attribute.",
+          "remediation_hint": "Review images without alt attributes and provide appropriate text or an empty decorative alt.",
+          "rule_id": "image_alt",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "script_count": 0
+          },
+          "message": "No JSON-LD was present; absence alone is not an indexability failure.",
+          "remediation_hint": "Correct invalid or incomplete JSON-LD and manually verify it against visible page content.",
+          "rule_id": "jsonld_consistency",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/products/",
+          "status": "not_applicable",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "redirect_chain": [],
+            "status_code": 200,
+            "url": "https://zoogosports.com/product-categories/knee-massagers/"
+          },
+          "message": "The page returned a successful HTTP response through a validated redirect chain.",
+          "remediation_hint": "Check the expected page response and validated redirect chain.",
+          "rule_id": "http_status_redirect",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "robots_missing": false,
+            "robots_url": "https://zoogosports.com/robots.txt",
+            "status_code": 200,
+            "url": "https://zoogosports.com/product-categories/knee-massagers/"
+          },
+          "message": "robots.txt does not block this expected public page.",
+          "remediation_hint": "Review robots.txt and the intended crawl policy for this URL.",
+          "rule_id": "robots_access",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "expected_indexable": true,
+            "meta_directives": [
+              "index, follow, max-snippet:-1, max-video-preview:-1, max-image-preview:large"
+            ],
+            "x_robots_tag": ""
+          },
+          "message": "Index directives agree with the configured expectation.",
+          "remediation_hint": "Align robots meta and X-Robots-Tag with the configured indexability policy.",
+          "rule_id": "index_directives",
+          "scope": "page",
+          "severity": "error",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "entry_count": 5,
+            "sampled_page_count": 0,
+            "url": "https://zoogosports.com/sitemap_index.xml"
+          },
+          "message": "The sitemap XML is valid and its sampled URLs are on the configured origin.",
+          "remediation_hint": "Publish a valid same-origin sitemap and include canonical public URLs.",
+          "rule_id": "sitemap_validity",
+          "scope": "site_sample",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "canonical": "https://zoogosports.com/product-categories/knee-massagers/",
+            "target_status": 200
+          },
+          "message": "The canonical URL is valid, on the preferred origin, and its target is successful or self-referential.",
+          "remediation_hint": "Use one valid canonical URL on the configured preferred origin and verify its target.",
+          "rule_id": "canonical_target",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "title",
+            "value": "Knee Massagers Wholesale & OEM | ZOOGO"
+          },
+          "message": "The HTML title is present.",
+          "remediation_hint": "Add a concise, page-specific HTML title.",
+          "rule_id": "title_present",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "duplicate_groups": [],
+            "sampled_titled_pages": 3
+          },
+          "message": "No duplicate titles were found in the frozen sample.",
+          "remediation_hint": "Review repeated titles and make them distinguish the represented pages.",
+          "rule_id": "duplicate_titles",
+          "scope": "site_sample",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "element": "meta[name=description]",
+            "value": "Image-based wholesale range of electric knee massage devices. Submit your target market and quantity to receive specifications and commercial terms."
+          },
+          "message": "A non-empty meta description is present.",
+          "remediation_hint": "Consider adding a page-specific meta description for search snippets.",
+          "rule_id": "meta_description",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "h1_count": 1,
+            "heading": "Knee Massagers"
+          },
+          "message": "Exactly one H1 was found; this structural check is not a ranking guarantee.",
+          "remediation_hint": "Review the main heading structure; this heuristic is not a ranking penalty.",
+          "rule_id": "heading_structure",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "broken_links": [],
+            "checked_links": 109,
+            "inconclusive_links": [
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product/electric-knee-massager/"
+              }
+            ],
+            "results": [
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/product-categories/knee-massagers/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/product-categories/knee-massagers/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/products/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/product-categories/knee-massagers/"
+              },
+              {
+                "error": null,
+                "in_scope": true,
+                "redirect_chain": [],
+                "status_code": 200,
+                "url": "https://zoogosports.com/product-categories/knee-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/request-a-quote/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/hand-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/product-categories/lumbar-massagers/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/oem-odm/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/quality-compliance/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/about-us/"
+              },
+              {
+                "error": "bounded audit page sample was reached",
+                "in_scope": true,
+                "status_code": 0,
+                "url": "https://zoogosports.com/faq/"
+              }
+            ]
+          },
+          "message": "At least one sampled internal-link request was inconclusive; it is not counted as a broken page.",
+          "remediation_hint": "Repair confirmed broken in-scope internal links; retry inconclusive network checks.",
+          "rule_id": "internal_links",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "unknown",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "image_count": 1,
+            "missing_alt_count": 0
+          },
+          "message": "Every captured image has an alt attribute.",
+          "remediation_hint": "Review images without alt attributes and provide appropriate text or an empty decorative alt.",
+          "rule_id": "image_alt",
+          "scope": "page",
+          "severity": "info",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "pass",
+          "version": "1.0.0"
+        },
+        {
+          "evidence": {
+            "objects_checked": 5,
+            "supported_required_field_profile": [
+              "article",
+              "blogposting",
+              "breadcrumblist",
+              "faqpage",
+              "localbusiness",
+              "newsarticle",
+              "organization",
+              "product",
+              "webpage",
+              "website"
+            ],
+            "unsupported_types": [
+              "CollectionPage",
+              "ItemList"
+            ]
+          },
+          "message": "Some JSON-LD types are outside the deterministic required-field profile.",
+          "remediation_hint": "Correct invalid or incomplete JSON-LD and manually verify it against visible page content.",
+          "rule_id": "jsonld_consistency",
+          "scope": "page",
+          "severity": "warning",
+          "snapshot_url": "https://zoogosports.com/product-categories/knee-massagers/",
+          "status": "needs_review",
+          "version": "1.0.0"
+        }
+      ],
+      "rule_status_counts": {
+        "needs_review": 2,
+        "not_applicable": 1,
+        "pass": 30,
+        "unknown": 3
+      },
+      "sitemap": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogosports.com/sitemap_index.xml"
+      },
+      "status": "succeeded"
+    }
+  ]
+}

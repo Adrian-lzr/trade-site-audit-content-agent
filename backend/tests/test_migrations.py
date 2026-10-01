@@ -27,7 +27,26 @@ def test_alembic_upgrade_head_creates_minimal_schema(monkeypatch):
         assert "is_synthetic" in {column["name"] for column in inspector.get_columns("page_snapshots")}
         assert {"subject", "predicate", "value", "unit", "source_id", "source_locator", "visibility", "status", "version", "valid_from", "valid_until", "reviewer"}.issubset({column["name"] for column in inspector.get_columns("facts")})
         assert {"change_requests", "change_revisions", "change_approvals", "outbox_events", "publication_attempts"}.issubset(set(inspector.get_table_names()))
-        assert "idempotency_key" in {column["name"] for column in inspector.get_columns("outbox_events")}
+        assert {"idempotency_key", "lease_token", "lease_expires_at", "attempts", "last_error"}.issubset({column["name"] for column in inspector.get_columns("outbox_events")})
+        publication_columns = {column["name"] for column in inspector.get_columns("publication_attempts")}
+        assert {"idempotency_key", "target", "branch", "commit_sha", "external_id", "updated_at", "deployment_status", "deployment_id", "deployed_commit_sha", "deployed_at", "verified_at", "rollback_of_attempt_id", "expected_current_sha", "rollback_reason"}.issubset(publication_columns)
+        rollback_foreign_keys = inspector.get_foreign_keys("publication_attempts")
+        assert any(
+            foreign_key.get("name") == "fk_publication_attempts_rollback_of"
+            and foreign_key.get("referred_table") == "publication_attempts"
+            and foreign_key.get("constrained_columns") == ["rollback_of_attempt_id"]
+            for foreign_key in rollback_foreign_keys
+        )
+        visibility_run_columns = {column["name"] for column in inspector.get_columns("visibility_runs")}
+        assert {
+            "provider_config_version",
+            "prompt_version",
+            "pricing_basis_json",
+            "request_id",
+            "reserved_cost_usd",
+        }.issubset(visibility_run_columns)
+        visibility_sample_columns = {column["name"] for column in inspector.get_columns("visibility_samples")}
+        assert {"request_id", "estimated_cost_usd"}.issubset(visibility_sample_columns)
         migration_engine.dispose()
     finally:
         os.environ.pop("DATABASE_URL", None)

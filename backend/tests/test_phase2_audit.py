@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from backend.audit import execute_job
 from backend.audit_rules import RULES, RULE_VERSION
-from backend.crawler import CrawlResult
+from backend.crawler import CrawlResult, is_sitemap_url
 from backend.database import SessionLocal
 from backend.models import AuditFinding, AuditRuleResult, Job, PageSnapshot, Site, Workspace
 
@@ -104,3 +104,11 @@ def test_unavailable_robots_produces_unknown_rule_without_fetching_page():
         assert not any(urlsplit(url).path == "/" for url in crawler.calls)
         assert db.scalar(select(AuditRuleResult.id).where(AuditRuleResult.snapshot_id == snapshot.id)) is not None
         assert len(db.scalars(select(AuditRuleResult).where(AuditRuleResult.snapshot_id == snapshot.id)).all()) == 12
+
+
+def test_wordpress_sitemap_name_is_accepted_as_a_control_resource():
+    assert is_sitemap_url("https://example.test/sitemap.xml")
+    assert is_sitemap_url("https://example.test/wp-sitemap.xml")
+    assert is_sitemap_url("/wp-sitemap-posts-product-1.xml")
+    assert not is_sitemap_url("https://example.test/sitemap.html")
+    assert not is_sitemap_url("https://other.test/not-a-sitemap.xml")

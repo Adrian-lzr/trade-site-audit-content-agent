@@ -118,6 +118,15 @@ def normalize_path(path: str) -> str:
     return normalized if normalized.startswith("/") else "/" + normalized
 
 
+def is_sitemap_url(value: str) -> bool:
+    """Recognize common same-origin sitemap XML resource names."""
+
+    parsed = urlparse(value)
+    path = parsed.path if parsed.scheme else value
+    filename = path.rstrip("/").rsplit("/", 1)[-1].lower()
+    return filename.endswith(".xml") and filename.startswith(("sitemap", "wp-sitemap"))
+
+
 def validate_target(url: str, base_url: str, allowed_paths: list[str], *, allow_loopback: bool = settings.allow_loopback) -> set[ipaddress._BaseAddress]:
     return _validated_target(url, base_url, allowed_paths, allow_loopback=allow_loopback)[1]
 
@@ -171,7 +180,7 @@ class FixtureCrawler:
         parsed = urlparse(url)
         path = (parsed.path or "/").lower()
         is_robots = path == "/robots.txt"
-        is_sitemap = path.rsplit("/", 1)[-1].startswith("sitemap") and path.endswith(".xml")
+        is_sitemap = is_sitemap_url(url)
         if not (is_robots or is_sitemap):
             raise CrawlError("control resource must be robots.txt or a sitemap XML file")
         return self.fetch(url, base_url=base_url, allowed_paths=["/"], allow_loopback=allow_loopback)

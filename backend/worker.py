@@ -40,9 +40,24 @@ class JobWorker:
             if job_id is None:
                 # Content tasks share this worker process but have their own lease
                 # and checkpoint lifecycle. Import lazily to avoid startup cycles.
-                from .content_worker import ContentGenerationWorker
+                # A missing optional workflow dependency must not prevent unrelated
+                # publication or visibility work from progressing. The dependency
+                # is still reported by the content worker when content work exists.
+                try:
+                    from .content_worker import ContentGenerationWorker
+                except ModuleNotFoundError as exc:
+                    if exc.name != "langgraph":
+                        raise
+                else:
+                    if ContentGenerationWorker().run_once():
+                        return True
+                from .publication_worker import PublicationWorker
 
-                return ContentGenerationWorker().run_once()
+                if PublicationWorker().run_once():
+                    return True
+                from .visibility_worker import VisibilityWorker
+
+                return VisibilityWorker().run_once()
         with SessionLocal() as work_db:
             try:
                 execute_job(work_db, job_id)

@@ -44,6 +44,20 @@ class ChangeState(StrEnum):
     rolled_back = "rolled_back"
 
 
+class VisibilityRunStatus(StrEnum):
+    queued = "queued"
+    running = "running"
+    succeeded = "succeeded"
+    partial = "partial"
+    failed = "failed"
+
+
+class VisibilitySampleStatus(StrEnum):
+    succeeded = "succeeded"
+    failed = "failed"
+    unavailable = "unavailable"
+
+
 class Workspace(Base):
     __tablename__ = "workspaces"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -52,6 +66,45 @@ class Workspace(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     sites: Mapped[list["Site"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
     facts: Mapped[list["Fact"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+    memberships: Mapped[list["Membership"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+    audit_events: Mapped[list["AuditEvent"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+
+
+class Membership(Base):
+    """Workspace membership metadata; user_id is an application supplied actor key.
+
+    This table does not authenticate or provision users. Until an identity provider is
+    integrated, callers must treat ``user_id`` as an explicit request/system actor value.
+    """
+
+    __tablename__ = "memberships"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "user_id", name="uq_membership_workspace_user"),
+        CheckConstraint("role IN ('viewer', 'operator', 'reviewer', 'admin')", name="ck_membership_role"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(20), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    workspace: Mapped[Workspace] = relationship(back_populates="memberships")
+
+
+class AuditEvent(Base):
+    """Append-only audit trail entry with explicit, unauthenticated actor metadata."""
+
+    __tablename__ = "audit_events"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    actor: Mapped[str] = mapped_column(String(255), nullable=False)
+    action: Mapped[str] = mapped_column(String(120), nullable=False)
+    target_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    target_id: Mapped[str] = mapped_column(String(120), nullable=False)
+    before_version_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
+    after_version_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
+    run_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    workspace: Mapped[Workspace] = relationship(back_populates="audit_events")
 
 
 class Site(Base):
@@ -203,6 +256,8 @@ class PageSnapshot(Base):
     headers_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
     is_synthetic: Mapped[bool] = mapped_column(default=False, nullable=False)
     audit_rule_version: Mapped[str] = mapped_column(String(40), default="1.0.0", nullable=False)
+    artifact_uri: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    parser_version: Mapped[str | None] = mapped_column(String(120), nullable=True)
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     page: Mapped[Page] = relationship(back_populates="snapshots")
     findings: Mapped[list["AuditFinding"]] = relationship(back_populates="snapshot", cascade="all, delete-orphan")
@@ -430,16 +485,117 @@ class OutboxEvent(Base):
     payload_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lease_token: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class PublicationAttempt(Base):
     __tablename__ = "publication_attempts"
+    __table_args__ = (UniqueConstraint("idempotency_key", name="uq_publication_attempt_idempotency_key"),)
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     change_request_id: Mapped[int] = mapped_column(ForeignKey("change_requests.id", ondelete="CASCADE"), nullable=False)
     revision_id: Mapped[int] = mapped_column(ForeignKey("change_revisions.id", ondelete="CASCADE"), nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    target: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     status: Mapped[str] = mapped_column(String(30), nullable=False)
+    branch: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    commit_sha: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    external_id: Mapped[str | None] = mapped_column(String(500), nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    deployment_status: Mapped[str] = mapped_column(String(30), default="not_started", nullable=False)
+    deployment_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    deployed_commit_sha: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    deployed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    rollback_of_attempt_id: Mapped[int | None] = mapped_column(ForeignKey("publication_attempts.id", ondelete="SET NULL"), nullable=True)
+    expected_current_sha: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    rollback_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
 
     request: Mapped[ChangeRequest] = relationship(back_populates="publication_attempts")
     revision: Mapped[ChangeRevision] = relationship()
+
+
+class VisibilityRun(Base):
+    __tablename__ = "visibility_runs"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["workspace_id", "site_id"],
+            ["sites.workspace_id", "sites.id"],
+            name="fk_visibility_run_site_workspace",
+            ondelete="CASCADE",
+        ),
+        CheckConstraint("status IN ('queued', 'running', 'succeeded', 'partial', 'failed')", name="ck_visibility_run_status"),
+        UniqueConstraint("idempotency_key", name="uq_visibility_run_idempotency_key"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    site_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    question_set_id: Mapped[int] = mapped_column(ForeignKey("procurement_question_sets.id", ondelete="CASCADE"), nullable=False)
+    question_set_version_id: Mapped[int] = mapped_column(ForeignKey("procurement_question_set_versions.id", ondelete="CASCADE"), nullable=False)
+    provider: Mapped[str] = mapped_column(String(80), nullable=False)
+    provider_kind: Mapped[str] = mapped_column(String(40), nullable=False)
+    provider_model: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    provider_config_version: Mapped[str] = mapped_column(String(120), default="visibility-provider-v1", nullable=False)
+    prompt_version: Mapped[str] = mapped_column(String(120), default="visibility-prompt-v1", nullable=False)
+    pricing_basis_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
+    request_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default=VisibilityRunStatus.queued.value, nullable=False)
+    is_synthetic: Mapped[bool] = mapped_column(default=False, nullable=False)
+    market: Mapped[str] = mapped_column(String(120), nullable=False)
+    language: Mapped[str] = mapped_column(String(35), nullable=False)
+    capability_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
+    idempotency_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    brand_terms_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    budget_usd: Mapped[str] = mapped_column(String(30), default="0", nullable=False)
+    planned_samples: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    successful_samples: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    failed_samples: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    total_cost_usd: Mapped[str] = mapped_column(String(30), default="0", nullable=False)
+    reserved_cost_usd: Mapped[str] = mapped_column(String(30), default="0", nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    lease_token: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+    samples: Mapped[list["VisibilitySample"]] = relationship(back_populates="run", cascade="all, delete-orphan", order_by="VisibilitySample.id")
+
+
+class VisibilitySample(Base):
+    __tablename__ = "visibility_samples"
+    __table_args__ = (
+        CheckConstraint("status IN ('succeeded', 'failed', 'unavailable')", name="ck_visibility_sample_status"),
+        UniqueConstraint("run_id", "question_id", name="uq_visibility_run_question"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    run_id: Mapped[int] = mapped_column(ForeignKey("visibility_runs.id", ondelete="CASCADE"), nullable=False)
+    question_id: Mapped[int] = mapped_column(ForeignKey("procurement_questions.id", ondelete="CASCADE"), nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    brand_query: Mapped[bool] = mapped_column(default=False, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    raw_response: Mapped[str | None] = mapped_column(Text, nullable=True)
+    answer_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    citations_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    mentioned_domains_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    provider_request_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    request_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    model: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cost_usd: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    estimated_cost_usd: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+    run: Mapped[VisibilityRun] = relationship(back_populates="samples")
+    question: Mapped[ProcurementQuestion] = relationship()

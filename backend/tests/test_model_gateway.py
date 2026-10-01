@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import httpx
 import pytest
 
-from backend.content_workflow import ConfirmedFact, DraftRequest, validate_structured_draft
+from backend.content_workflow import ConfirmedFact, DraftNeedsInformation, DraftRequest, validate_structured_draft
 from backend.model_gateway import (
     FixtureModelDraftGateway,
     ModelGatewayConfig,
@@ -67,6 +67,8 @@ def _request(
     generation_id: str = "change:44:draft:0",
     summary: str = "Write a concise valve listing",
     procurement_context: dict[str, str] | None = None,
+    external_guidance: tuple[dict[str, str], ...] = (),
+    snapshot_context: str = "",
 ) -> DraftRequest:
     return DraftRequest(
         generation_id=generation_id,
@@ -74,6 +76,8 @@ def _request(
         request_summary=summary,
         facts=(_fact(),),
         procurement_context=procurement_context or {},
+        external_guidance=external_guidance,
+        snapshot_context=snapshot_context,
     )
 
 
@@ -155,7 +159,16 @@ def test_gateway_sends_stable_json_mode_request_and_caches_generation():
     assert user_prompt["role"] == "user"
     user_data = json.loads(user_prompt["content"])
     assert user_data["procurement_context"] == {}
+    assert user_data["page_snapshot_context"] == ""
     assert user_data["request_summary"] == request.request_summary
+    assert user_data["cache_key_material"] == {
+        "schema_version": "draft-cache-v2",
+        "model": "fixture-model",
+        "prompt_version": "procurement-fact-constraint-v1",
+        "rule_set_version": "structured-draft-v1",
+        "snapshot_hash": "",
+        "fact_versions": [{"fact_id": 11, "series_id": "synthetic-series-11", "version": 1}],
+    }
     assert user_data["confirmed_facts"] == [
         {
             "fact_id": 11,
@@ -199,6 +212,54 @@ def test_model_gateway_includes_procurement_context_as_untrusted_intent_metadata
     assert "intent metadata" in system_prompt["content"]
     assert "procurement_context" in system_prompt["content"]
     gateway.close()
+
+
+def test_model_gateway_passes_traced_guidance_only_as_untrusted_policy_context():
+    guidance = ({
+        "id": "google-search-essentials",
+        "title": "Google Search Essentials",
+        "summary": "Do not claim a ranking guarantee.",
+        "scope": "Google Search only.",
+        "market_scope": "Google Search",
+        "source_url": "https://developers.google.com/search/docs/essentials",
+        "source_date": "2025-12-10",
+        "accessed_at": "2026-09-30",
+        "last_verified_at": "2026-09-30",
+        "freshness_policy": "revalidate_before_use",
+        "source_kind": "official_guidance",
+        "topic_tags": "search,policy",
+        "license": "CC BY 4.0",
+    },)
+    request = _request(external_guidance=guidance)
+    gateway = OpenAICompatibleDraftGateway(
+        _config(),
+        transport=httpx.MockTransport(lambda _: _completion('{"title":"Valve"}')),
+    )
+    try:
+        payload = gateway._request_payload(request)
+    finally:
+        gateway.close()
+
+    system_prompt, user_prompt = payload["messages"]
+    user_data = json.loads(user_prompt["content"])
+    assert user_data["external_guidance"] == [guidance[0]]
+    assert "use it to improve drafting structure, clarity, completeness, and missing-information questions" in system_prompt["content"]
+    assert "never as evidence about this supplier or product" in system_prompt["content"]
+    assert "proof of technical, legal, or certification applicability" in system_prompt["content"]
+    assert "Use only confirmed_facts" in system_prompt["content"]
+
+
+def test_model_gateway_includes_snapshot_context_as_untrusted_data():
+    request = _request(snapshot_context="<p>Existing page baseline</p>")
+    gateway = OpenAICompatibleDraftGateway(_config(), transport=httpx.MockTransport(lambda _: _completion('{"title":"Valve"}')))
+    try:
+        payload = gateway._request_payload(request)
+    finally:
+        gateway.close()
+    system_prompt, user_prompt = payload["messages"]
+    user_data = json.loads(user_prompt["content"])
+    assert user_data["page_snapshot_context"] == "<p>Existing page baseline</p>"
+    assert "untrusted page data" in system_prompt["content"]
 
 
 def test_provider_error_does_not_expose_body_or_credential():
@@ -343,6 +404,76 @@ def test_fixture_gateway_uses_procurement_question_to_select_and_shape_confirmed
     assert "product drawing" in drawing["body"].casefold()
     assert validate_structured_draft(pressure, facts) == []
     assert validate_structured_draft(drawing, facts) == []
+
+
+@pytest.mark.parametrize(
+    ("question", "predicate"),
+    [
+        (
+            "How do I select a valve for the fluid and operating conditions in my application?",
+            "material_grade_status",
+        ),
+        (
+            "What should I compare when choosing between different industrial valve types?",
+            "quotation_request_checklist",
+        ),
+    ],
+)
+def test_fixture_gateway_does_not_echo_facts_without_a_topic_match(question: str, predicate: str):
+    unrelated = _fact(
+        fact_id=31,
+        subject="Industrial valve",
+        predicate=predicate,
+        value="UNRELATED-FACT-MUST-NOT-APPEAR",
+        unit=None,
+    )
+    request = DraftRequest(
+        generation_id="local:46:unsupported-topic",
+        change_request_id=46,
+        request_summary="Prepare a concise buyer FAQ.",
+        facts=(unrelated,),
+        procurement_context={
+            "question": question,
+            "product": "Industrial valves",
+            "use_case": "industrial flow control",
+            "buyer_role": "application engineer",
+        },
+    )
+
+    draft = FixtureModelDraftGateway().draft(request)
+
+    assert isinstance(draft, DraftNeedsInformation)
+    assert "no directly relevant confirmed supplier facts" in draft.summary.casefold()
+    assert "UNRELATED-FACT-MUST-NOT-APPEAR" not in draft.summary
+
+
+def test_fixture_gateway_matches_plural_materials_question_to_material_fact():
+    fact = _fact(
+        fact_id=32,
+        subject="Industrial valve",
+        predicate="material_grade_status",
+        value="No material grade is asserted; confirm the applicable model record.",
+        unit=None,
+    )
+    request = DraftRequest(
+        generation_id="local:47:materials",
+        change_request_id=47,
+        request_summary="Prepare a concise buyer FAQ.",
+        facts=(fact,),
+        procurement_context={
+            "question": "How can I verify the materials used in a specific valve model?",
+            "product": "Industrial valves",
+            "use_case": "industrial flow control",
+            "buyer_role": "quality engineer",
+        },
+    )
+
+    draft = FixtureModelDraftGateway().draft(request)
+
+    assert draft["title"] == "Industrial valves: Materials"
+    assert "No material grade is asserted" in draft["body"]
+    assert "material grade status" in draft["faq"][0]["answer"]
+    assert "do not directly answer" not in draft["faq"][0]["answer"]
 
 
 def test_gateway_configuration_rejects_unbounded_or_credential_bearing_urls():

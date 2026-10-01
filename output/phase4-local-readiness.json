@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "database": "sqlite",
+  "database_path": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\trade-visibility-readiness-nmfq_ei6\\readiness.sqlite",
+  "repository": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\trade-visibility-readiness-nmfq_ei6\\repository",
+  "initial_commit": "b541bd47b1bfed0c281bdd467426d873dab4c46d",
+  "pages": 5,
+  "published_attempts": 5,
+  "deployment_callbacks": 5,
+  "verified_deployments": 5,
+  "rollback": {
+    "source_attempt_id": 1,
+    "rollback_attempt_id": 6,
+    "source_commit": "078117d6e2385116dd1a5f67a999950b0cb987c7",
+    "rollback_commit": "810fb20e2aff252a44be06080394889074bfe9e5",
+    "source_final_status": "rolled_back",
+    "rollback_final_status": "verified"
+  },
+  "idempotency": {
+    "publication_replay_rejected": true,
+    "publication_outbox_unique": true,
+    "rollback_replay_same_attempt": true
+  },
+  "external_side_effects": {
+    "remote_git_push": false,
+    "cms_write": false,
+    "external_deployment": false,
+    "deployment_callbacks_are_local_state": true
+  },
+  "workdir_retained": false
+}

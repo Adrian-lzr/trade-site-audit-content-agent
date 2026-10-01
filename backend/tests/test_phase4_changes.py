@@ -50,20 +50,20 @@ def test_change_draft_submit_approval_and_idempotent_outbox():
         )
         assert tampered_hash.status_code == 409
 
-        submitted = client.post(f"/api/changes/{change['id']}/submit-approval", headers={"If-Match": '"1"'})
+        submitted = client.post(f"/api/changes/{change['id']}/submit-approval?workspace_id={workspace_id}", headers={"If-Match": '"1"'})
         assert submitted.status_code == 200, submitted.text
         assert submitted.json()["state"] == "pending_approval"
-        duplicate_submit = client.post(f"/api/changes/{change['id']}/submit-approval", json={"expected_version": 1})
+        duplicate_submit = client.post(f"/api/changes/{change['id']}/submit-approval?workspace_id={workspace_id}", json={"expected_version": 1})
         assert duplicate_submit.status_code == 200
         approved = client.post(
-            f"/api/changes/{change['id']}/approval",
+            f"/api/changes/{change['id']}/approval?workspace_id={workspace_id}",
             headers={"If-Match": '"1"'},
             json={"reviewer": "alice", "decision": "approved", "revision_id": change["revision"]["id"], "revision_hash": revision_hash, "expected_version": 1},
         )
         assert approved.status_code == 200, approved.text
         assert approved.json()["state"] == "approved"
         duplicate_approval = client.post(
-            f"/api/changes/{change['id']}/approval",
+            f"/api/changes/{change['id']}/approval?workspace_id={workspace_id}",
             json={"reviewer": "alice", "decision": "approved", "revision_id": change["revision"]["id"], "revision_hash": revision_hash, "expected_version": 1},
         )
         assert duplicate_approval.status_code == 200
@@ -78,16 +78,16 @@ def test_new_revision_invalidates_old_approval_and_requires_if_match():
     workspace_id, site_id = _site("revision")
     with TestClient(app) as client:
         change = client.post(f"/api/workspaces/{workspace_id}/sites/{site_id}/changes", json=_change_payload(workspace_id, site_id)).json()
-        client.post(f"/api/changes/{change['id']}/submit-approval", json={"expected_version": 1})
+        client.post(f"/api/changes/{change['id']}/submit-approval?workspace_id={workspace_id}", json={"expected_version": 1})
         old_revision = change["revision"]
-        assert client.post(f"/api/changes/{change['id']}/approval", json={"reviewer": "alice", "decision": "approved", "revision_id": old_revision["id"], "revision_hash": old_revision["content_hash"], "expected_version": 1}).status_code == 200
-        revised = client.post(f"/api/changes/{change['id']}/revisions", headers={"If-Match": '"1"'}, json={"field_diff": {"body": "new"}, "expected_version": 1})
+        assert client.post(f"/api/changes/{change['id']}/approval?workspace_id={workspace_id}", json={"reviewer": "alice", "decision": "approved", "revision_id": old_revision["id"], "revision_hash": old_revision["content_hash"], "expected_version": 1}).status_code == 200
+        revised = client.post(f"/api/changes/{change['id']}/revisions?workspace_id={workspace_id}", headers={"If-Match": '"1"'}, json={"field_diff": {"body": "new"}, "expected_version": 1})
         assert revised.status_code == 200, revised.text
         assert revised.json()["state"] == "draft"
         assert revised.json()["approvals"]
-        stale = client.post(f"/api/changes/{change['id']}/revisions", headers={"If-Match": '"1"'}, json={"field_diff": {"body": "another"}, "expected_version": 1})
+        stale = client.post(f"/api/changes/{change['id']}/revisions?workspace_id={workspace_id}", headers={"If-Match": '"1"'}, json={"field_diff": {"body": "another"}, "expected_version": 1})
         assert stale.status_code == 409
-        assert client.post(f"/api/changes/{change['id']}/approval", json={"reviewer": "alice", "decision": "approved", "revision_id": old_revision["id"], "revision_hash": old_revision["content_hash"], "expected_version": 3}).status_code == 409
+        assert client.post(f"/api/changes/{change['id']}/approval?workspace_id={workspace_id}", json={"reviewer": "alice", "decision": "approved", "revision_id": old_revision["id"], "revision_hash": old_revision["content_hash"], "expected_version": 3}).status_code == 409
 
 
 def test_change_workspace_isolation_snapshot_and_fact_validation():
@@ -151,16 +151,16 @@ def test_publish_rechecks_fact_public_visibility():
         )
         assert change_response.status_code == 201, change_response.text
         change = change_response.json()
-        assert client.post(f"/api/changes/{change['id']}/submit-approval", json={"expected_version": 1}).status_code == 200
+        assert client.post(f"/api/changes/{change['id']}/submit-approval?workspace_id={workspace_id}", json={"expected_version": 1}).status_code == 200
         approved = client.post(
-            f"/api/changes/{change['id']}/approval",
+            f"/api/changes/{change['id']}/approval?workspace_id={workspace_id}",
             json={"reviewer": "alice", "decision": "approved", "revision_id": change["revision"]["id"], "revision_hash": change["revision"]["content_hash"], "expected_version": 1},
         )
         assert approved.status_code == 200, approved.text
         with SessionLocal() as db:
             db.get(Fact, fact_id).visibility = "internal_only"
             db.commit()
-        response = client.post(f"/api/changes/{change['id']}/publish", json={"expected_version": 1})
+        response = client.post(f"/api/changes/{change['id']}/publish?workspace_id={workspace_id}", json={"expected_version": 1})
         assert response.status_code == 409
 
 
@@ -168,10 +168,10 @@ def test_publish_requires_current_base_snapshot_binding():
     workspace_id, site_id = _site("publish")
     with TestClient(app) as client:
         change = client.post(f"/api/workspaces/{workspace_id}/sites/{site_id}/changes", json=_change_payload(workspace_id, site_id)).json()
-        assert client.post(f"/api/changes/{change['id']}/submit-approval", json={"expected_version": 1}).status_code == 200
+        assert client.post(f"/api/changes/{change['id']}/submit-approval?workspace_id={workspace_id}", json={"expected_version": 1}).status_code == 200
         assert client.post(
-            f"/api/changes/{change['id']}/approval",
+            f"/api/changes/{change['id']}/approval?workspace_id={workspace_id}",
             json={"reviewer": "alice", "decision": "approved", "revision_id": change["revision"]["id"], "revision_hash": change["revision"]["content_hash"], "expected_version": 1},
         ).status_code == 200
-        response = client.post(f"/api/changes/{change['id']}/publish", json={"expected_version": 1})
+        response = client.post(f"/api/changes/{change['id']}/publish?workspace_id={workspace_id}", json={"expected_version": 1})
         assert response.status_code == 409

@@ -14,8 +14,13 @@ __pycache__/
 node_modules/
 dist/
 *.tsbuildinfo
+.vite/
 
 # Browser automation state (keep output/playwright screenshots tracked)
 .playwright-cli/
 .playwright-mcp/
 output/playwright/*.log
+output/runtime/
+
+# Production acceptance evidence can contain identifiers, URLs, and operational metadata.
+production-evidence/

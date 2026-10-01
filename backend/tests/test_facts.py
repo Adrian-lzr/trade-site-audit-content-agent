@@ -64,6 +64,34 @@ def test_fact_import_confirmation_public_query_and_expiration():
         assert listed[0]["status"] == "expired"
 
 
+def test_csv_fact_import_creates_proposed_rows_and_rolls_back_invalid_batch():
+    with TestClient(app) as client:
+        workspace = _workspace(client, "CSV facts")
+        url = f"/api/workspaces/{workspace['id']}/facts/import-csv"
+        header = "subject,predicate,value,unit,source_id,source_locator,visibility,valid_from,valid_until\r\n"
+        valid_csv = (
+            "\ufeff" + header
+            + '"Bench, compact",max_load,250,kg,catalog-42,"https://example.test/catalog#bench",public,,\r\n'
+            + "Bench,frame_material,steel,,catalog-42,product-sheet.xlsx#materials,,,,\r\n"
+        )
+        imported = client.post(url, content=valid_csv.encode("utf-8"), headers={"Content-Type": "text/csv"})
+        assert imported.status_code == 201, imported.text
+        facts = imported.json()
+        assert len(facts) == 2
+        assert facts[0]["subject"] == "Bench, compact"
+        assert facts[0]["status"] == facts[1]["status"] == "proposed"
+        assert facts[0]["visibility"] == "public"
+        assert facts[1]["visibility"] == "internal_only"
+        assert client.get(f"/api/workspaces/{workspace['id']}/facts/public").json() == []
+
+        invalid_csv = header + "Row one,weight,25,kg,catalog-42,spec.xlsx#weight,internal_only,,\r\n" + "Row two,capacity,100,kg,,spec.xlsx#capacity,internal_only,,\r\n"
+        rejected = client.post(url, content=invalid_csv, headers={"Content-Type": "text/csv"})
+        assert rejected.status_code == 422
+        assert rejected.json()["detail"]["row"] == 3
+        listed = client.get(f"/api/workspaces/{workspace['id']}/facts").json()
+        assert len(listed) == 2
+
+
 def test_fact_visibility_defaults_to_internal_and_public_query_requires_current_confirmation():
     with TestClient(app) as client:
         workspace = _workspace(client, "fact visibility")

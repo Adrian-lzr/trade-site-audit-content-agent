@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
@@ -211,11 +212,38 @@ class SnapshotOut(BaseModel):
     title: str | None
     content_hash: str
     content_type: str | None
+    artifact_uri: str | None = None
+    parser_version: str | None = None
     fetched_at: datetime
     is_synthetic: bool = False
     findings: list[FindingOut]
     rule_set_version: str
     rule_results: list[RuleResultOut]
+
+
+class AuditEventCreate(BaseModel):
+    """Explicit actor metadata only; this payload is not an authentication mechanism."""
+    actor: str = Field(min_length=1, max_length=255)
+    action: str = Field(min_length=1, max_length=120)
+    target_type: str = Field(min_length=1, max_length=120)
+    target_id: str = Field(min_length=1, max_length=120)
+    before_version: dict[str, Any] = Field(default_factory=dict)
+    after_version: dict[str, Any] = Field(default_factory=dict)
+    run_id: str | None = Field(default=None, max_length=120)
+
+
+class AuditEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    workspace_id: int
+    actor: str
+    action: str
+    target_type: str
+    target_id: str
+    before_version: dict[str, Any]
+    after_version: dict[str, Any]
+    run_id: str | None
+    created_at: datetime
 
 
 class FactCreate(BaseModel):
@@ -237,6 +265,9 @@ class FactCreate(BaseModel):
 
     @model_validator(mode="after")
     def valid_window(self):
+        for field_name in ("subject", "predicate", "value", "source_id", "source_locator"):
+            if not getattr(self, field_name).strip():
+                raise ValueError(f"{field_name} must not be blank")
         if self.valid_until is not None and self.valid_from is not None and self.valid_until <= self.valid_from:
             raise ValueError("valid_until must be after valid_from")
         return self
@@ -374,5 +405,138 @@ class PublicationAttemptOut(BaseModel):
     change_request_id: int
     revision_id: int
     status: str
+    target: str | None
+    branch: str | None
+    commit_sha: str | None
+    external_id: str | None
     error: str | None
+    deployment_status: str
+    deployment_id: str | None
+    deployed_commit_sha: str | None
+    deployed_at: datetime | None
+    verified_at: datetime | None
+    rollback_of_attempt_id: int | None
+    expected_current_sha: str | None
+    rollback_reason: str | None
     created_at: datetime
+    updated_at: datetime
+
+
+class DeploymentUpdate(BaseModel):
+    status: Literal["deployed", "failed"]
+    commit_sha: str | None = None
+    deployment_id: str | None = Field(default=None, max_length=255)
+
+
+class RollbackRequest(BaseModel):
+    expected_current_sha: str = Field(min_length=40, max_length=64)
+    reason: str = Field(min_length=1, max_length=2000)
+
+
+class VisibilityRunCreate(BaseModel):
+    """Create a sampling run against one immutable, frozen question-set version."""
+
+    question_set_id: int | None = Field(default=None, ge=1)
+    question_set_version_id: int | None = Field(default=None, ge=1)
+    question_set_version: int | None = Field(default=None, ge=1)
+    provider: str = Field(default="fixture", min_length=1, max_length=80)
+    provider_kind: Literal["model_api", "consumer_search_surface", "manual_capture"] | None = None
+    market: str = Field(default="global", min_length=1, max_length=120)
+    language: str = Field(default="en", min_length=1, max_length=35)
+    brand_terms: list[str] = Field(default_factory=list, max_length=20)
+    max_samples: int | None = Field(default=None, ge=1, le=100)
+    budget_usd: Decimal = Field(default=Decimal("0"), ge=Decimal("0"), max_digits=12, decimal_places=6)
+    idempotency_key: str | None = Field(default=None, min_length=1, max_length=255)
+    provider_model: str | None = Field(default=None, max_length=200)
+    provider_config_version: str | None = Field(default=None, max_length=120)
+    prompt_version: str | None = Field(default=None, max_length=120)
+
+    @model_validator(mode="after")
+    def validate_version_and_terms(self):
+        if self.question_set_version_id is None and self.question_set_version is None:
+            raise ValueError("question_set_version_id or question_set_version is required")
+        cleaned = []
+        for term in self.brand_terms:
+            term = term.strip()
+            if term and term.casefold() not in {existing.casefold() for existing in cleaned}:
+                cleaned.append(term)
+        self.brand_terms = cleaned
+        if not self.market.strip() or not self.language.strip():
+            raise ValueError("market and language must not be blank")
+        return self
+
+    @property
+    def version_number(self) -> int | None:
+        return self.question_set_version
+
+
+class VisibilitySampleCapture(BaseModel):
+    """Raw, human-entered evidence for a manual-capture provider sample."""
+
+    question_id: int = Field(ge=1)
+    answer_text: str = Field(min_length=1, max_length=100_000)
+    raw_response: str | None = Field(default=None, max_length=200_000)
+    citations: list[str] = Field(default_factory=list, max_length=100)
+    mentioned_domains: list[str] = Field(default_factory=list, max_length=100)
+    model: str | None = Field(default=None, max_length=200)
+    provider_request_id: str | None = Field(default=None, max_length=255)
+
+
+class VisibilitySampleOut(BaseModel):
+    id: int
+    run_id: int
+    question_id: int
+    position: int
+    question: str
+    brand_query: bool
+    status: Literal["succeeded", "failed", "unavailable"]
+    raw_response: str | None
+    answer_text: str | None
+    citations: list[str]
+    mentioned_domains: list[str]
+    provider_request_id: str | None
+    request_id: str | None
+    model: str | None
+    input_tokens: int | None
+    output_tokens: int | None
+    cost_usd: str | None
+    estimated_cost_usd: str | None
+    error_code: str | None
+    error_message: str | None
+    completed_at: datetime | None
+    created_at: datetime
+
+
+class VisibilityRunOut(BaseModel):
+    id: int
+    workspace_id: int
+    site_id: int
+    question_set_id: int
+    question_set_version_id: int
+    provider: str
+    provider_kind: Literal["model_api", "consumer_search_surface", "manual_capture"]
+    provider_model: str | None
+    provider_config_version: str
+    prompt_version: str
+    pricing_basis: dict[str, object]
+    request_id: str | None
+    status: Literal["queued", "running", "succeeded", "partial", "failed"]
+    is_synthetic: bool
+    market: str
+    language: str
+    capability: dict[str, object]
+    idempotency_key: str | None
+    brand_terms: list[str]
+    budget_usd: str
+    planned_samples: int
+    successful_samples: int
+    failed_samples: int
+    total_cost_usd: str
+    reserved_cost_usd: str
+    attempts: int
+    error: str | None
+    started_at: datetime | None
+    completed_at: datetime | None
+    created_at: datetime
+    metrics: dict[str, object]
+    samples: list[VisibilitySampleOut]

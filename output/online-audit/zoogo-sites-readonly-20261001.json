@@ -1,0 +1,178 @@
+{
+  "database": "temporary_sqlite_deleted_after_run",
+  "generated_at": "2026-10-01T05:44:49.664167+00:00",
+  "limitations": [
+    "This is a bounded HTML/robots/sitemap sample, not a full-site crawl.",
+    "The run does not measure search ranking, consumer AI citations, traffic, leads, or revenue.",
+    "No publication, CMS write, PR, or deployment endpoint was called."
+  ],
+  "mode": "live_https_readonly",
+  "origins": [
+    {
+      "direct_control_checks": [
+        {
+          "content_bytes": 80235,
+          "error": null,
+          "final_url": "https://zoogo.club",
+          "method": "GET",
+          "path": "/",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": "Compact Fitness Equipment Manufacturer | ZOOGO ChinaExpandToggle MenuExpand"
+        },
+        {
+          "content_bytes": 111,
+          "error": null,
+          "final_url": "https://zoogo.club/robots.txt",
+          "method": "GET",
+          "path": "/robots.txt",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": null
+        },
+        {
+          "content_bytes": 614,
+          "error": null,
+          "final_url": "https://zoogo.club/wp-sitemap.xml",
+          "method": "GET",
+          "path": "/wp-sitemap.xml",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": null
+        }
+      ],
+      "findings": 0,
+      "job_id": 1,
+      "origin": "https://zoogo.club",
+      "page_limit": 3,
+      "pages": [
+        {
+          "content_hash": "9ac5427ef0fb89e684f9cd4043d9b13184e1f8174f02bd388e0b1327b770ad67",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Compact Fitness Equipment Manufacturer | ZOOGO ChinaExpandToggle MenuExpand",
+          "url": "https://zoogo.club/"
+        },
+        {
+          "content_hash": "2c08a1814e5c58838e084e95ee3312259ea616b3459afaa83b4219266f7914e9",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Wholesale Fitness Equipment Manufacturer | ZOOGOExpandToggle MenuExpand",
+          "url": "https://zoogo.club/products/"
+        },
+        {
+          "content_hash": "dfc7b16d1a7de945d144dd2b9fb722fdee3b6a7e6389934569c66979ad905c45",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Wholesale Under-Desk Mini Elliptical Trainers | ZOOGO FactoryExpandToggle MenuExpand",
+          "url": "https://zoogo.club/product-categories/mini-elliptical-trainers/"
+        }
+      ],
+      "pages_sampled": 3,
+      "robots": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogo.club/robots.txt"
+      },
+      "rule_result_count": 36,
+      "rule_status_counts": {
+        "needs_review": 3,
+        "not_applicable": 1,
+        "pass": 29,
+        "unknown": 3
+      },
+      "sitemap": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogo.club/wp-sitemap.xml"
+      },
+      "status": "succeeded"
+    },
+    {
+      "direct_control_checks": [
+        {
+          "content_bytes": 73798,
+          "error": null,
+          "final_url": "https://zoogosports.com",
+          "method": "GET",
+          "path": "/",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": "Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO"
+        },
+        {
+          "content_bytes": 122,
+          "error": null,
+          "final_url": "https://zoogosports.com/robots.txt",
+          "method": "GET",
+          "path": "/robots.txt",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": null
+        },
+        {
+          "content_bytes": 931,
+          "error": null,
+          "final_url": "https://zoogosports.com/sitemap_index.xml",
+          "method": "GET",
+          "path": "/sitemap_index.xml",
+          "redirect_chain": [],
+          "redirect_count": 0,
+          "status_code": 200,
+          "title": null
+        }
+      ],
+      "findings": 0,
+      "job_id": 2,
+      "origin": "https://zoogosports.com",
+      "page_limit": 3,
+      "pages": [
+        {
+          "content_hash": "24e0dcf462949ad97b965d3243ecf0a54984f7de2dfa82a94632906ee5ccaa84",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO",
+          "url": "https://zoogosports.com/"
+        },
+        {
+          "content_hash": "cd21fc8eb62593826c63ae1596abac4bec1bf2f63ee5eedf4ea7867791bc6bc8",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Wholesale Massage Equipment Catalog | ZOOGO",
+          "url": "https://zoogosports.com/products/"
+        },
+        {
+          "content_hash": "982e01e87e90c54bdcead09c0cefe7006521f94e9f3647b254075a91deca1bb2",
+          "content_type": "text/html; charset=UTF-8",
+          "status_code": 200,
+          "title": "Knee Massagers Wholesale & OEM | ZOOGO",
+          "url": "https://zoogosports.com/product-categories/knee-massagers/"
+        }
+      ],
+      "pages_sampled": 3,
+      "robots": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogosports.com/robots.txt"
+      },
+      "rule_result_count": 36,
+      "rule_status_counts": {
+        "needs_review": 2,
+        "not_applicable": 1,
+        "pass": 30,
+        "unknown": 3
+      },
+      "sitemap": {
+        "error": null,
+        "status_code": 200,
+        "url": "https://zoogosports.com/sitemap_index.xml"
+      },
+      "status": "succeeded"
+    }
+  ]
+}
