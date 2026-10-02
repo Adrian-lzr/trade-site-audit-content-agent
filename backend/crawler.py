@@ -6,7 +6,6 @@ import posixpath
 import socket
 from time import monotonic, sleep
 from dataclasses import dataclass
-from html.parser import HTMLParser
 from collections.abc import Callable
 from urllib.parse import unquote, urljoin, urlparse
 
@@ -15,6 +14,7 @@ import httpx
 from httpcore._backends.sync import SyncBackend
 
 from .config import settings
+from .document_parser import parse_document
 
 
 class CrawlError(ValueError):
@@ -23,25 +23,6 @@ class CrawlError(ValueError):
 
 class RobotsBlocked(CrawlError):
     pass
-
-
-class _TitleParser(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__()
-        self.in_title = False
-        self.parts: list[str] = []
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag.lower() == "title":
-            self.in_title = True
-
-    def handle_endtag(self, tag: str) -> None:
-        if tag.lower() == "title":
-            self.in_title = False
-
-    def handle_data(self, data: str) -> None:
-        if self.in_title:
-            self.parts.append(data)
 
 
 @dataclass(frozen=True)
@@ -247,9 +228,7 @@ class FixtureCrawler:
             finally:
                 if client is not None:
                     client.close()
-            parser = _TitleParser()
-            parser.feed(content)
-            title = "".join(parser.parts).strip() or None
+            title = parse_document(content, requested_url=url, final_url=response_url).title
             return CrawlResult(response_url, status_code, headers, content, title, redirect_chain=tuple(redirect_chain))
         return CrawlResult(current, 0, {}, "", None, error="too many redirects", redirect_chain=tuple(redirect_chain))
 

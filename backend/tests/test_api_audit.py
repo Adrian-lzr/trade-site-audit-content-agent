@@ -86,7 +86,7 @@ def test_frontend_contract_and_missing_title_rule_persists_to_pages(monkeypatch)
         page = pages.json()[0]
         assert page["title"] is None
         assert page["is_synthetic"] is True
-        assert page["finding_count"] == 1
+        assert page["finding_count"] == page["rule_problem_count"] == 2
         assert page["rule_count"] == 12
         assert page["rule_problem_count"] == 2
         assert page["rule_review_count"] == 1
@@ -96,10 +96,11 @@ def test_frontend_contract_and_missing_title_rule_persists_to_pages(monkeypatch)
 
         snapshot = client.get(f"/api/snapshots/{page['id']}?workspace_id={site['workspace_id']}")
         assert snapshot.status_code == 200
-        assert snapshot.json()["findings"][0]["code"] == "TITLE_MISSING"
+        assert {finding["code"] for finding in snapshot.json()["findings"]} == {"TITLE_MISSING", "RULE_SITEMAP_VALIDITY"}
         assert snapshot.json()["content_hash"] == page["content_hash"]
         assert snapshot.json()["is_synthetic"] is True
-        assert snapshot.json()["rule_set_version"] == "1.0.0"
+        assert snapshot.json()["rule_set_version"] == "1.1.0"
+        assert snapshot.json()["parser_version"] == "2.0.0"
         assert len(snapshot.json()["rule_results"]) == 12
         assert client.get(f"/api/audit-runs/not-a-number?workspace_id={site['workspace_id']}").status_code == 404
 

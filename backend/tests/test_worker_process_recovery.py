@@ -156,5 +156,5 @@ JobWorker().run_forever(poll_interval=0.01)
             assert completed.status == "succeeded", worker_stderr or worker_stdout
             snapshots = db.scalars(select(PageSnapshot).where(PageSnapshot.job_id == job_id)).all()
             assert len(snapshots) == 1
-            assert [finding.code for finding in snapshots[0].findings] == ["TITLE_MISSING"]
-            assert db.scalar(select(func.count()).select_from(AuditFinding).where(AuditFinding.snapshot_id == snapshots[0].id)) == 1
+            assert {finding.code for finding in snapshots[0].findings} == {"TITLE_MISSING", "RULE_SITEMAP_VALIDITY"}
+            assert db.scalar(select(func.count()).select_from(AuditFinding).where(AuditFinding.snapshot_id == snapshots[0].id)) == 2

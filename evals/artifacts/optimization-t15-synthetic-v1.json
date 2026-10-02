@@ -1,0 +1,2899 @@
+{
+  "manifest_version": "t15-synthetic-v1",
+  "dataset_status": "synthetic_fixture_only",
+  "synthetic_notice": "All products, sources, facts, questions, and expectations are synthetic; no human or business result is recorded.",
+  "created_at": "2026-10-02T00:00:00+00:00",
+  "source_hash_algorithm": "sha256",
+  "split_counts": {
+    "dev": 20,
+    "holdout": 30
+  },
+  "grouping_policy": "Each product/source group belongs to exactly one split; no group is shared by dev and holdout.",
+  "holdout_access_policy": {
+    "policy_version": "t15-holdout-access-v1",
+    "status": "frozen",
+    "development_access": "metadata_only",
+    "expected_value_access": "evaluator_only",
+    "raw_source_access": "evaluator_only",
+    "human_review_status": "not_started",
+    "scores_present": false,
+    "enforcement": "protocol_and_validator; production holdout storage must use an access-controlled store"
+  },
+  "evaluation_protocol": {
+    "strategies": [
+      "original",
+      "ordinary_rewrite",
+      "fact_constrained_rewrite"
+    ],
+    "model_outputs_present": false,
+    "human_annotations_present": false,
+    "real_provider_results_present": false
+  },
+  "dev_case_ids": [
+    "t15-dev-000",
+    "t15-dev-001",
+    "t15-dev-002",
+    "t15-dev-003",
+    "t15-dev-004",
+    "t15-dev-005",
+    "t15-dev-006",
+    "t15-dev-007",
+    "t15-dev-008",
+    "t15-dev-009",
+    "t15-dev-010",
+    "t15-dev-011",
+    "t15-dev-012",
+    "t15-dev-013",
+    "t15-dev-014",
+    "t15-dev-015",
+    "t15-dev-016",
+    "t15-dev-017",
+    "t15-dev-018",
+    "t15-dev-019"
+  ],
+  "holdout_case_ids": [
+    "t15-holdout-020",
+    "t15-holdout-021",
+    "t15-holdout-022",
+    "t15-holdout-023",
+    "t15-holdout-024",
+    "t15-holdout-025",
+    "t15-holdout-026",
+    "t15-holdout-027",
+    "t15-holdout-028",
+    "t15-holdout-029",
+    "t15-holdout-030",
+    "t15-holdout-031",
+    "t15-holdout-032",
+    "t15-holdout-033",
+    "t15-holdout-034",
+    "t15-holdout-035",
+    "t15-holdout-036",
+    "t15-holdout-037",
+    "t15-holdout-038",
+    "t15-holdout-039",
+    "t15-holdout-040",
+    "t15-holdout-041",
+    "t15-holdout-042",
+    "t15-holdout-043",
+    "t15-holdout-044",
+    "t15-holdout-045",
+    "t15-holdout-046",
+    "t15-holdout-047",
+    "t15-holdout-048",
+    "t15-holdout-049"
+  ],
+  "holdout_frozen_at": "2026-10-02T00:00:00+00:00",
+  "cases": [
+    {
+      "case_id": "t15-dev-000",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-alpha",
+        "source_id": "source-alpha-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "fd1dd07384a48e296abe02c63b7fd48cec6edb49e5c8ff6f4986bf9f24a380e0",
+        "source_locator": "fixture://t15/source-alpha-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What pressure rating and minimum order apply to valve-alpha?",
+      "required_facts": [
+        {
+          "fact_id": "valve-alpha-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-alpha",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-alpha"
+          }
+        },
+        {
+          "fact_id": "valve-alpha-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "10",
+          "unit": "pieces",
+          "product_id": "valve-alpha",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-alpha"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "valve-alpha is rated to 16 bar with a minimum order of 10 pieces.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-001",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-alpha",
+        "source_id": "source-alpha-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "fd1dd07384a48e296abe02c63b7fd48cec6edb49e5c8ff6f4986bf9f24a380e0",
+        "source_locator": "fixture://t15/source-alpha-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can valve-alpha be specified as 1,600 kPa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-alpha-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-alpha",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-alpha"
+          }
+        },
+        {
+          "fact_id": "valve-alpha-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "11",
+          "unit": "pieces",
+          "product_id": "valve-alpha",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-alpha"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "Yes. The 16 bar rating is equivalent to 1,600 kPa for valve-alpha.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-002",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-alpha",
+        "source_id": "source-alpha-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "fd1dd07384a48e296abe02c63b7fd48cec6edb49e5c8ff6f4986bf9f24a380e0",
+        "source_locator": "fixture://t15/source-alpha-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What is the lead time for valve-alpha?",
+      "required_facts": [
+        {
+          "fact_id": "valve-alpha-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-alpha",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-alpha"
+          }
+        },
+        {
+          "fact_id": "valve-alpha-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "12",
+          "unit": "pieces",
+          "product_id": "valve-alpha",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-alpha"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "lead_time is not present in the confirmed synthetic source facts"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-003",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-alpha",
+        "source_id": "source-alpha-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "fd1dd07384a48e296abe02c63b7fd48cec6edb49e5c8ff6f4986bf9f24a380e0",
+        "source_locator": "fixture://t15/source-alpha-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Does superseded version 0 of valve-alpha still define the pressure rating?",
+      "required_facts": [
+        {
+          "fact_id": "valve-alpha-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-alpha",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-alpha"
+          }
+        },
+        {
+          "fact_id": "valve-alpha-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "13",
+          "unit": "pieces",
+          "product_id": "valve-alpha",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-alpha"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the requested fact version is superseded and cannot support a current answer"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-004",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-alpha",
+        "source_id": "source-alpha-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "fd1dd07384a48e296abe02c63b7fd48cec6edb49e5c8ff6f4986bf9f24a380e0",
+        "source_locator": "fixture://t15/source-alpha-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can the pressure rating for valve-alpha be applied to valve-OTHER?",
+      "required_facts": [
+        {
+          "fact_id": "valve-alpha-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-alpha",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-alpha"
+          }
+        },
+        {
+          "fact_id": "valve-alpha-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "14",
+          "unit": "pieces",
+          "product_id": "valve-alpha",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-alpha"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the confirmed fact is scoped to this product and cannot be transferred to another model"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-005",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-beta",
+        "source_id": "source-beta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "9b3a3c6470e374cb63b3ca87001c1e2bf9768cf4243bb2ffdf579888e9abb563",
+        "source_locator": "fixture://t15/source-beta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What pressure rating and minimum order apply to valve-beta?",
+      "required_facts": [
+        {
+          "fact_id": "valve-beta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-beta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-beta"
+          }
+        },
+        {
+          "fact_id": "valve-beta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "15",
+          "unit": "pieces",
+          "product_id": "valve-beta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-beta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "valve-beta is rated to 16 bar with a minimum order of 15 pieces.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-006",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-beta",
+        "source_id": "source-beta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "9b3a3c6470e374cb63b3ca87001c1e2bf9768cf4243bb2ffdf579888e9abb563",
+        "source_locator": "fixture://t15/source-beta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can valve-beta be specified as 1,600 kPa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-beta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-beta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-beta"
+          }
+        },
+        {
+          "fact_id": "valve-beta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "16",
+          "unit": "pieces",
+          "product_id": "valve-beta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-beta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "Yes. The 16 bar rating is equivalent to 1,600 kPa for valve-beta.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-007",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-beta",
+        "source_id": "source-beta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "9b3a3c6470e374cb63b3ca87001c1e2bf9768cf4243bb2ffdf579888e9abb563",
+        "source_locator": "fixture://t15/source-beta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What is the lead time for valve-beta?",
+      "required_facts": [
+        {
+          "fact_id": "valve-beta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-beta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-beta"
+          }
+        },
+        {
+          "fact_id": "valve-beta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "17",
+          "unit": "pieces",
+          "product_id": "valve-beta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-beta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "lead_time is not present in the confirmed synthetic source facts"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-008",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-beta",
+        "source_id": "source-beta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "9b3a3c6470e374cb63b3ca87001c1e2bf9768cf4243bb2ffdf579888e9abb563",
+        "source_locator": "fixture://t15/source-beta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Does superseded version 0 of valve-beta still define the pressure rating?",
+      "required_facts": [
+        {
+          "fact_id": "valve-beta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-beta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-beta"
+          }
+        },
+        {
+          "fact_id": "valve-beta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "18",
+          "unit": "pieces",
+          "product_id": "valve-beta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-beta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the requested fact version is superseded and cannot support a current answer"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-009",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-beta",
+        "source_id": "source-beta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "9b3a3c6470e374cb63b3ca87001c1e2bf9768cf4243bb2ffdf579888e9abb563",
+        "source_locator": "fixture://t15/source-beta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can the pressure rating for valve-beta be applied to valve-OTHER?",
+      "required_facts": [
+        {
+          "fact_id": "valve-beta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-beta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-beta"
+          }
+        },
+        {
+          "fact_id": "valve-beta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "19",
+          "unit": "pieces",
+          "product_id": "valve-beta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-beta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the confirmed fact is scoped to this product and cannot be transferred to another model"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-010",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-gamma",
+        "source_id": "source-gamma-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "333382917fa434d9c89fb0ed83d9ad55dc55518d9386459993ca5f203a294e07",
+        "source_locator": "fixture://t15/source-gamma-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What pressure rating and minimum order apply to valve-gamma?",
+      "required_facts": [
+        {
+          "fact_id": "valve-gamma-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-gamma",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-gamma"
+          }
+        },
+        {
+          "fact_id": "valve-gamma-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "20",
+          "unit": "pieces",
+          "product_id": "valve-gamma",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-gamma"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "valve-gamma is rated to 16 bar with a minimum order of 20 pieces.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-011",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-gamma",
+        "source_id": "source-gamma-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "333382917fa434d9c89fb0ed83d9ad55dc55518d9386459993ca5f203a294e07",
+        "source_locator": "fixture://t15/source-gamma-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can valve-gamma be specified as 1,600 kPa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-gamma-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-gamma",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-gamma"
+          }
+        },
+        {
+          "fact_id": "valve-gamma-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "21",
+          "unit": "pieces",
+          "product_id": "valve-gamma",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-gamma"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "Yes. The 16 bar rating is equivalent to 1,600 kPa for valve-gamma.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-012",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-gamma",
+        "source_id": "source-gamma-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "333382917fa434d9c89fb0ed83d9ad55dc55518d9386459993ca5f203a294e07",
+        "source_locator": "fixture://t15/source-gamma-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What is the lead time for valve-gamma?",
+      "required_facts": [
+        {
+          "fact_id": "valve-gamma-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-gamma",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-gamma"
+          }
+        },
+        {
+          "fact_id": "valve-gamma-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "22",
+          "unit": "pieces",
+          "product_id": "valve-gamma",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-gamma"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "lead_time is not present in the confirmed synthetic source facts"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-013",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-gamma",
+        "source_id": "source-gamma-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "333382917fa434d9c89fb0ed83d9ad55dc55518d9386459993ca5f203a294e07",
+        "source_locator": "fixture://t15/source-gamma-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Does superseded version 0 of valve-gamma still define the pressure rating?",
+      "required_facts": [
+        {
+          "fact_id": "valve-gamma-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-gamma",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-gamma"
+          }
+        },
+        {
+          "fact_id": "valve-gamma-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "23",
+          "unit": "pieces",
+          "product_id": "valve-gamma",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-gamma"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the requested fact version is superseded and cannot support a current answer"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-014",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-gamma",
+        "source_id": "source-gamma-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "333382917fa434d9c89fb0ed83d9ad55dc55518d9386459993ca5f203a294e07",
+        "source_locator": "fixture://t15/source-gamma-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can the pressure rating for valve-gamma be applied to valve-OTHER?",
+      "required_facts": [
+        {
+          "fact_id": "valve-gamma-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-gamma",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-gamma"
+          }
+        },
+        {
+          "fact_id": "valve-gamma-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "24",
+          "unit": "pieces",
+          "product_id": "valve-gamma",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-gamma"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the confirmed fact is scoped to this product and cannot be transferred to another model"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-015",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-delta",
+        "source_id": "source-delta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "22c1a5c2244eb6a59479d364af65fa65c5aba41f18c69b5aca053e0f7e33d923",
+        "source_locator": "fixture://t15/source-delta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What pressure rating and minimum order apply to valve-delta?",
+      "required_facts": [
+        {
+          "fact_id": "valve-delta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-delta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-delta"
+          }
+        },
+        {
+          "fact_id": "valve-delta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "25",
+          "unit": "pieces",
+          "product_id": "valve-delta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-delta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "valve-delta is rated to 16 bar with a minimum order of 25 pieces.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-016",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-delta",
+        "source_id": "source-delta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "22c1a5c2244eb6a59479d364af65fa65c5aba41f18c69b5aca053e0f7e33d923",
+        "source_locator": "fixture://t15/source-delta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can valve-delta be specified as 1,600 kPa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-delta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-delta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-delta"
+          }
+        },
+        {
+          "fact_id": "valve-delta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "26",
+          "unit": "pieces",
+          "product_id": "valve-delta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-delta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "Yes. The 16 bar rating is equivalent to 1,600 kPa for valve-delta.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-017",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-delta",
+        "source_id": "source-delta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "22c1a5c2244eb6a59479d364af65fa65c5aba41f18c69b5aca053e0f7e33d923",
+        "source_locator": "fixture://t15/source-delta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What is the lead time for valve-delta?",
+      "required_facts": [
+        {
+          "fact_id": "valve-delta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-delta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-delta"
+          }
+        },
+        {
+          "fact_id": "valve-delta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "27",
+          "unit": "pieces",
+          "product_id": "valve-delta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-delta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "lead_time is not present in the confirmed synthetic source facts"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-018",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-delta",
+        "source_id": "source-delta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "22c1a5c2244eb6a59479d364af65fa65c5aba41f18c69b5aca053e0f7e33d923",
+        "source_locator": "fixture://t15/source-delta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Does superseded version 0 of valve-delta still define the pressure rating?",
+      "required_facts": [
+        {
+          "fact_id": "valve-delta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-delta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-delta"
+          }
+        },
+        {
+          "fact_id": "valve-delta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "28",
+          "unit": "pieces",
+          "product_id": "valve-delta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-delta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the requested fact version is superseded and cannot support a current answer"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-dev-019",
+      "synthetic": true,
+      "split": "dev",
+      "group": {
+        "product_id": "valve-delta",
+        "source_id": "source-delta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "22c1a5c2244eb6a59479d364af65fa65c5aba41f18c69b5aca053e0f7e33d923",
+        "source_locator": "fixture://t15/source-delta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can the pressure rating for valve-delta be applied to valve-OTHER?",
+      "required_facts": [
+        {
+          "fact_id": "valve-delta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-delta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-delta"
+          }
+        },
+        {
+          "fact_id": "valve-delta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "29",
+          "unit": "pieces",
+          "product_id": "valve-delta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-delta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the confirmed fact is scoped to this product and cannot be transferred to another model"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "development",
+        "permitted_before_evaluation": [
+          "all_fixture_operations"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-020",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-epsilon",
+        "source_id": "source-epsilon-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "7dc5f0375528cc814212e468de55b8afdcb5c99f309921e1e5eb4f1c3771c07e",
+        "source_locator": "fixture://t15/source-epsilon-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What pressure rating and minimum order apply to valve-epsilon?",
+      "required_facts": [
+        {
+          "fact_id": "valve-epsilon-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-epsilon",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-epsilon"
+          }
+        },
+        {
+          "fact_id": "valve-epsilon-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "30",
+          "unit": "pieces",
+          "product_id": "valve-epsilon",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-epsilon"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "valve-epsilon is rated to 16 bar with a minimum order of 30 pieces.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-021",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-epsilon",
+        "source_id": "source-epsilon-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "7dc5f0375528cc814212e468de55b8afdcb5c99f309921e1e5eb4f1c3771c07e",
+        "source_locator": "fixture://t15/source-epsilon-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can valve-epsilon be specified as 1,600 kPa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-epsilon-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-epsilon",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-epsilon"
+          }
+        },
+        {
+          "fact_id": "valve-epsilon-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "31",
+          "unit": "pieces",
+          "product_id": "valve-epsilon",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-epsilon"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "Yes. The 16 bar rating is equivalent to 1,600 kPa for valve-epsilon.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-022",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-epsilon",
+        "source_id": "source-epsilon-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "7dc5f0375528cc814212e468de55b8afdcb5c99f309921e1e5eb4f1c3771c07e",
+        "source_locator": "fixture://t15/source-epsilon-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What is the lead time for valve-epsilon?",
+      "required_facts": [
+        {
+          "fact_id": "valve-epsilon-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-epsilon",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-epsilon"
+          }
+        },
+        {
+          "fact_id": "valve-epsilon-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "32",
+          "unit": "pieces",
+          "product_id": "valve-epsilon",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-epsilon"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "lead_time is not present in the confirmed synthetic source facts"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-023",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-epsilon",
+        "source_id": "source-epsilon-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "7dc5f0375528cc814212e468de55b8afdcb5c99f309921e1e5eb4f1c3771c07e",
+        "source_locator": "fixture://t15/source-epsilon-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Does superseded version 0 of valve-epsilon still define the pressure rating?",
+      "required_facts": [
+        {
+          "fact_id": "valve-epsilon-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-epsilon",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-epsilon"
+          }
+        },
+        {
+          "fact_id": "valve-epsilon-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "33",
+          "unit": "pieces",
+          "product_id": "valve-epsilon",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-epsilon"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the requested fact version is superseded and cannot support a current answer"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-024",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-epsilon",
+        "source_id": "source-epsilon-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "7dc5f0375528cc814212e468de55b8afdcb5c99f309921e1e5eb4f1c3771c07e",
+        "source_locator": "fixture://t15/source-epsilon-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can the pressure rating for valve-epsilon be applied to valve-OTHER?",
+      "required_facts": [
+        {
+          "fact_id": "valve-epsilon-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-epsilon",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-epsilon"
+          }
+        },
+        {
+          "fact_id": "valve-epsilon-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "34",
+          "unit": "pieces",
+          "product_id": "valve-epsilon",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-epsilon"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the confirmed fact is scoped to this product and cannot be transferred to another model"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-025",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-zeta",
+        "source_id": "source-zeta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "93c295afe7b94acd6a1a71d948c5ca24a1fbc8e90d59e75092c63ed321d249e1",
+        "source_locator": "fixture://t15/source-zeta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What pressure rating and minimum order apply to valve-zeta?",
+      "required_facts": [
+        {
+          "fact_id": "valve-zeta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-zeta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-zeta"
+          }
+        },
+        {
+          "fact_id": "valve-zeta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "35",
+          "unit": "pieces",
+          "product_id": "valve-zeta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-zeta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "valve-zeta is rated to 16 bar with a minimum order of 35 pieces.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-026",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-zeta",
+        "source_id": "source-zeta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "93c295afe7b94acd6a1a71d948c5ca24a1fbc8e90d59e75092c63ed321d249e1",
+        "source_locator": "fixture://t15/source-zeta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can valve-zeta be specified as 1,600 kPa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-zeta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-zeta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-zeta"
+          }
+        },
+        {
+          "fact_id": "valve-zeta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "36",
+          "unit": "pieces",
+          "product_id": "valve-zeta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-zeta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "Yes. The 16 bar rating is equivalent to 1,600 kPa for valve-zeta.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-027",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-zeta",
+        "source_id": "source-zeta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "93c295afe7b94acd6a1a71d948c5ca24a1fbc8e90d59e75092c63ed321d249e1",
+        "source_locator": "fixture://t15/source-zeta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What is the lead time for valve-zeta?",
+      "required_facts": [
+        {
+          "fact_id": "valve-zeta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-zeta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-zeta"
+          }
+        },
+        {
+          "fact_id": "valve-zeta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "37",
+          "unit": "pieces",
+          "product_id": "valve-zeta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-zeta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "lead_time is not present in the confirmed synthetic source facts"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-028",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-zeta",
+        "source_id": "source-zeta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "93c295afe7b94acd6a1a71d948c5ca24a1fbc8e90d59e75092c63ed321d249e1",
+        "source_locator": "fixture://t15/source-zeta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Does superseded version 0 of valve-zeta still define the pressure rating?",
+      "required_facts": [
+        {
+          "fact_id": "valve-zeta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-zeta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-zeta"
+          }
+        },
+        {
+          "fact_id": "valve-zeta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "38",
+          "unit": "pieces",
+          "product_id": "valve-zeta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-zeta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the requested fact version is superseded and cannot support a current answer"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-029",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-zeta",
+        "source_id": "source-zeta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "93c295afe7b94acd6a1a71d948c5ca24a1fbc8e90d59e75092c63ed321d249e1",
+        "source_locator": "fixture://t15/source-zeta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can the pressure rating for valve-zeta be applied to valve-OTHER?",
+      "required_facts": [
+        {
+          "fact_id": "valve-zeta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-zeta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-zeta"
+          }
+        },
+        {
+          "fact_id": "valve-zeta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "39",
+          "unit": "pieces",
+          "product_id": "valve-zeta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-zeta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the confirmed fact is scoped to this product and cannot be transferred to another model"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-030",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-eta",
+        "source_id": "source-eta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "1d8057d4c0be1f1a60a21437d8569976caff8e90a91713fc3b89fb5e0cfe642d",
+        "source_locator": "fixture://t15/source-eta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What pressure rating and minimum order apply to valve-eta?",
+      "required_facts": [
+        {
+          "fact_id": "valve-eta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-eta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-eta"
+          }
+        },
+        {
+          "fact_id": "valve-eta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "40",
+          "unit": "pieces",
+          "product_id": "valve-eta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-eta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "valve-eta is rated to 16 bar with a minimum order of 40 pieces.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-031",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-eta",
+        "source_id": "source-eta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "1d8057d4c0be1f1a60a21437d8569976caff8e90a91713fc3b89fb5e0cfe642d",
+        "source_locator": "fixture://t15/source-eta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can valve-eta be specified as 1,600 kPa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-eta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-eta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-eta"
+          }
+        },
+        {
+          "fact_id": "valve-eta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "41",
+          "unit": "pieces",
+          "product_id": "valve-eta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-eta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "Yes. The 16 bar rating is equivalent to 1,600 kPa for valve-eta.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-032",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-eta",
+        "source_id": "source-eta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "1d8057d4c0be1f1a60a21437d8569976caff8e90a91713fc3b89fb5e0cfe642d",
+        "source_locator": "fixture://t15/source-eta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What is the lead time for valve-eta?",
+      "required_facts": [
+        {
+          "fact_id": "valve-eta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-eta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-eta"
+          }
+        },
+        {
+          "fact_id": "valve-eta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "42",
+          "unit": "pieces",
+          "product_id": "valve-eta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-eta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "lead_time is not present in the confirmed synthetic source facts"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-033",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-eta",
+        "source_id": "source-eta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "1d8057d4c0be1f1a60a21437d8569976caff8e90a91713fc3b89fb5e0cfe642d",
+        "source_locator": "fixture://t15/source-eta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Does superseded version 0 of valve-eta still define the pressure rating?",
+      "required_facts": [
+        {
+          "fact_id": "valve-eta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-eta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-eta"
+          }
+        },
+        {
+          "fact_id": "valve-eta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "43",
+          "unit": "pieces",
+          "product_id": "valve-eta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-eta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the requested fact version is superseded and cannot support a current answer"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-034",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-eta",
+        "source_id": "source-eta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "1d8057d4c0be1f1a60a21437d8569976caff8e90a91713fc3b89fb5e0cfe642d",
+        "source_locator": "fixture://t15/source-eta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can the pressure rating for valve-eta be applied to valve-OTHER?",
+      "required_facts": [
+        {
+          "fact_id": "valve-eta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-eta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-eta"
+          }
+        },
+        {
+          "fact_id": "valve-eta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "44",
+          "unit": "pieces",
+          "product_id": "valve-eta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-eta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the confirmed fact is scoped to this product and cannot be transferred to another model"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-035",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-theta",
+        "source_id": "source-theta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "c0427b8b7bb8a819571473271c69819a7efb4f3ee5500cd4d90c739ef1aa9ce5",
+        "source_locator": "fixture://t15/source-theta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What pressure rating and minimum order apply to valve-theta?",
+      "required_facts": [
+        {
+          "fact_id": "valve-theta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-theta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-theta"
+          }
+        },
+        {
+          "fact_id": "valve-theta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "45",
+          "unit": "pieces",
+          "product_id": "valve-theta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-theta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "valve-theta is rated to 16 bar with a minimum order of 45 pieces.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-036",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-theta",
+        "source_id": "source-theta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "c0427b8b7bb8a819571473271c69819a7efb4f3ee5500cd4d90c739ef1aa9ce5",
+        "source_locator": "fixture://t15/source-theta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can valve-theta be specified as 1,600 kPa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-theta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-theta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-theta"
+          }
+        },
+        {
+          "fact_id": "valve-theta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "46",
+          "unit": "pieces",
+          "product_id": "valve-theta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-theta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "Yes. The 16 bar rating is equivalent to 1,600 kPa for valve-theta.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-037",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-theta",
+        "source_id": "source-theta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "c0427b8b7bb8a819571473271c69819a7efb4f3ee5500cd4d90c739ef1aa9ce5",
+        "source_locator": "fixture://t15/source-theta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What is the lead time for valve-theta?",
+      "required_facts": [
+        {
+          "fact_id": "valve-theta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-theta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-theta"
+          }
+        },
+        {
+          "fact_id": "valve-theta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "47",
+          "unit": "pieces",
+          "product_id": "valve-theta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-theta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "lead_time is not present in the confirmed synthetic source facts"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-038",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-theta",
+        "source_id": "source-theta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "c0427b8b7bb8a819571473271c69819a7efb4f3ee5500cd4d90c739ef1aa9ce5",
+        "source_locator": "fixture://t15/source-theta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Does superseded version 0 of valve-theta still define the pressure rating?",
+      "required_facts": [
+        {
+          "fact_id": "valve-theta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-theta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-theta"
+          }
+        },
+        {
+          "fact_id": "valve-theta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "48",
+          "unit": "pieces",
+          "product_id": "valve-theta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-theta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the requested fact version is superseded and cannot support a current answer"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-039",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-theta",
+        "source_id": "source-theta-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "c0427b8b7bb8a819571473271c69819a7efb4f3ee5500cd4d90c739ef1aa9ce5",
+        "source_locator": "fixture://t15/source-theta-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can the pressure rating for valve-theta be applied to valve-OTHER?",
+      "required_facts": [
+        {
+          "fact_id": "valve-theta-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-theta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-theta"
+          }
+        },
+        {
+          "fact_id": "valve-theta-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "49",
+          "unit": "pieces",
+          "product_id": "valve-theta",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-theta"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the confirmed fact is scoped to this product and cannot be transferred to another model"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-040",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-iota",
+        "source_id": "source-iota-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "2ca5ce74696d0d1364c1d0d0eb14e451c95a4ce9dddd60929d263809ca267974",
+        "source_locator": "fixture://t15/source-iota-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What pressure rating and minimum order apply to valve-iota?",
+      "required_facts": [
+        {
+          "fact_id": "valve-iota-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-iota",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-iota"
+          }
+        },
+        {
+          "fact_id": "valve-iota-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "50",
+          "unit": "pieces",
+          "product_id": "valve-iota",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-iota"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "valve-iota is rated to 16 bar with a minimum order of 50 pieces.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-041",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-iota",
+        "source_id": "source-iota-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "2ca5ce74696d0d1364c1d0d0eb14e451c95a4ce9dddd60929d263809ca267974",
+        "source_locator": "fixture://t15/source-iota-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can valve-iota be specified as 1,600 kPa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-iota-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-iota",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-iota"
+          }
+        },
+        {
+          "fact_id": "valve-iota-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "51",
+          "unit": "pieces",
+          "product_id": "valve-iota",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-iota"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "Yes. The 16 bar rating is equivalent to 1,600 kPa for valve-iota.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-042",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-iota",
+        "source_id": "source-iota-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "2ca5ce74696d0d1364c1d0d0eb14e451c95a4ce9dddd60929d263809ca267974",
+        "source_locator": "fixture://t15/source-iota-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What is the lead time for valve-iota?",
+      "required_facts": [
+        {
+          "fact_id": "valve-iota-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-iota",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-iota"
+          }
+        },
+        {
+          "fact_id": "valve-iota-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "52",
+          "unit": "pieces",
+          "product_id": "valve-iota",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-iota"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "lead_time is not present in the confirmed synthetic source facts"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-043",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-iota",
+        "source_id": "source-iota-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "2ca5ce74696d0d1364c1d0d0eb14e451c95a4ce9dddd60929d263809ca267974",
+        "source_locator": "fixture://t15/source-iota-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Does superseded version 0 of valve-iota still define the pressure rating?",
+      "required_facts": [
+        {
+          "fact_id": "valve-iota-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-iota",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-iota"
+          }
+        },
+        {
+          "fact_id": "valve-iota-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "53",
+          "unit": "pieces",
+          "product_id": "valve-iota",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-iota"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the requested fact version is superseded and cannot support a current answer"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-044",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-iota",
+        "source_id": "source-iota-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "2ca5ce74696d0d1364c1d0d0eb14e451c95a4ce9dddd60929d263809ca267974",
+        "source_locator": "fixture://t15/source-iota-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can the pressure rating for valve-iota be applied to valve-OTHER?",
+      "required_facts": [
+        {
+          "fact_id": "valve-iota-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-iota",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-iota"
+          }
+        },
+        {
+          "fact_id": "valve-iota-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "54",
+          "unit": "pieces",
+          "product_id": "valve-iota",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-iota"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the confirmed fact is scoped to this product and cannot be transferred to another model"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-045",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-kappa",
+        "source_id": "source-kappa-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "f74c217f36200f81d1ce20c117f2c1b10dc71c119f476f044d61a563f6ef917c",
+        "source_locator": "fixture://t15/source-kappa-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What pressure rating and minimum order apply to valve-kappa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-kappa-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-kappa",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-kappa"
+          }
+        },
+        {
+          "fact_id": "valve-kappa-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "55",
+          "unit": "pieces",
+          "product_id": "valve-kappa",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-kappa"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "valve-kappa is rated to 16 bar with a minimum order of 55 pieces.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-046",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-kappa",
+        "source_id": "source-kappa-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "f74c217f36200f81d1ce20c117f2c1b10dc71c119f476f044d61a563f6ef917c",
+        "source_locator": "fixture://t15/source-kappa-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can valve-kappa be specified as 1,600 kPa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-kappa-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-kappa",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-kappa"
+          }
+        },
+        {
+          "fact_id": "valve-kappa-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "56",
+          "unit": "pieces",
+          "product_id": "valve-kappa",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-kappa"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "answer",
+        "answer": "Yes. The 16 bar rating is equivalent to 1,600 kPa for valve-kappa.",
+        "refusal_reason": null
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-047",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-kappa",
+        "source_id": "source-kappa-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "f74c217f36200f81d1ce20c117f2c1b10dc71c119f476f044d61a563f6ef917c",
+        "source_locator": "fixture://t15/source-kappa-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "What is the lead time for valve-kappa?",
+      "required_facts": [
+        {
+          "fact_id": "valve-kappa-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-kappa",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-kappa"
+          }
+        },
+        {
+          "fact_id": "valve-kappa-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "57",
+          "unit": "pieces",
+          "product_id": "valve-kappa",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-kappa"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "lead_time is not present in the confirmed synthetic source facts"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-048",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-kappa",
+        "source_id": "source-kappa-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "f74c217f36200f81d1ce20c117f2c1b10dc71c119f476f044d61a563f6ef917c",
+        "source_locator": "fixture://t15/source-kappa-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Does superseded version 0 of valve-kappa still define the pressure rating?",
+      "required_facts": [
+        {
+          "fact_id": "valve-kappa-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-kappa",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-kappa"
+          }
+        },
+        {
+          "fact_id": "valve-kappa-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "58",
+          "unit": "pieces",
+          "product_id": "valve-kappa",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-kappa"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the requested fact version is superseded and cannot support a current answer"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    },
+    {
+      "case_id": "t15-holdout-049",
+      "synthetic": true,
+      "split": "holdout",
+      "group": {
+        "product_id": "valve-kappa",
+        "source_id": "source-kappa-spec-v1"
+      },
+      "source": {
+        "raw_source_sha256": "f74c217f36200f81d1ce20c117f2c1b10dc71c119f476f044d61a563f6ef917c",
+        "source_locator": "fixture://t15/source-kappa-spec-v1.html",
+        "source_format": "synthetic_html_snapshot",
+        "raw_content_status": "synthetic_descriptor_only"
+      },
+      "question": "Can the pressure rating for valve-kappa be applied to valve-OTHER?",
+      "required_facts": [
+        {
+          "fact_id": "valve-kappa-f-pressure",
+          "predicate": "pressure_rating",
+          "value": "16",
+          "unit": "bar",
+          "product_id": "valve-kappa",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-kappa"
+          }
+        },
+        {
+          "fact_id": "valve-kappa-f-min-order",
+          "predicate": "minimum_order_quantity",
+          "value": "59",
+          "unit": "pieces",
+          "product_id": "valve-kappa",
+          "fact_version": 1,
+          "scope": {
+            "market": "US",
+            "model": "valve-kappa"
+          }
+        }
+      ],
+      "expected": {
+        "kind": "refusal",
+        "answer": null,
+        "refusal_reason": "the confirmed fact is scoped to this product and cannot be transferred to another model"
+      },
+      "holdout_access_policy": {
+        "policy_version": "t15-holdout-access-v1",
+        "expected_value_access": "evaluator_only",
+        "permitted_before_evaluation": [
+          "schema_validation",
+          "count_validation",
+          "hash_inventory"
+        ],
+        "human_annotation": "not_started"
+      }
+    }
+  ]
+}

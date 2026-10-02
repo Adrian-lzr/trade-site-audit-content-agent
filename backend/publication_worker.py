@@ -10,6 +10,7 @@ from sqlalchemy import select, update
 from .database import SessionLocal
 from .git_publisher import ChangeSet, GitPublisher, GitPublisherError, IdempotencyConflictError, RollbackConflictError
 from .models import ChangeApproval, ChangeRequest, ChangeRevision, ChangeState, Fact, FactStatus, FactVisibility, OutboxEvent, Page, PageSnapshot, PublicationAttempt, Site, utcnow
+from .services.facts import FactResolutionError, assert_bindings_current
 
 
 PUBLICATION_LEASE = timedelta(minutes=5)
@@ -66,19 +67,10 @@ def _assert_publishable(db, change: ChangeRequest, revision: ChangeRevision, sit
     )
     if latest is None or latest.id != snapshot.id or latest.content_hash != revision.base_content_hash:
         raise GitPublisherError("publication page snapshot changed after approval")
-    now = utcnow()
-    for binding in json.loads(revision.fact_versions_json or "[]"):
-        fact = db.get(Fact, int(binding["fact_id"]))
-        if (
-            fact is None
-            or fact.workspace_id != change.workspace_id
-            or fact.version != int(binding["version"])
-            or fact.visibility != FactVisibility.public.value
-            or fact.status != FactStatus.confirmed.value
-            or fact.valid_from > now
-            or (fact.valid_until is not None and fact.valid_until <= now)
-        ):
-            raise GitPublisherError("a bound fact is no longer current, confirmed, and public")
+    try:
+        assert_bindings_current(db, change.workspace_id, json.loads(revision.fact_versions_json or "[]"))
+    except FactResolutionError as exc:
+        raise GitPublisherError(str(exc)) from exc
 
 
 class PublicationWorker:

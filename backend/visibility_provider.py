@@ -69,6 +69,7 @@ def redact_sensitive_text(value: str | None, *, max_bytes: int | None = None) ->
 @dataclass(slots=True)
 class VisibilityResponse:
     status: str = VisibilitySampleStatus.succeeded.value
+    answered_question: bool | None = None
     raw_response: str | None = None
     answer_text: str | None = None
     citations: list[str] = field(default_factory=list)
@@ -330,6 +331,7 @@ class StructuredHTTPVisibilityProvider:
             return VisibilityResponse(
                 raw_response=raw,
                 answer_text=redact_sensitive_text(answer),
+                answered_question=body.get("answered_question") if isinstance(body.get("answered_question"), bool) else None,
                 citations=citations,
                 mentioned_domains=mentioned_domains,
                 provider_request_id=str(body.get("request_id") or provider_request_id or "") or None,

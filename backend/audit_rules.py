@@ -3,13 +3,13 @@ from __future__ import annotations
 import json
 import re
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
-from html.parser import HTMLParser
 from typing import Any
 from urllib.parse import urljoin, urlsplit
 
+from .document_parser import PARSER_VERSION, ParsedDocument, normalize_http_url, parse_document
 
-RULE_VERSION = "1.0.0"
+
+RULE_VERSION = "1.1.0"
 RULES = (
     ("http_status_redirect", "page", "error", "Check the expected page response and validated redirect chain."),
     ("robots_access", "page", "error", "Review robots.txt and the intended crawl policy for this URL."),
@@ -24,90 +24,6 @@ RULES = (
     ("image_alt", "page", "info", "Review images without alt attributes and provide appropriate text or an empty decorative alt."),
     ("jsonld_consistency", "page", "warning", "Correct invalid or incomplete JSON-LD and manually verify it against visible page content."),
 )
-
-
-@dataclass(frozen=True)
-class ParsedDocument:
-    title: str | None
-    canonical: list[str]
-    robots: list[str]
-    descriptions: list[str]
-    h1: list[str]
-    images: list[bool]
-    links: list[str]
-    jsonld: list[str]
-
-
-class _DocumentParser(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__(convert_charrefs=True)
-        self.title_parts: list[str] = []
-        self.h1_parts: list[str] = []
-        self.canonical: list[str] = []
-        self.robots: list[str] = []
-        self.descriptions: list[str] = []
-        self.images: list[bool] = []
-        self.links: list[str] = []
-        self.jsonld: list[str] = []
-        self._in_title = False
-        self._in_h1 = False
-        self._in_jsonld = False
-        self._jsonld_parts: list[str] = []
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        tag = tag.lower()
-        values = {key.lower(): value for key, value in attrs if key}
-        if tag == "title":
-            self._in_title = True
-        elif tag == "h1":
-            self._in_h1 = True
-            self.h1_parts.append("")
-        elif tag == "meta":
-            name = (values.get("name") or "").strip().lower()
-            if name in {"robots", "googlebot"} and values.get("content") is not None:
-                self.robots.append(values["content"] or "")
-            if name == "description" and values.get("content") is not None:
-                self.descriptions.append(values["content"] or "")
-        elif tag == "link" and "canonical" in (values.get("rel") or "").lower().split():
-            self.canonical.append(values.get("href") or "")
-        elif tag == "img":
-            self.images.append("alt" in values)
-        elif tag == "a" and values.get("href"):
-            self.links.append(values["href"] or "")
-        elif tag == "script" and "json" in (values.get("type") or "").lower() and "ld+json" in (values.get("type") or "").lower():
-            self._in_jsonld = True
-            self._jsonld_parts = []
-
-    def handle_endtag(self, tag: str) -> None:
-        tag = tag.lower()
-        if tag == "title":
-            self._in_title = False
-        elif tag == "h1":
-            self._in_h1 = False
-        elif tag == "script" and self._in_jsonld:
-            self.jsonld.append("".join(self._jsonld_parts))
-            self._in_jsonld = False
-            self._jsonld_parts = []
-
-    def handle_data(self, data: str) -> None:
-        if self._in_title:
-            self.title_parts.append(data)
-        if self._in_h1 and self.h1_parts:
-            self.h1_parts[-1] += data
-        if self._in_jsonld:
-            self._jsonld_parts.append(data)
-
-    def result(self) -> ParsedDocument:
-        title = " ".join("".join(self.title_parts).split()) or None
-        headings = [" ".join(value.split()) for value in self.h1_parts]
-        return ParsedDocument(title, self.canonical, self.robots, self.descriptions, headings, self.images, self.links, self.jsonld)
-
-
-def parse_document(content: str) -> ParsedDocument:
-    parser = _DocumentParser()
-    parser.feed(content or "")
-    parser.close()
-    return parser.result()
 
 
 def _result(rule_index: int, status: str, message: str, evidence: dict[str, Any], *, severity: str | None = None) -> dict[str, Any]:
@@ -156,7 +72,9 @@ def _document_status(snapshot: dict[str, Any]) -> tuple[str, str]:
 
 def evaluate_snapshot(snapshot: dict[str, Any], audit_input: dict[str, Any]) -> list[dict[str, Any]]:
     """Evaluate a frozen snapshot and frozen bounded probe context deterministically."""
-    document = parse_document(str(snapshot.get("content") or ""))
+    url = str(snapshot.get("final_url") or snapshot.get("url") or "")
+    requested_url = str(snapshot.get("requested_url") or audit_input.get("requested_url") or url)
+    document = parse_document(str(snapshot.get("content") or ""), requested_url=requested_url, final_url=url)
     policy = audit_input.get("policy") or {}
     crawl = audit_input.get("crawl") or {}
     robots = audit_input.get("robots") or {}
@@ -164,7 +82,6 @@ def evaluate_snapshot(snapshot: dict[str, Any], audit_input: dict[str, Any]) -> 
     links = audit_input.get("link_checks") or []
     sample_pages = audit_input.get("sample_pages") or []
     page_status, page_status_message = _document_status(snapshot)
-    url = str(snapshot.get("url") or "")
     code = int(snapshot.get("status_code") or 0)
     out: list[dict[str, Any]] = []
 
@@ -249,24 +166,31 @@ def evaluate_snapshot(snapshot: dict[str, Any], audit_input: dict[str, Any]) -> 
     if page_status != "available":
         out.append(_result(4, "not_applicable" if page_status == "not_applicable" else "unknown", page_status_message, {"status_code": code}))
     elif not document.canonical:
-        out.append(_result(4, "not_applicable", "The page does not declare a canonical URL; no canonical target can be assessed.", {"url": url}))
-    elif len(document.canonical) != 1 or not document.canonical[0].strip():
-        out.append(_result(4, "fail", "The page must declare at most one non-empty canonical URL.", {"canonical_values": document.canonical}))
+        out.append(_result(4, "not_applicable", "The page does not declare a canonical URL; no canonical target can be assessed.", {"declared_canonical_values": document.canonical}))
+    elif len(document.canonical) != 1:
+        out.append(_result(4, "fail", "The page must declare exactly one canonical URL.", {"declared_canonical_values": document.canonical}))
     else:
-        canonical = urljoin(url, document.canonical[0].strip())
+        canonical = document.normalized_canonicals[0] or ""
         target_origin = _origin(canonical)
         preferred_origin = _origin(str(policy.get("preferred_origin") or policy.get("site_origin") or ""))
-        observed = {str(entry.get("url")): entry for entry in sample_pages}
+        observed: dict[str, dict[str, Any]] = {}
+        for entry in sample_pages:
+            for identity in (entry.get("final_url"), entry.get("url"), entry.get("requested_url")):
+                if not identity:
+                    continue
+                normalized_identity, _ = normalize_http_url(str(identity))
+                if normalized_identity:
+                    observed[normalized_identity] = entry
         target = observed.get(canonical)
         if target_origin is None:
-            out.append(_result(4, "fail", "The canonical URL is not a valid HTTP(S) URL.", {"canonical": canonical}))
+            out.append(_result(4, "fail", "The canonical URL is not a valid HTTP(S) URL.", {"declared_canonical_values": document.canonical, "canonical": canonical, "canonical_error": document.canonical_errors[0]}))
         elif target_origin != preferred_origin:
-            out.append(_result(4, "fail", "The canonical URL is not on the configured preferred site origin.", {"canonical": canonical, "preferred_origin": policy.get("preferred_origin") or policy.get("site_origin")}))
+            out.append(_result(4, "fail", "The canonical URL is not on the configured preferred site origin.", {"declared_canonical_values": document.canonical, "canonical": canonical, "preferred_origin": policy.get("preferred_origin") or policy.get("site_origin")}))
         elif target and (int(target.get("status_code") or 0) == 429 or int(target.get("status_code") or 0) >= 500):
             out.append(_result(4, "unknown", "The sampled canonical target has a transient HTTP failure.", {"canonical": canonical, "status_code": target.get("status_code")}))
         elif target and int(target.get("status_code") or 0) >= 400:
             out.append(_result(4, "fail", "The sampled canonical target returned an HTTP error.", {"canonical": canonical, "status_code": target.get("status_code")}))
-        elif not target and canonical != url:
+        elif not target and canonical not in {normalize_http_url(url)[0], normalize_http_url(requested_url)[0]}:
             out.append(_result(4, "unknown", "The canonical target is in scope but was not in the bounded captured sample.", {"canonical": canonical, "target_checked": False}))
         else:
             out.append(_result(4, "pass", "The canonical URL is valid, on the preferred origin, and its target is successful or self-referential.", {"canonical": canonical, "target_status": target.get("status_code") if target else code}))
@@ -277,8 +201,20 @@ def evaluate_snapshot(snapshot: dict[str, Any], audit_input: dict[str, Any]) -> 
         for index in (5, 7, 8, 10, 11):
             out.append(_result(index, state, page_status_message, {"status_code": code}))
     else:
-        title = snapshot.get("title") or document.title
-        out.append(_result(5, "fail" if not title else "pass", "The HTML title is missing." if not title else "The HTML title is present.", {"element": "title", "value": title}))
+        title = document.title
+        if document.requires_render and not title:
+            title_state = "unknown"
+            title_message = "The static response resembles a JavaScript shell; render it before assessing the title."
+        elif not title:
+            title_state = "fail"
+            title_message = "The HTML head title is missing."
+        elif len(document.title_values) > 1:
+            title_state = "needs_review"
+            title_message = "Multiple HTML head titles were found; review which title the rendered document exposes."
+        else:
+            title_state = "pass"
+            title_message = "Exactly one non-empty HTML head title is present."
+        out.append(_result(5, title_state, title_message, {"element": "head > title", "value": title, "title_values": document.title_values, "requires_render": document.requires_render}))
 
         usable_sample = [entry for entry in sample_pages if entry.get("title") and 200 <= int(entry.get("status_code") or 0) < 300]
         if len(usable_sample) < 2:
@@ -292,10 +228,14 @@ def evaluate_snapshot(snapshot: dict[str, Any], audit_input: dict[str, Any]) -> 
             out.append(_result(6, "needs_review" if duplicates else "pass", "Repeated titles need human review; duplication alone is not treated as a search penalty." if duplicates else "No duplicate titles were found in the frozen sample.", {"duplicate_groups": duplicates, "sampled_titled_pages": len(usable_sample)}))
 
         description = next((value.strip() for value in document.descriptions if value.strip()), None)
-        out.append(_result(7, "needs_review" if not description else "pass", "The page has no non-empty meta description; this is an improvement suggestion." if not description else "A non-empty meta description is present.", {"element": "meta[name=description]", "value": description}))
+        description_state = "unknown" if document.requires_render and not description else "needs_review" if not description else "pass"
+        description_message = "The static response resembles a JavaScript shell; render it before assessing its meta description." if description_state == "unknown" else "The page has no non-empty meta description; this is an improvement suggestion." if description_state == "needs_review" else "A non-empty head meta description is present."
+        out.append(_result(7, description_state, description_message, {"element": "head > meta[name=description]", "value": description, "requires_render": document.requires_render}))
 
         if not document.h1 or len(document.h1) != 1:
-            out.append(_result(8, "needs_review", "The page has no H1 or has multiple H1 elements; review its heading hierarchy manually.", {"h1_count": len(document.h1), "headings": document.h1[:10]}))
+            heading_state = "unknown" if document.requires_render and not document.h1 else "needs_review"
+            heading_message = "The static response resembles a JavaScript shell; render it before assessing heading structure." if heading_state == "unknown" else "The page has no H1 or has multiple H1 elements; review its heading hierarchy manually."
+            out.append(_result(8, heading_state, heading_message, {"h1_count": len(document.h1), "headings": document.h1[:10], "requires_render": document.requires_render}))
         else:
             out.append(_result(8, "pass", "Exactly one H1 was found; this structural check is not a ranking guarantee.", {"h1_count": 1, "heading": document.h1[0]}))
 
@@ -315,13 +255,18 @@ def evaluate_snapshot(snapshot: dict[str, Any], audit_input: dict[str, Any]) -> 
 
         missing_alt = sum(1 for has_alt in document.images if not has_alt)
         if not document.images:
-            out.append(_result(10, "not_applicable", "No images were present in the captured HTML.", {"image_count": 0}))
+            image_state = "unknown" if document.requires_render else "not_applicable"
+            image_message = "The static response resembles a JavaScript shell; render it before assessing images." if image_state == "unknown" else "No images were present in the captured HTML."
+            out.append(_result(10, image_state, image_message, {"image_count": 0, "requires_render": document.requires_render}))
         elif missing_alt:
             out.append(_result(10, "needs_review", "Some images have no alt attribute; review whether they need descriptive or decorative alternatives.", {"image_count": len(document.images), "missing_alt_count": missing_alt}))
         else:
             out.append(_result(10, "pass", "Every captured image has an alt attribute.", {"image_count": len(document.images), "missing_alt_count": 0}))
 
-        out.append(_jsonld_result(document, snapshot, title))
+        jsonld_result = _jsonld_result(document, snapshot, title)
+        if document.requires_render and jsonld_result["status"] == "not_applicable":
+            jsonld_result = _result(11, "unknown", "The static response resembles a JavaScript shell; render it before assessing structured data.", {"script_count": document.script_count, "requires_render": True})
+        out.append(jsonld_result)
 
     present = {item["rule_id"] for item in out}
     if "duplicate_titles" not in present:
@@ -344,6 +289,21 @@ def evaluate_snapshot(snapshot: dict[str, Any], audit_input: dict[str, Any]) -> 
             state = "fail" if broken else "unknown" if inconclusive else "pass"
             message = "One or more sampled in-scope internal links returned a definitive client error." if broken else "At least one sampled internal-link request was inconclusive." if inconclusive else "All sampled in-scope internal links returned non-error responses."
             out.append(_result(9, state, message, {"checked_links": len(in_scope_links), "broken_links": broken[:20], "inconclusive_links": inconclusive[:20], "results": in_scope_links[:20]}))
+    identity_evidence = {
+        "requested_url": requested_url,
+        "final_url": url,
+        "declared_canonical_values": document.canonical,
+        "normalized_canonical_values": document.normalized_canonicals,
+        "canonical_parse_errors": document.canonical_errors,
+        "normalized_canonical_url": document.canonical_url,
+        "parser_version": PARSER_VERSION,
+        "parser_source_hash": document.source_hash,
+        "parser_metadata_hash": document.metadata_hash,
+        "parser_body_hash": document.body_hash,
+        "requires_render": document.requires_render,
+    }
+    for result in out:
+        result["evidence"] = {**identity_evidence, **result["evidence"]}
     return out
 
 

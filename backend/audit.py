@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from .audit_rules import RULES, RULE_VERSION, evaluate_snapshot, parse_document
 from .crawler import CrawlError, CrawlResult, FixtureCrawler, is_sitemap_url, normalize_path
+from .document_parser import PARSER_VERSION
 from .models import AuditFinding, AuditRuleResult, Job, JobStatus, Page, PageSnapshot, Site, utcnow
 
 
@@ -177,6 +178,52 @@ def _result_data(result: CrawlResult) -> dict:
     }
 
 
+def map_rule_failures_to_findings(rule_results: list[dict]) -> list[dict]:
+    """Project only definitive rule failures into the legacy findings collection."""
+    findings = []
+    for result in rule_results:
+        if result.get("status") != "fail":
+            continue
+        rule_id = str(result.get("rule_id") or "unknown")
+        evidence = dict(result.get("evidence") or {})
+        evidence.update({
+            "rule_id": rule_id,
+            "rule_version": result.get("version"),
+            "rule_status": "fail",
+        })
+        findings.append({
+            "code": "TITLE_MISSING" if rule_id == "title_present" else f"RULE_{rule_id.upper()}",
+            "severity": str(result.get("severity") or "warning"),
+            "message": str(result.get("message") or "Audit rule failed."),
+            "evidence": evidence,
+        })
+    return findings
+
+
+def summarize_rule_results(rule_results: list[dict]) -> dict[str, int]:
+    """Keep definitive failures, review, inconclusive, and NA totals distinct."""
+    counts = {
+        "problem_count": 0,
+        "review_count": 0,
+        "unknown_count": 0,
+        "pass_count": 0,
+        "not_applicable_count": 0,
+    }
+    status_keys = {
+        "fail": "problem_count",
+        "needs_review": "review_count",
+        "unknown": "unknown_count",
+        "pass": "pass_count",
+        "not_applicable": "not_applicable_count",
+    }
+    for result in rule_results:
+        key = status_keys.get(str(result.get("status")))
+        if key:
+            counts[key] += 1
+    counts["attention_count"] = counts["problem_count"] + counts["review_count"] + counts["unknown_count"]
+    return counts
+
+
 def execute_claimed_job(db: Session, job_id: int, lease_token: str, crawler: FixtureCrawler | None = None) -> Job:
     job_state = db.execute(
         select(Job.site_id, Job.status, Job.lease_token, Job.lease_expires_at).where(Job.id == job_id)
@@ -276,7 +323,7 @@ def execute_claimed_job(db: Session, job_id: int, lease_token: str, crawler: Fix
                     crawl_error = "robots.txt did not provide a reliable allow decision" if not blocked else None
                     robots_blocked = blocked
                     robots_directive = directive
-                    captured.append({"url": requested_url, "status_code": 0, "headers": {}, "content": "", "title": None, "error": crawl_error, "redirect_chain": [], "blocked_by_robots": blocked, "robots_directive": directive})
+                    captured.append({"url": requested_url, "requested_url": requested_url, "status_code": 0, "headers": {}, "content": "", "title": None, "error": crawl_error, "redirect_chain": [], "blocked_by_robots": blocked, "robots_directive": directive})
                     observed_results[requested_url] = {"status_code": 0, "error": crawl_error, "redirect_chain": []}
                 continue
 
@@ -330,20 +377,20 @@ def execute_claimed_job(db: Session, job_id: int, lease_token: str, crawler: Fix
         snapshots: list[PageSnapshot] = []
         snapshot_data: list[dict] = []
         for data in captured:
-            canonical_url = data["url"] or target_url
-            page = _get_or_create_page(db, site_id, canonical_url)
+            requested_url = data.get("requested_url") or data["url"] or target_url
+            final_url = data["url"] or requested_url
+            page = _get_or_create_page(db, site_id, final_url)
             content_hash = sha256(data["content"].encode("utf-8")).hexdigest()
             content_type = data["headers"].get("content-type")
-            snapshot = PageSnapshot(page_id=page.id, job_id=job_id, url=canonical_url, status_code=data["status_code"], title=data["title"], content_hash=content_hash, content_type=content_type, content=data["content"], headers_json=json.dumps(data["headers"], sort_keys=True), is_synthetic=is_synthetic, audit_rule_version=RULE_VERSION)
+            document = parse_document(data["content"], requested_url=requested_url, final_url=final_url)
+            snapshot = PageSnapshot(page_id=page.id, job_id=job_id, url=final_url, requested_url=requested_url, final_url=final_url, status_code=data["status_code"], title=document.title, content_hash=content_hash, content_type=content_type, content=data["content"], headers_json=json.dumps(data["headers"], sort_keys=True), is_synthetic=is_synthetic, audit_rule_version=RULE_VERSION, parser_version=PARSER_VERSION, declared_canonical_json=json.dumps(document.canonical, ensure_ascii=True, separators=(",", ":")), normalized_canonical_json=json.dumps(document.normalized_canonicals, ensure_ascii=True, separators=(",", ":")), metadata_hash=document.metadata_hash, body_hash=document.body_hash)
             db.add(snapshot)
             db.flush()
-            if 200 <= data["status_code"] < 300 and content_type and content_type.split(";", 1)[0].strip().lower() in {"text/html", "application/xhtml+xml"} and not data["title"]:
-                db.add(AuditFinding(snapshot_id=snapshot.id, code="TITLE_MISSING", severity="error", message="Page is missing a title element", evidence_json=json.dumps({"url": canonical_url})))
             snapshots.append(snapshot)
-            snapshot_data.append({**data, "id": snapshot.id, "page_id": snapshot.page_id, "content_hash": content_hash, "content_type": content_type})
+            snapshot_data.append({**data, "url": final_url, "requested_url": requested_url, "final_url": final_url, "id": snapshot.id, "page_id": snapshot.page_id, "content_hash": content_hash, "content_type": content_type})
 
-        sample_pages = [{"snapshot_id": data["id"], "url": data["url"], "status_code": data["status_code"], "title": data["title"], "content_hash": data["content_hash"]} for data in snapshot_data]
-        frozen_input = {"policy": policy, "robots": {"url": robots.get("url"), "status_code": robots.get("status_code"), "error": robots.get("error"), "content_hash": sha256(str(robots.get("content") or "").encode("utf-8")).hexdigest()}, "sitemap": sitemap, "crawl": {data["url"]: {"error": data.get("error"), "redirect_chain": data.get("redirect_chain", []), "blocked_by_robots": data.get("blocked_by_robots", False), "robots_directive": data.get("robots_directive")} for data in snapshot_data}, "link_checks_by_page": link_checks_by_page, "sample_pages": sample_pages}
+        sample_pages = [{"snapshot_id": data["id"], "url": data["url"], "requested_url": data["requested_url"], "final_url": data["final_url"], "status_code": data["status_code"], "title": data["title"], "content_hash": data["content_hash"]} for data in snapshot_data]
+        frozen_input = {"policy": policy, "robots": {"url": robots.get("url"), "status_code": robots.get("status_code"), "error": robots.get("error"), "content_hash": sha256(str(robots.get("content") or "").encode("utf-8")).hexdigest()}, "sitemap": sitemap, "crawl": {data["url"]: {"requested_url": data["requested_url"], "final_url": data["final_url"], "error": data.get("error"), "redirect_chain": data.get("redirect_chain", []), "blocked_by_robots": data.get("blocked_by_robots", False), "robots_directive": data.get("robots_directive")} for data in snapshot_data}, "link_checks_by_page": link_checks_by_page, "sample_pages": sample_pages}
         job_record = db.get(Job, job_id)
         if job_record is None:
             raise ValueError("job not found")
@@ -351,6 +398,7 @@ def execute_claimed_job(db: Session, job_id: int, lease_token: str, crawler: Fix
         for snapshot, data in zip(snapshots, snapshot_data):
             page_input = {
                 "policy": policy,
+                "requested_url": data["requested_url"],
                 "robots": frozen_input["robots"],
                 "sitemap": sitemap,
                 "crawl": frozen_input["crawl"].get(data["url"], {}),
@@ -368,6 +416,8 @@ def execute_claimed_job(db: Session, job_id: int, lease_token: str, crawler: Fix
                 raise RuntimeError(f"audit rule evaluation returned an incomplete rule set for snapshot {snapshot.id}")
             for result in rule_results:
                 db.add(AuditRuleResult(snapshot_id=snapshot.id, rule_id=result["rule_id"], version=result["version"], scope=result["scope"], status=result["status"], severity=result["severity"], message=result["message"], evidence_json=json.dumps(result["evidence"], sort_keys=True, separators=(",", ":")), remediation_hint=result["remediation_hint"]))
+            for finding in map_rule_failures_to_findings(rule_results):
+                db.add(AuditFinding(snapshot_id=snapshot.id, code=finding["code"], severity=finding["severity"], message=finding["message"], evidence_json=json.dumps(finding["evidence"], sort_keys=True, separators=(",", ":"))))
         db.flush()
         now = utcnow()
         finish = db.execute(

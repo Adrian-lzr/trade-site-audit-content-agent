@@ -1,17 +1,10 @@
-"""Local, explicit authorization checks for workspace-scoped API routes.
+"""Explicit authorization checks for workspace-scoped API routes.
 
-The first version intentionally does not authenticate a user.  A caller may
-provide a local actor key through ``X-Local-User`` (with a few compatibility
-aliases); the key is looked up in :class:`Membership` for the target
-workspace.  This is useful for the local demo and for deterministic tests, but
-the header is not a security credential.  A real deployment still needs an
-authenticated identity provider or a trusted gateway to populate the actor
-identity.
-
-Anonymous requests remain supported while ``LOCAL_AUTH_MODE`` is ``demo``
-(the default), preserving the existing no-auth local demonstration.  Set it
-to ``required`` or ``strict`` to make a missing identity context an explicit
-401 error on routes that opt into these checks.
+Demo and test callers may provide a local actor key through ``X-Local-User``;
+production callers must provide a verified OIDC Bearer token.  In every mode,
+the role is loaded from :class:`Membership` and never from request claims.
+Production fails closed when OIDC configuration or the Bearer token is absent
+or invalid.
 """
 
 from __future__ import annotations
@@ -25,6 +18,7 @@ from fastapi import HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .identity import IdentityVerificationError, bearer_from_headers, verify_bearer_token
 from .models import Membership, Workspace
 
 
@@ -104,6 +98,14 @@ def identity_from_request(request: Request | Mapping[str, str]) -> IdentityConte
     """
 
     headers = _request_headers(request)
+    auth_mode = os.getenv("AUTH_MODE", "demo").strip().casefold()
+    if auth_mode not in {"demo", "test", "production"}:
+        raise HTTPException(500, "invalid AUTH_MODE")
+    bearer = None
+    try:
+        bearer = bearer_from_headers(headers)
+    except IdentityVerificationError as exc:
+        raise HTTPException(401, str(exc)) from exc
     user_values = _header_values(headers, _USER_HEADERS)
     workspace_values = _header_values(headers, _WORKSPACE_HEADERS)
     if len(user_values) > 1:
@@ -112,6 +114,24 @@ def identity_from_request(request: Request | Mapping[str, str]) -> IdentityConte
         raise HTTPException(400, "conflicting workspace identity headers")
     user_id = user_values[0] if user_values else None
     workspace_key = workspace_values[0] if workspace_values else None
+    if auth_mode == "production":
+        if user_id is not None:
+            raise HTTPException(401, "local identity headers are not accepted in production")
+        if bearer is None:
+            raise HTTPException(401, "Bearer identity is required")
+        try:
+            subject = verify_bearer_token(bearer)
+        except IdentityVerificationError as exc:
+            raise HTTPException(401, "invalid bearer identity") from exc
+        return IdentityContext(user_id=subject, workspace_key=workspace_key, source="oidc")
+    if bearer is not None:
+        try:
+            subject = verify_bearer_token(bearer)
+        except IdentityVerificationError as exc:
+            raise HTTPException(401, "invalid bearer identity") from exc
+        if user_id is not None and user_id != subject:
+            raise HTTPException(401, "conflicting identity assertions")
+        return IdentityContext(user_id=subject, workspace_key=workspace_key, source="oidc")
     if user_id is None:
         return IdentityContext(workspace_key=workspace_key)
     if len(user_id) > 255:

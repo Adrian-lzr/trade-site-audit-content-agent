@@ -25,6 +25,9 @@ from .models import (
     FactVisibility,
     utcnow,
 )
+from .services.facts import FactResolutionError, assert_bindings_current, resolve_current_facts
+from .services.claims import validate_high_risk_claims
+from .time_utils import as_utc
 
 
 MAX_REQUIRED_FACTS = 100
@@ -175,20 +178,11 @@ class SQLAlchemyContentWorkflowRepository:
         ids = sorted(set(fact_ids))
         if not ids:
             return ()
-        now = utcnow()
         with self._session_factory() as db:
-            rows = db.scalars(
-                select(Fact)
-                .where(
-                    Fact.workspace_id == workspace_id,
-                    Fact.id.in_(ids),
-                    Fact.status == FactStatus.confirmed.value,
-                    Fact.visibility == FactVisibility.public.value,
-                    Fact.valid_from <= now,
-                    or_(Fact.valid_until.is_(None), Fact.valid_until > now),
-                )
-                .order_by(Fact.id)
-            ).all()
+            rows, _conflicts = resolve_current_facts(
+                db, workspace_id, visibility=FactVisibility.public.value
+            )
+            rows = [row for row in rows if row.id in ids]
             return tuple(_fact_context(row) for row in rows)
 
     def persist_revision(
@@ -592,7 +586,8 @@ def validate_structured_draft(field_diff: Mapping[str, Any], facts: Sequence[Con
                 break
         if len(issues) >= 5:
             break
-    return issues
+    issues.extend(validate_high_risk_claims(field_diff, facts))
+    return issues[:5]
 
 
 def _generate_draft(
@@ -756,23 +751,11 @@ def _assert_facts_current(
     workspace_id: int,
     versions: Sequence[Mapping[str, int | str]],
 ) -> list[ConfirmedFact]:
-    ids = [int(item["fact_id"]) for item in versions]
-    rows = db.scalars(select(Fact).where(Fact.workspace_id == workspace_id, Fact.id.in_(ids))).all() if ids else []
-    facts = {row.id: row for row in rows}
-    now = utcnow()
-    for item in versions:
-        fact = facts.get(int(item["fact_id"]))
-        if (
-            fact is None
-            or fact.series_id != str(item["series_id"])
-            or fact.version != int(item["version"])
-            or fact.status != FactStatus.confirmed.value
-            or fact.visibility != FactVisibility.public.value
-            or _datetime_utc(fact.valid_from) > now
-            or (fact.valid_until is not None and _datetime_utc(fact.valid_until) <= now)
-        ):
-            raise StaleFactsError("selected fact version is no longer current and public")
-    return [_fact_context(facts[int(item["fact_id"])]) for item in versions]
+    try:
+        facts = assert_bindings_current(db, workspace_id, versions)
+    except FactResolutionError as exc:
+        raise StaleFactsError(str(exc)) from exc
+    return [_fact_context(fact) for fact in facts]
 
 
 def _validate_fact_versions_shape(versions: Sequence[Mapping[str, int | str]]) -> None:
@@ -835,7 +818,8 @@ def _fact_context(fact: Fact) -> ConfirmedFact:
 
 
 def _datetime_utc(value: datetime) -> datetime:
-    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+    # Compatibility wrapper for callers in this module; policy lives in one utility.
+    return as_utc(value)
 
 
 def _normalize_number(value: str) -> str:

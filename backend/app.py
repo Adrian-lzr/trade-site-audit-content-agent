@@ -25,6 +25,9 @@ from .database import get_db, init_db
 from .authz import Permission, authorize_workspace, effective_actor
 from .knowledge import curated_entries, filter_guidance
 from .models import AuditEvent, ChangeApproval, ChangeRequest, ChangeRevision, ChangeState, ContentGenerationItem, ContentGenerationTask, Fact, FactStatus, FactVisibility, Job, JobStatus, OutboxEvent, Page, PageSnapshot, ProcurementQuestion, ProcurementQuestionPageMapping, ProcurementQuestionSet, ProcurementQuestionSetVersion, PublicationAttempt, Site, VisibilityRun, VisibilitySample, Workspace, utcnow
+from .time_utils import as_utc
+from .services.facts import FactResolutionError, assert_binding_current, assert_bindings_current, resolve_current_facts
+from .services.claims import validate_high_risk_claims
 from .observability import request_context_middleware
 from .schemas import AuditEventCreate, AuditEventOut, ChangeAction, ChangeApprovalCreate, ChangeApprovalOut, ChangeRequestCreate, ChangeRequestOut, ChangeRevisionCreate, ChangeRevisionOut, ContentGenerationItemCreate, ContentGenerationItemOut, ContentGenerationTaskCreate, ContentGenerationTaskOut, ContentGenerationTaskSummaryOut, DeploymentUpdate, FactCreate, FactOut, FactReview, FindingOut, JobOut, ProcurementQuestionCreate, ProcurementQuestionOut, ProcurementQuestionPageMappingOut, ProcurementQuestionSetCreate, ProcurementQuestionSetOut, ProcurementQuestionSetSummaryOut, ProcurementQuestionSetVersionCreate, ProcurementQuestionSetVersionOut, ProcurementQuestionSetVersionUpdate, PublicationAttemptOut, RollbackRequest, RuleResultOut, SiteCreate, SnapshotOut, VisibilityRunCreate, VisibilityRunOut, VisibilitySampleCapture, WorkspaceCreate, WorkspaceOut
 from .visibility_provider import build_visibility_provider, redact_sensitive_text
@@ -296,19 +299,15 @@ def _workspace_for_key(db: Session, workspace_key: str | int | None) -> Workspac
 
 def _fact_expired(fact: Fact, now: datetime | None = None) -> bool:
     now = now or datetime.now(timezone.utc)
-    valid_until = fact.valid_until
+    valid_until = as_utc(fact.valid_until)
     if valid_until is None:
         return False
-    if valid_until.tzinfo is None:
-        valid_until = valid_until.replace(tzinfo=timezone.utc)
     return valid_until <= now
 
 
 def _fact_current(fact: Fact, now: datetime | None = None) -> bool:
     now = now or datetime.now(timezone.utc)
-    valid_from = fact.valid_from
-    if valid_from.tzinfo is None:
-        valid_from = valid_from.replace(tzinfo=timezone.utc)
+    valid_from = as_utc(fact.valid_from)
     if valid_from > now or _fact_expired(fact, now):
         return False
     return fact.status == FactStatus.confirmed.value
@@ -503,14 +502,10 @@ def import_fact(payload: FactCreate, request: Request, db: Session = Depends(get
 
 
 def _list_facts(db: Session, workspace: Workspace, *, public: bool, subject: str | None = None) -> list[FactOut]:
-    query = select(Fact).where(Fact.workspace_id == workspace.id)
     if public:
-        now = datetime.now(timezone.utc)
-        query = query.where(
-            Fact.visibility == FactVisibility.public.value,
-            Fact.status == FactStatus.confirmed.value,
-            Fact.valid_from <= now,
-        ).where((Fact.valid_until.is_(None)) | (Fact.valid_until > now))
+        facts, _conflicts = resolve_current_facts(db, workspace.id, subject=subject, visibility=FactVisibility.public.value)
+        return [_fact_response(fact, public=True) for fact in facts]
+    query = select(Fact).where(Fact.workspace_id == workspace.id)
     if subject:
         query = query.where(Fact.subject == subject)
     facts = db.scalars(query.order_by(Fact.subject, Fact.predicate, Fact.version.desc())).all()
@@ -587,6 +582,20 @@ def _review_fact(
     fact.status = target_status.value
     fact.reviewer = reviewer or payload.reviewer
     fact.reviewed_at = utcnow()
+    if target_status == FactStatus.confirmed:
+        # A confirmation is a state transition, so validate the complete
+        # series while this transaction still owns the row.  An overlap is a
+        # migration/authoring conflict and must never be resolved by ordering.
+        db.flush()
+        _resolved, conflicts = resolve_current_facts(
+            db,
+            fact.workspace_id,
+            series_ids=[fact.series_id],
+            visibility=None,
+        )
+        if conflicts:
+            db.rollback()
+            raise HTTPException(409, conflicts[0].reason)
     db.commit()
     db.refresh(fact)
     return fact
@@ -1356,6 +1365,7 @@ def _visibility_sample_out(sample: VisibilitySample, question: ProcurementQuesti
         "question": question.question if question is not None else "",
         "brand_query": sample.brand_query,
         "status": sample.status,
+        "answered_question": sample.answered_question,
         "raw_response": sample.raw_response,
         "answer_text": sample.answer_text,
         "citations": _json_array(sample.citations_json),
@@ -1670,6 +1680,7 @@ def capture_visibility_sample(
     if question is None or question.question_set_version_id != run.question_set_version_id:
         raise HTTPException(404, "visibility question not found")
     sample.status = "succeeded"
+    sample.answered_question = payload.answered_question
     sample.raw_response = redact_sensitive_text(
         payload.raw_response or payload.answer_text,
         max_bytes=settings.raw_evidence_max_bytes,
@@ -1842,7 +1853,7 @@ def _snapshot_response(snapshot: PageSnapshot) -> SnapshotOut:
         RuleResultOut(id=item.id, rule_id=item.rule_id, version=item.version, scope=item.scope, status=item.status, severity=item.severity, message=item.message, evidence=json.loads(item.evidence_json or "{}"), remediation_hint=item.remediation_hint)
         for item in sorted(snapshot.rule_results, key=lambda result: result.rule_id)
     ]
-    return SnapshotOut(id=snapshot.id, page_id=snapshot.page_id, job_id=snapshot.job_id, url=snapshot.url, status_code=snapshot.status_code, title=snapshot.title, content_hash=snapshot.content_hash, content_type=snapshot.content_type, artifact_uri=snapshot.artifact_uri, parser_version=snapshot.parser_version, fetched_at=snapshot.fetched_at, is_synthetic=snapshot.is_synthetic, findings=findings, rule_set_version=snapshot.audit_rule_version, rule_results=rule_results)
+    return SnapshotOut(id=snapshot.id, page_id=snapshot.page_id, job_id=snapshot.job_id, url=snapshot.url, requested_url=snapshot.requested_url, final_url=snapshot.final_url, status_code=snapshot.status_code, title=snapshot.title, content_hash=snapshot.content_hash, content_type=snapshot.content_type, artifact_uri=snapshot.artifact_uri, parser_version=snapshot.parser_version, declared_canonical=_json_array(snapshot.declared_canonical_json), normalized_canonical=_json_array(snapshot.normalized_canonical_json), metadata_hash=snapshot.metadata_hash, body_hash=snapshot.body_hash, fetched_at=snapshot.fetched_at, is_synthetic=snapshot.is_synthetic, findings=findings, rule_set_version=snapshot.audit_rule_version, rule_results=rule_results)
 
 
 @app.get("/api/snapshots/{snapshot_id}", response_model=SnapshotOut)
@@ -2030,8 +2041,10 @@ def _validate_facts(db: Session, workspace: Workspace, versions: list[dict[str, 
             raise HTTPException(404, "fact not found in workspace")
         if version is not None and int(version) != fact.version:
             raise HTTPException(409, "fact version changed; refresh before editing")
-        if fact.visibility != FactVisibility.public.value or not _fact_current(fact):
-            raise HTTPException(409, "fact is not a current confirmed public fact")
+        try:
+            assert_binding_current(db, workspace.id, {"fact_id": fact.id, "series_id": fact.series_id, "version": fact.version})
+        except FactResolutionError as exc:
+            raise HTTPException(409, str(exc)) from exc
         summary.append({"fact_id": fact.id, "series_id": fact.series_id, "version": fact.version})
     return sorted(summary, key=lambda item: (int(item["fact_id"]), int(item["version"])))
 
@@ -2081,6 +2094,10 @@ def _create_revision(db: Session, change: ChangeRequest, payload: ChangeRevision
     _validate_field_diff(payload.field_diff)
     snapshot_id, base_hash = _snapshot_binding(db, site, payload.base_snapshot_id, payload.base_content_hash)
     facts = _validate_facts(db, change.workspace, payload.fact_versions)
+    fact_rows = [db.get(Fact, int(item["fact_id"])) for item in facts]
+    claim_issues = validate_high_risk_claims(payload.field_diff, [fact for fact in fact_rows if fact is not None])
+    if claim_issues:
+        raise HTTPException(422, "content claims require confirmed supporting facts: " + "; ".join(claim_issues[:5]))
     computed_hash = _revision_hash(snapshot_id, base_hash, payload.field_diff, facts)
     if payload.content_hash is not None and payload.content_hash != computed_hash:
         raise HTTPException(409, "content_hash does not match the canonical change revision")
@@ -2303,10 +2320,10 @@ def publish_change(change_id: int, request: Request, payload: ChangeAction | Non
     latest_snapshot = db.scalar(select(PageSnapshot).join(Page).where(PageSnapshot.page_id == base_snapshot.page_id).order_by(PageSnapshot.fetched_at.desc(), PageSnapshot.id.desc()))
     if latest_snapshot is None or latest_snapshot.id != base_snapshot.id or latest_snapshot.content_hash != revision.base_content_hash:
         raise HTTPException(409, "base snapshot is no longer the current site snapshot")
-    for item in json.loads(revision.fact_versions_json or "[]"):
-        fact = db.get(Fact, int(item["fact_id"]))
-        if fact is None or fact.workspace_id != change.workspace_id or fact.version != int(item["version"]) or fact.visibility != FactVisibility.public.value or not _fact_current(fact):
-            raise HTTPException(409, "bound fact is no longer current, confirmed, and public")
+    try:
+        assert_bindings_current(db, change.workspace_id, json.loads(revision.fact_versions_json or "[]"))
+    except FactResolutionError as exc:
+        raise HTTPException(409, str(exc)) from exc
     target = os.getenv("GIT_PUBLISH_TARGET", "demo").strip() or "demo"
     idempotency_key = f"change:{change.id}:revision:{revision.id}:target:{target}"
     attempt = db.scalar(select(PublicationAttempt).where(PublicationAttempt.idempotency_key == idempotency_key))

@@ -4,7 +4,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator, field_validator
+from .time_utils import require_aware_utc
 
 
 class WorkspaceCreate(BaseModel):
@@ -208,12 +209,18 @@ class SnapshotOut(BaseModel):
     page_id: int
     job_id: int | None
     url: str
+    requested_url: str | None = None
+    final_url: str | None = None
     status_code: int
     title: str | None
     content_hash: str
     content_type: str | None
     artifact_uri: str | None = None
     parser_version: str | None = None
+    declared_canonical: list[str] = Field(default_factory=list)
+    normalized_canonical: list[str | None] = Field(default_factory=list)
+    metadata_hash: str | None = None
+    body_hash: str | None = None
     fetched_at: datetime
     is_synthetic: bool = False
     findings: list[FindingOut]
@@ -262,6 +269,14 @@ class FactCreate(BaseModel):
     version: int | None = Field(default=None, ge=1)
     valid_from: datetime | None = None
     valid_until: datetime | None = None
+
+    @field_validator("valid_from", "valid_until")
+    @classmethod
+    def require_timezone(cls, value: datetime | None):
+        try:
+            return require_aware_utc(value)
+        except ValueError as exc:
+            raise ValueError(str(exc)) from exc
 
     @model_validator(mode="after")
     def valid_window(self):
@@ -478,6 +493,7 @@ class VisibilitySampleCapture(BaseModel):
     raw_response: str | None = Field(default=None, max_length=200_000)
     citations: list[str] = Field(default_factory=list, max_length=100)
     mentioned_domains: list[str] = Field(default_factory=list, max_length=100)
+    answered_question: bool | None = None
     model: str | None = Field(default=None, max_length=200)
     provider_request_id: str | None = Field(default=None, max_length=255)
 
@@ -490,6 +506,7 @@ class VisibilitySampleOut(BaseModel):
     question: str
     brand_query: bool
     status: Literal["succeeded", "failed", "unavailable"]
+    answered_question: bool | None
     raw_response: str | None
     answer_text: str | None
     citations: list[str]

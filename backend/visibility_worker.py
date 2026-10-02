@@ -27,6 +27,8 @@ from .models import (
     VisibilitySampleStatus,
     utcnow,
 )
+from .time_utils import as_utc
+from .services.visibility_metrics import calculate_visibility_metrics as calculate_visibility_metrics_v2
 from .visibility_provider import VisibilityProvider, VisibilityResponse, build_visibility_provider, redact_sensitive_text
 
 
@@ -420,10 +422,7 @@ def _sample_provider(
 def calculate_workspace_daily_spend(db, workspace_id: int, *, at: datetime | None = None) -> Decimal:
     """Return total plus in-flight reservations for one UTC calendar day."""
 
-    current = at or utcnow()
-    if current.tzinfo is None:
-        current = current.replace(tzinfo=timezone.utc)
-    current = current.astimezone(timezone.utc)
+    current = as_utc(at or utcnow())
     start = datetime.combine(current.date(), time.min, tzinfo=timezone.utc)
     end = start + timedelta(days=1)
     total = Decimal("0")
@@ -432,9 +431,7 @@ def calculate_workspace_daily_spend(db, workspace_id: int, *, at: datetime | Non
         occurred = run.completed_at or run.started_at or run.created_at
         if occurred is None:
             continue
-        if occurred.tzinfo is None:
-            occurred = occurred.replace(tzinfo=timezone.utc)
-        occurred = occurred.astimezone(timezone.utc)
+        occurred = as_utc(occurred)
         if start <= occurred < end:
             total += _decimal(run.total_cost_usd) + _decimal(run.reserved_cost_usd)
     return total.quantize(Decimal("0.000001"))
@@ -442,6 +439,7 @@ def calculate_workspace_daily_spend(db, workspace_id: int, *, at: datetime | Non
 
 def _apply_response(sample: VisibilitySample, response: VisibilityResponse, *, max_raw_bytes: int | None = None) -> None:
     sample.status = response.status if response.status in {item.value for item in VisibilitySampleStatus} else VisibilitySampleStatus.failed.value
+    sample.answered_question = response.answered_question if isinstance(response.answered_question, bool) else None
     sample.raw_response = redact_sensitive_text(response.raw_response, max_bytes=max_raw_bytes)
     sample.answer_text = redact_sensitive_text(response.answer_text, max_bytes=max_raw_bytes)
     sample.citations_json = json.dumps(
@@ -570,45 +568,54 @@ def _finish_from_samples(run: VisibilityRun, db) -> None:
 
 
 def calculate_visibility_metrics(run: VisibilityRun, site: Site) -> dict[str, object]:
-    samples = list(run.samples)
-    successful = [sample for sample in samples if sample.status == VisibilitySampleStatus.succeeded.value]
-    target_domain = _site_domain(site.base_url)
     terms = _json_list(run.brand_terms_json)
-    total = run.planned_samples or len(samples)
-    failed_only = [sample for sample in samples if sample.status == VisibilitySampleStatus.failed.value]
-    unavailable = [sample for sample in samples if sample.status == VisibilitySampleStatus.unavailable.value]
-    site_cited = [sample for sample in successful if _sample_cites_site(sample, target_domain)]
-    brand_queries = [sample for sample in successful if sample.brand_query]
-    non_brand_queries = [sample for sample in successful if not sample.brand_query]
-    brand_mentions = [sample for sample in brand_queries if _sample_mentions_brand(sample, terms, target_domain)]
-    non_brand_mentions = [sample for sample in non_brand_queries if _sample_mentions_brand(sample, terms, target_domain)]
-    covered_questions = {sample.question_id for sample in site_cited}
-    successful_questions = {sample.question_id for sample in successful}
-    return {
-        "sampling_success_rate": _ratio(len(successful), total),
-        "successful_samples": len(successful),
-        "failed_samples": len(samples) - len(successful),
-        "failed_error_samples": len(failed_only),
-        "unavailable_samples": len(unavailable),
-        "planned_samples": total,
-        "site_citation_rate": _ratio(len(site_cited), len(successful)),
-        "question_coverage_rate": _ratio(len(covered_questions), len(successful_questions)),
-        "covered_question_count": len(covered_questions),
-        "successful_question_count": len(successful_questions),
-        "questions_without_successful_sample": max(0, total - len(successful_questions)),
-        "brand_mention_rate": _ratio(len(brand_mentions), len(brand_queries)),
-        "non_brand_mention_rate": _ratio(len(non_brand_mentions), len(non_brand_queries)),
-        "brand": {
-            "query_count": len(brand_queries),
-            "mention_count": len(brand_mentions),
-            "mention_rate": _ratio(len(brand_mentions), len(brand_queries)),
-        },
-        "non_brand": {
-            "query_count": len(non_brand_queries),
-            "mention_count": len(non_brand_mentions),
-            "mention_rate": _ratio(len(non_brand_mentions), len(non_brand_queries)),
-        },
-    }
+    samples = list(run.samples)
+    questions = [sample.question_id for sample in samples]
+    metrics = calculate_visibility_metrics_v2(
+        samples,
+        site_url=site.base_url,
+        brand_terms=terms,
+        planned_samples=run.planned_samples or len(samples),
+        expected_questions=questions,
+        is_synthetic=bool(run.is_synthetic),
+        provider_kind=run.provider_kind,
+    )
+    # Keep the established response aliases while making v2 the canonical
+    # source of truth for all counting semantics.
+    sample_success = metrics["sample_success"]
+    citation = metrics["validated_site_citation"]
+    brand = metrics["brand_mention"]
+    domain = metrics["domain_mention"]
+    successful = [sample for sample in samples if sample.status == VisibilitySampleStatus.succeeded.value]
+    brand_samples = [sample for sample in successful if sample.brand_query]
+    non_brand_samples = [sample for sample in successful if not sample.brand_query]
+    metrics.update(
+        {
+            "sampling_success_rate": sample_success["rate"],
+            "successful_samples": sample_success["numerator"],
+            "failed_samples": metrics["sample_counts"]["observed"] - sample_success["numerator"],
+            "failed_error_samples": sum(sample.status == VisibilitySampleStatus.failed.value for sample in samples),
+            "unavailable_samples": sum(sample.status == VisibilitySampleStatus.unavailable.value for sample in samples),
+            "planned_samples": sample_success["denominator"],
+            "site_citation_rate": citation["rate"],
+            "question_coverage_rate": metrics["answered_question"]["rate"],
+            "covered_question_count": metrics["answered_question"]["numerator"],
+            "successful_question_count": metrics["answered_question"]["denominator"],
+            "brand_mention_rate": brand["rate"],
+            "non_brand_mention_rate": domain["rate"],
+            "brand": {
+                "query_count": len(brand_samples),
+                "mention_count": brand["numerator"],
+                "mention_rate": brand["rate"],
+            },
+            "non_brand": {
+                "query_count": len(non_brand_samples),
+                "mention_count": domain["numerator"],
+                "mention_rate": domain["rate"],
+            },
+        }
+    )
+    return metrics
 
 
 def _sample_cites_site(sample: VisibilitySample, target_domain: str) -> bool:

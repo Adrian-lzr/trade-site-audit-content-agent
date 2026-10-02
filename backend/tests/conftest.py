@@ -29,6 +29,8 @@ def clean_database():
         ContentGenerationTask,
         Fact,
         Job,
+        ModelCall,
+        BudgetReservation,
         Membership,
         OutboxEvent,
         Page,
@@ -48,6 +50,8 @@ def clean_database():
     with SessionLocal() as db:
         for model in (
             AuditEvent,
+            BudgetReservation,
+            ModelCall,
             Membership,
             OutboxEvent,
             VisibilitySample,

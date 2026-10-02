@@ -4,14 +4,11 @@ from datetime import datetime, timezone
 from enum import StrEnum
 from uuid import uuid4
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, ForeignKeyConstraint, Integer, String, Text, UniqueConstraint
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, ForeignKeyConstraint, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
-
-
-def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from .time_utils import utcnow
 
 
 class JobStatus(StrEnum):
@@ -58,6 +55,20 @@ class VisibilitySampleStatus(StrEnum):
     unavailable = "unavailable"
 
 
+class ModelCallStatus(StrEnum):
+    reserved = "reserved"
+    succeeded = "succeeded"
+    failed = "failed"
+    unknown_result = "unknown_result"
+
+
+class BudgetReservationStatus(StrEnum):
+    reserved = "reserved"
+    settled = "settled"
+    released = "released"
+    unknown_result = "unknown_result"
+
+
 class Workspace(Base):
     __tablename__ = "workspaces"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -68,6 +79,8 @@ class Workspace(Base):
     facts: Mapped[list["Fact"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
     memberships: Mapped[list["Membership"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
     audit_events: Mapped[list["AuditEvent"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+    model_calls: Mapped[list["ModelCall"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+    budget_reservations: Mapped[list["BudgetReservation"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
 
 
 class Membership(Base):
@@ -248,6 +261,8 @@ class PageSnapshot(Base):
     page_id: Mapped[int] = mapped_column(ForeignKey("pages.id", ondelete="CASCADE"), nullable=False)
     job_id: Mapped[int | None] = mapped_column(ForeignKey("jobs.id", ondelete="SET NULL"), nullable=True)
     url: Mapped[str] = mapped_column(String(2048), nullable=False)
+    requested_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    final_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     status_code: Mapped[int] = mapped_column(Integer, nullable=False)
     title: Mapped[str | None] = mapped_column(String(500), nullable=True)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -258,6 +273,10 @@ class PageSnapshot(Base):
     audit_rule_version: Mapped[str] = mapped_column(String(40), default="1.0.0", nullable=False)
     artifact_uri: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     parser_version: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    declared_canonical_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    normalized_canonical_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    metadata_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    body_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     page: Mapped[Page] = relationship(back_populates="snapshots")
     findings: Mapped[list["AuditFinding"]] = relationship(back_populates="snapshot", cascade="all, delete-orphan")
@@ -314,13 +333,15 @@ class Fact(Base):
     __tablename__ = "facts"
     __table_args__ = (
         UniqueConstraint("workspace_id", "series_id", "version", name="uq_fact_series_version"),
+        UniqueConstraint("workspace_id", "id", name="uq_fact_workspace_id"),
         CheckConstraint("visibility IN ('public', 'internal_only')", name="ck_fact_visibility"),
+        ForeignKeyConstraint(["workspace_id", "parent_id"], ["facts.workspace_id", "facts.id"], name="fk_fact_parent_workspace", ondelete="RESTRICT"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
     series_id: Mapped[str] = mapped_column(String(64), default=lambda: uuid4().hex, nullable=False)
-    parent_id: Mapped[int | None] = mapped_column(ForeignKey("facts.id", ondelete="SET NULL"), nullable=True)
+    parent_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     subject: Mapped[str] = mapped_column(String(500), nullable=False)
     predicate: Mapped[str] = mapped_column(String(200), nullable=False)
     value: Mapped[str] = mapped_column(Text, nullable=False)
@@ -337,8 +358,8 @@ class Fact(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     workspace: Mapped[Workspace] = relationship(back_populates="facts")
-    parent: Mapped["Fact | None"] = relationship(remote_side=[id], back_populates="children")
-    children: Mapped[list["Fact"]] = relationship(back_populates="parent")
+    parent: Mapped["Fact | None"] = relationship(remote_side=[id], back_populates="children", overlaps="workspace,facts")
+    children: Mapped[list["Fact"]] = relationship(back_populates="parent", overlaps="workspace,facts")
 
 
 class ChangeRequest(Base):
@@ -581,6 +602,9 @@ class VisibilitySample(Base):
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     brand_query: Mapped[bool] = mapped_column(default=False, nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False)
+    # Optional independent evaluator result.  Null means the question was not
+    # evaluated; answer text and citations must never be used as a proxy.
+    answered_question: Mapped[bool | None] = mapped_column(nullable=True)
     raw_response: Mapped[str | None] = mapped_column(Text, nullable=True)
     answer_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     citations_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
@@ -599,3 +623,65 @@ class VisibilitySample(Base):
 
     run: Mapped[VisibilityRun] = relationship(back_populates="samples")
     question: Mapped[ProcurementQuestion] = relationship()
+
+
+class ModelCall(Base):
+    """Durable accounting record for one model or visibility provider attempt."""
+
+    __tablename__ = "model_calls"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "call_key", name="uq_model_call_workspace_key"),
+        CheckConstraint("status IN ('reserved', 'succeeded', 'failed', 'unknown_result')", name="ck_model_call_status"),
+        CheckConstraint("cost_known IN (0, 1)", name="ck_model_call_cost_known"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    call_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    call_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    generation_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    sample_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    input_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    attempt: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    provider_request_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    output_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    amount: Mapped[object | None] = mapped_column(Numeric(18, 6), nullable=True)
+    currency: Mapped[str] = mapped_column(String(12), default="USD", nullable=False)
+    price_version: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    cost_source: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    cost_known: Mapped[bool] = mapped_column(default=False, nullable=False)
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(String(24), default=ModelCallStatus.reserved.value, nullable=False)
+    error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    workspace: Mapped[Workspace] = relationship(back_populates="model_calls")
+
+
+class BudgetReservation(Base):
+    """Short-lived reservation plus the final billing disposition."""
+
+    __tablename__ = "budget_reservations"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "reservation_key", name="uq_budget_reservation_workspace_key"),
+        CheckConstraint("status IN ('reserved', 'settled', 'released', 'unknown_result')", name="ck_budget_reservation_status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    reservation_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    model_call_id: Mapped[int | None] = mapped_column(ForeignKey("model_calls.id", ondelete="SET NULL"), nullable=True)
+    reserved_amount: Mapped[object] = mapped_column(Numeric(18, 6), nullable=False)
+    settled_amount: Mapped[object | None] = mapped_column(Numeric(18, 6), nullable=True)
+    currency: Mapped[str] = mapped_column(String(12), default="USD", nullable=False)
+    status: Mapped[str] = mapped_column(String(24), default=BudgetReservationStatus.reserved.value, nullable=False)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    settled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    workspace: Mapped[Workspace] = relationship(back_populates="budget_reservations")
+    model_call: Mapped[ModelCall | None] = relationship()
