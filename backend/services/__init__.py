@@ -2,6 +2,7 @@
 
 from .visibility_metrics import METRIC_VERSION, calculate_visibility_metrics
 from .ingestion import EvidenceBlock, IngestionError, IngestionResult, extract_text_pdf, ingest_csv, ingest_text_pdf, retrieve_evidence
+from .deployment import DEPLOYMENT_STATUSES, DeploymentVerification, verify_deployment
 
 __all__ = [
     "METRIC_VERSION",
@@ -13,5 +14,8 @@ __all__ = [
     "ingest_csv",
     "ingest_text_pdf",
     "retrieve_evidence",
+    "DEPLOYMENT_STATUSES",
+    "DeploymentVerification",
+    "verify_deployment",
 ]
 

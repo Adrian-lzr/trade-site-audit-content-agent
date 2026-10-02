@@ -1,10 +1,12 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, ArrowUpRight, Check, ChevronDown, CircleHelp, FileCheck2, FileText, LoaderCircle, Plus, RefreshCw, Search, Send, ShieldCheck, BookOpen } from "lucide-react";
+import { AlertCircle, ArrowUpRight, Check, ChevronDown, CircleHelp, Edit3, ExternalLink, FileCheck2, FileText, Info, LoaderCircle, Plus, RefreshCw, Search, Send, ShieldCheck, BookOpen, X } from "lucide-react";
 import {
+  addChangeRevision,
   createContentGenerationTask,
   decideChangeApproval,
   Fact,
   getContentGenerationTask,
+  getSnapshot,
   getProcurementQuestionSet,
   listContentGenerationTasks,
   listFacts,
@@ -22,6 +24,7 @@ import {
   ContentGenerationTaskSummary,
   ContentGenerationItem,
   KnowledgeEntry,
+  SnapshotDetail,
 } from "./api";
 
 type TaskDraftItem = {
@@ -116,6 +119,45 @@ function fieldValue(value: unknown) {
   return JSON.stringify(value, null, 2);
 }
 
+function factBindingKey(reference: { fact_id?: unknown; series_id?: unknown; version?: unknown }) {
+  return `${String(reference.fact_id ?? "")}:${String(reference.series_id ?? "")}:${String(reference.version ?? "")}`;
+}
+
+function factBindingIsCurrent(reference: { fact_id?: unknown; series_id?: unknown; version?: unknown }, fact: Fact | undefined) {
+  return Boolean(
+    fact
+      && String(fact.series_id) === String(reference.series_id ?? fact.series_id)
+      && Number(fact.version) === Number(reference.version)
+      && isFactCurrent(fact),
+  );
+}
+
+function revisionFieldEntries(fieldDiff: Record<string, unknown>) {
+  return Object.entries(fieldDiff || {}).filter(([field]) => !["claims", "claim_bindings", "validation_report", "missing_information", "answered_question_ids"].includes(field));
+}
+
+function revisionClaims(fieldDiff: Record<string, unknown>) {
+  const candidate = fieldDiff?.claims ?? fieldDiff?.claim_bindings;
+  if (!Array.isArray(candidate)) return [] as Array<Record<string, unknown>>;
+  return candidate.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object" && !Array.isArray(item)));
+}
+
+function revisionMissingInformation(fieldDiff: Record<string, unknown>) {
+  const candidate = fieldDiff?.missing_information;
+  if (Array.isArray(candidate)) return candidate.map((item) => String(item)).filter(Boolean);
+  if (typeof candidate === "string" && candidate.trim()) return [candidate.trim()];
+  return [];
+}
+
+function snapshotContent(detail: SnapshotDetail) {
+  const value = detail.content;
+  if (typeof value === "string" && value.trim()) return value;
+  const candidate = detail as SnapshotDetail & { body?: unknown; text?: unknown };
+  if (typeof candidate.body === "string" && candidate.body.trim()) return candidate.body;
+  if (typeof candidate.text === "string" && candidate.text.trim()) return candidate.text;
+  return "";
+}
+
 function taskStatus(status: string) {
   const labels: Record<string, string> = {
     queued: "排队中",
@@ -186,6 +228,13 @@ export function ContentReviewWorkspace({
   const [taskDetailError, setTaskDetailError] = useState("");
   const [reviewer, setReviewer] = useState("");
   const [approvalComments, setApprovalComments] = useState<Record<number, string>>({});
+  const [revisionEditors, setRevisionEditors] = useState<Record<number, boolean>>({});
+  const [revisionDrafts, setRevisionDrafts] = useState<Record<number, string>>({});
+  const [revisionEditErrors, setRevisionEditErrors] = useState<Record<number, string>>({});
+  const [sourceSnapshot, setSourceSnapshot] = useState<SnapshotDetail | null>(null);
+  const [sourceSnapshotId, setSourceSnapshotId] = useState<number | null>(null);
+  const [sourceSnapshotLoading, setSourceSnapshotLoading] = useState(false);
+  const [sourceSnapshotError, setSourceSnapshotError] = useState("");
   const [busyAction, setBusyAction] = useState("");
   const [notice, setNotice] = useState("");
   const [knowledgeEntries, setKnowledgeEntries] = useState<KnowledgeEntry[]>([]);
@@ -518,6 +567,68 @@ export function ContentReviewWorkspace({
     }
   }
 
+  async function openSourceSnapshot(snapshotId: number) {
+    setSourceSnapshotId(snapshotId);
+    setSourceSnapshot(null);
+    setSourceSnapshotError("");
+    setSourceSnapshotLoading(true);
+    try {
+      setSourceSnapshot(await getSnapshot(String(snapshotId), workspaceKey));
+    } catch (error) {
+      setSourceSnapshotError(messageOf(error));
+    } finally {
+      setSourceSnapshotLoading(false);
+    }
+  }
+
+  function startRevisionEdit(item: ContentGenerationItem) {
+    const revision = item.change_request.revision;
+    if (!revision) return;
+    setRevisionDrafts((current) => ({ ...current, [item.id]: JSON.stringify(revision.field_diff || {}, null, 2) }));
+    setRevisionEditErrors((current) => ({ ...current, [item.id]: "" }));
+    setRevisionEditors((current) => ({ ...current, [item.id]: true }));
+  }
+
+  function cancelRevisionEdit(itemId: number) {
+    setRevisionEditors((current) => ({ ...current, [itemId]: false }));
+    setRevisionEditErrors((current) => ({ ...current, [itemId]: "" }));
+  }
+
+  async function saveRevisionEdit(item: ContentGenerationItem) {
+    const change = item.change_request;
+    const revision = change.revision;
+    if (!revision) return;
+    let fieldDiff: Record<string, unknown>;
+    try {
+      const parsed: unknown = JSON.parse(revisionDrafts[item.id] || "{}");
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("改稿必须是 JSON 对象。");
+      fieldDiff = parsed as Record<string, unknown>;
+    } catch (error) {
+      setRevisionEditErrors((current) => ({ ...current, [item.id]: error instanceof Error ? error.message : "改稿 JSON 无效。" }));
+      return;
+    }
+    setBusyAction(`edit-${item.id}`);
+    setRevisionEditErrors((current) => ({ ...current, [item.id]: "" }));
+    try {
+      await addChangeRevision({
+        changeId: change.id,
+        workspaceKey,
+        expectedVersion: change.version,
+        baseSnapshotId: revision.base_snapshot_id,
+        baseContentHash: revision.base_content_hash,
+        fieldDiff,
+        factVersions: revision.fact_versions,
+      });
+      await loadTask(taskDetail!.id);
+      setRevisionEditors((current) => ({ ...current, [item.id]: false }));
+      setNotice(`变更 #${change.id} 已保存为新修订，请重新提交审核。旧批准不会沿用。`);
+    } catch (error) {
+      setRevisionEditErrors((current) => ({ ...current, [item.id]: messageOf(error) }));
+    } finally {
+      setBusyAction("");
+    }
+  }
+
   async function handleSubmitForApproval(item: ContentGenerationItem) {
     const change = item.change_request;
     if (!change.current_revision_id || !change.revision) {
@@ -544,17 +655,14 @@ export function ContentReviewWorkspace({
       setTaskDetailError("改稿版本信息不完整，不能提交审核决定。");
       return;
     }
-    if (!reviewer.trim()) {
-      setTaskDetailError("请填写审核人标识后再提交审核决定。");
-      return;
-    }
+    const reviewerHint = reviewer.trim() || "current-session";
     setBusyAction(`${decision}-${item.id}`);
     setTaskDetailError("");
     try {
       await decideChangeApproval({
         changeId: change.id,
         workspaceKey,
-        reviewer: reviewer.trim(),
+        reviewer: reviewerHint,
         decision,
         revisionId: revision.id,
         revisionHash: revision.content_hash,
@@ -734,28 +842,73 @@ export function ContentReviewWorkspace({
         {!taskDetailLoading && taskDetail && <div className="content-task-detail">
           <div className="content-detail-heading"><div><strong>任务 #{taskDetail.id}</strong><span className={`content-status ${statusClass(taskDetail.status)}`}>{taskStatus(taskDetail.status)}</span></div><button className="icon-button" type="button" title="重新读取任务" aria-label="重新读取任务" onClick={() => void refreshTaskDetail()}><RefreshCw size={13} /></button></div>
           {taskDetail.last_error && <div className="content-last-error">{taskDetail.last_error}</div>}
-          <label className="reviewer-field content-reviewer">审核人标识<input value={reviewer} onChange={(event) => setReviewer(event.target.value)} maxLength={200} /></label>
-          <div className="content-result-items">{taskDetail.items.map((item) => <ReviewItem key={item.id} item={item} facts={facts} busyAction={busyAction} comment={approvalComments[item.id] || ""} onComment={(value) => setApprovalComments((current) => ({ ...current, [item.id]: value }))} onSubmit={() => void handleSubmitForApproval(item)} onDecide={(decision) => void handleApproval(item, decision)} />)}</div>
+          <label className="reviewer-field content-reviewer">审核身份（生产环境由已验证身份决定）<input value={reviewer} onChange={(event) => setReviewer(event.target.value)} maxLength={200} placeholder="演示模式可填写标识" /><small>服务端会从 OIDC / 工作区 Membership 解析 reviewer；此字段不能提升权限。</small></label>
+          <div className="content-result-items">{taskDetail.items.map((item) => <ReviewItem
+            key={item.id}
+            item={item}
+            currentSnapshot={pagesById.get(item.page_id)}
+            facts={facts}
+            busyAction={busyAction}
+            comment={approvalComments[item.id] || ""}
+            editing={Boolean(revisionEditors[item.id])}
+            editDraft={revisionDrafts[item.id] || ""}
+            editError={revisionEditErrors[item.id] || ""}
+            onComment={(value) => setApprovalComments((current) => ({ ...current, [item.id]: value }))}
+            onOpenSource={(snapshotId) => void openSourceSnapshot(snapshotId)}
+            onStartEdit={() => startRevisionEdit(item)}
+            onCancelEdit={() => cancelRevisionEdit(item.id)}
+            onEditDraft={(value) => setRevisionDrafts((current) => ({ ...current, [item.id]: value }))}
+            onSaveEdit={() => void saveRevisionEdit(item)}
+            onSubmit={() => void handleSubmitForApproval(item)}
+            onDecide={(decision) => void handleApproval(item, decision)}
+          />)}</div>
         </div>}
       </aside>
+    </div>}
+
+    {sourceSnapshotId !== null && <div className="modal-backdrop evidence-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSourceSnapshotId(null); }}>
+      <section className="evidence-dialog content-source-dialog" role="dialog" aria-modal="true" aria-labelledby="content-source-title" aria-busy={sourceSnapshotLoading}>
+        <div className="evidence-heading"><div><span className="dialog-icon"><FileCheck2 size={18} /></span><div><h2 id="content-source-title">原页面证据</h2><p>{sourceSnapshot?.url || `快照 #${sourceSnapshotId}`}</p></div></div><button className="icon-button" type="button" onClick={() => setSourceSnapshotId(null)} aria-label="关闭原页面证据"><X size={17} /></button></div>
+        <div className="evidence-body">
+          {sourceSnapshotLoading ? <SnapshotLoading /> : sourceSnapshotError ? <InlineRetry message={sourceSnapshotError} onRetry={() => void openSourceSnapshot(sourceSnapshotId)} /> : sourceSnapshot ? <SnapshotEvidence detail={sourceSnapshot} /> : null}
+        </div>
+      </section>
     </div>}
   </div>;
 }
 
 function ReviewItem({
   item,
+  currentSnapshot,
   facts,
   busyAction,
   comment,
+  editing,
+  editDraft,
+  editError,
   onComment,
+  onOpenSource,
+  onStartEdit,
+  onCancelEdit,
+  onEditDraft,
+  onSaveEdit,
   onSubmit,
   onDecide,
 }: {
   item: ContentGenerationItem;
+  currentSnapshot?: PageSnapshot;
   facts: Fact[];
   busyAction: string;
   comment: string;
+  editing: boolean;
+  editDraft: string;
+  editError: string;
   onComment: (value: string) => void;
+  onOpenSource: (snapshotId: number) => void;
+  onStartEdit: () => void;
+  onCancelEdit: () => void;
+  onEditDraft: (value: string) => void;
+  onSaveEdit: () => void;
   onSubmit: () => void;
   onDecide: (decision: "approved" | "rejected") => void;
 }) {
@@ -767,34 +920,83 @@ function ReviewItem({
   const factsById = new Map(facts.map((fact) => [fact.id, fact]));
   const showFacts = approvedFactVersions.map((reference) => {
     const fact = factsById.get(reference.fact_id);
-    return { reference, fact: fact && isFactCurrent(fact) ? fact : null };
+    return { reference, fact: fact && factBindingIsCurrent(reference, fact) ? fact : null };
+  });
+  const staleSnapshot = revision?.base_snapshot_id !== item.snapshot_id
+    || revision?.base_content_hash !== item.snapshot_hash
+    || (currentSnapshot && (snapshotId(currentSnapshot) !== item.snapshot_id || currentSnapshot.content_hash !== item.snapshot_hash));
+  const claims = revision ? revisionClaims(revision.field_diff) : [];
+  const missingInformation = revision ? revisionMissingInformation(revision.field_diff) : [];
+  const unsupportedClaims = claims.filter((claim) => {
+    const fact = factsById.get(Number(claim.fact_id));
+    return !fact || !factBindingIsCurrent(claim, fact);
   });
   const canSubmit = item.status === "awaiting_review" && change.state === "draft" && Boolean(revision);
   const canDecide = item.status === "awaiting_review" && change.state === "pending_approval" && Boolean(revision);
 
   return <article className="content-review-item">
     <div className="content-review-item-head"><div><span className={`content-status ${statusClass(displayStatus)}`}>{taskStatus(displayStatus)}</span><strong>{item.question}</strong></div><small>{item.canonical_url}</small></div>
-    <div className="content-review-binding"><span>原始页面快照</span><code>#{item.snapshot_id} · {item.snapshot_hash}</code><span>工作流 thread_id</span><code>{item.thread_id}</code></div>
+    <div className="content-review-binding"><span>原始页面快照</span><code>#{item.snapshot_id} · {item.snapshot_hash}</code><button type="button" className="text-button content-source-button" onClick={() => onOpenSource(item.snapshot_id)}><FileCheck2 size={12} />查看证据</button><span>工作流 thread_id</span><code>{item.thread_id}</code></div>
     <p className="content-review-summary">{item.request_summary}</p>
+    <div className="content-evidence-strip" aria-label="证据状态">
+      <span className="content-evidence-chip"><ShieldCheck size={12} />{showFacts.length} 条事实绑定</span>
+      <span className={`content-evidence-chip ${staleSnapshot ? "stale" : "good"}`}><FileCheck2 size={12} />{staleSnapshot ? "页面快照已变化" : "页面快照一致"}</span>
+      <span className={`content-evidence-chip ${unsupportedClaims.length ? "stale" : claims.length ? "good" : "muted"}`}><Info size={12} />{claims.length ? `${claims.length} 条声明` : "声明定位未提供"}</span>
+    </div>
     {item.status === "needs_information" && <div className="content-inline-note warning"><CircleHelp size={14} /><span>缺少可用信息或事实已失效。请刷新任务与企业事实，核对来源后再处理。</span></div>}
     {item.status === "failed" && <div className="content-inline-note warning"><AlertCircle size={14} /><span>本项处理失败；检查任务错误信息并刷新状态。</span></div>}
+    {staleSnapshot && <div className="content-inline-note warning"><AlertCircle size={14} /><span>改稿基于旧页面快照，不能按当前证据直接批准；请刷新任务或重新生成。</span></div>}
+    {missingInformation.length > 0 && <div className="content-inline-note warning"><CircleHelp size={14} /><span>待补资料：{missingInformation.join("；")}</span></div>}
     {revision && <>
-      <div className="content-review-subheading"><strong>待审字段</strong><span>版本 {revision.revision} · {revision.state}</span></div>
-      <div className="content-diff-list">{Object.entries(revision.field_diff || {}).map(([field, value]) => <div className="content-diff-row" key={field}><strong>{field}</strong><pre>{fieldValue(value)}</pre></div>)}{Object.keys(revision.field_diff || {}).length === 0 && <span className="content-no-facts">该版本没有字段改动。</span>}</div>
+      <div className="content-review-subheading"><strong>待审字段</strong><span>版本 {revision.revision} · {revision.state} · schema {revision.schema_version || "未记录"}</span></div>
+      {editing ? <div className="content-edit-panel"><label className="field-label">编辑当前修订（JSON 字段对象）<textarea value={editDraft} onChange={(event) => onEditDraft(event.target.value)} rows={8} disabled={busyAction !== ""} spellCheck={false} /><span className="field-hint">保存会创建新 revision，清除旧批准并要求重新提交审核。服务端会重新校验事实、页面快照和字段白名单。</span></label>{editError && <div className="content-inline-note warning" role="alert"><AlertCircle size={14} />{editError}</div>}<div className="content-review-edit-actions"><button type="button" className="button button-secondary small" onClick={onCancelEdit} disabled={busyAction !== ""}><X size={13} />取消</button><button type="button" className="button button-primary small" onClick={onSaveEdit} disabled={busyAction !== ""}>{busyAction === `edit-${item.id}` ? <LoaderCircle size={13} className="spin" /> : <Check size={13} />}保存新修订</button></div></div> : <div className="content-diff-list">{revisionFieldEntries(revision.field_diff || {}).map(([field, value]) => <div className="content-diff-row" key={field}><strong>{field}</strong><pre>{fieldValue(value)}</pre></div>)}{revisionFieldEntries(revision.field_diff || {}).length === 0 && <span className="content-no-facts">该版本没有字段改动。</span>}</div>}
+      {!editing && <button type="button" className="text-button content-edit-button" onClick={onStartEdit} disabled={busyAction !== "" || terminalApprovalState === "approved"}><Edit3 size={12} />编辑并生成新修订</button>}
+      {claims.length > 0 && <><div className="content-review-subheading"><strong>声明与证据绑定</strong><span>{claims.length} 条</span></div><div className="content-claim-list">{claims.map((claim, index) => { const fact = factsById.get(Number(claim.fact_id)); const valid = Boolean(fact && factBindingIsCurrent(claim, fact)); return <div className={`content-claim-row ${valid ? "valid" : "stale"}`} key={`${String(claim.claim_id || index)}:${factBindingKey(claim)}`}><span><strong>{String(claim.claim_id || `声明 ${index + 1}`)}</strong><small>{String(claim.field_path || "未提供字段路径")} · fact #{String(claim.fact_id || "?")} · v{String(claim.fact_version || claim.version || "?")}</small></span><span>{valid ? "已绑定当前事实" : "事实缺失或已失效"}</span></div>; })}</div></>}
       <div className="content-review-subheading"><strong>引用事实</strong><span>{showFacts.length} 项</span></div>
       {showFacts.length === 0 ? <span className="content-no-facts">没有记录事实版本。</span> : <div className="content-review-facts">{showFacts.map(({ reference, fact }) => {
         const href = fact ? factLocatorHref(fact.source_locator) : "";
         return <div className="content-review-fact" key={`${reference.fact_id}:${reference.version}`}>
           <span><strong>{fact ? `${fact.subject} · ${fact.predicate}` : `企业事实 #${reference.fact_id}`}</strong><small>v{reference.version}{fact && fact.version !== reference.version ? ` · 当前 v${fact.version}` : ""}{!fact ? " · 已不再满足公开有效条件" : ""}</small></span>
-          {href && <a href={href} target="_blank" rel="noreferrer" title="打开事实来源" aria-label={`打开事实 ${reference.fact_id} 的来源`}><ArrowUpRight size={13} /></a>}
+          {href ? <a href={href} target="_blank" rel="noreferrer" title="打开事实来源" aria-label={`打开事实 ${reference.fact_id} 的来源`}><ArrowUpRight size={13} /></a> : <span className="content-source-unavailable" title="当前 API 未提供可打开的 URL"><Info size={12} />来源定位</span>}
         </div>;
       })}</div>}
       <div className="content-revision-hash"><span>改稿 Hash</span><code>{revision.content_hash}</code></div>
     </>}
     {change.approvals.length > 0 && <div className="content-approval-history"><strong>审核记录</strong>{change.approvals.map((approval) => <div key={approval.id}><span className={`content-status ${statusClass(approval.decision)}`}>{approval.decision === "approved" ? "已通过" : "已退回"}</span><span>{approval.reviewer} · {asDate(approval.created_at)}</span>{approval.comment && <small>{approval.comment}</small>}</div>)}</div>}
-    {canSubmit && <div className="content-review-actions"><p>检查页面快照、建议字段和事实来源后，提交至人工审核队列。</p><button className="button button-primary small" type="button" onClick={onSubmit} disabled={busyAction !== ""}>{busyAction === `submit-${item.id}` ? <LoaderCircle size={13} className="spin" /> : <Send size={13} />}提交审核</button></div>}
-    {canDecide && <div className="content-review-decision"><label className="field-label">审核意见<textarea value={comment} onChange={(event) => onComment(event.target.value)} rows={2} maxLength={2000} placeholder="可选；退回时说明修改原因" disabled={busyAction !== ""} /></label><div><button className="button button-secondary small" type="button" onClick={() => onDecide("rejected")} disabled={busyAction !== ""}>{busyAction === `rejected-${item.id}` ? <LoaderCircle size={13} className="spin" /> : null}退回修改</button><button className="button button-primary small" type="button" onClick={() => onDecide("approved")} disabled={busyAction !== ""}>{busyAction === `approved-${item.id}` ? <LoaderCircle size={13} className="spin" /> : <Check size={13} />}通过</button></div></div>}
+    {canSubmit && <div className="content-review-actions"><p>检查页面快照、建议字段和事实来源后，提交至人工审核队列。{staleSnapshot ? "当前快照已变化，需刷新后再提交。" : ""}</p><button className="button button-primary small" type="button" onClick={onSubmit} disabled={busyAction !== "" || staleSnapshot || unsupportedClaims.length > 0}>{busyAction === `submit-${item.id}` ? <LoaderCircle size={13} className="spin" /> : <Send size={13} />}提交审核</button></div>}
+    {canDecide && <div className="content-review-decision"><label className="field-label">审核意见<textarea value={comment} onChange={(event) => onComment(event.target.value)} rows={2} maxLength={2000} placeholder="可选；退回时说明修改原因" disabled={busyAction !== ""} /></label><div><button className="button button-secondary small" type="button" onClick={() => onDecide("rejected")} disabled={busyAction !== ""}>{busyAction === `rejected-${item.id}` ? <LoaderCircle size={13} className="spin" /> : null}退回修改</button><button className="button button-primary small" type="button" onClick={() => onDecide("approved")} disabled={busyAction !== "" || staleSnapshot || unsupportedClaims.length > 0}>{busyAction === `approved-${item.id}` ? <LoaderCircle size={13} className="spin" /> : <Check size={13} />}通过</button></div>{(staleSnapshot || unsupportedClaims.length > 0) && <p className="content-review-blocker">审批已禁用：{staleSnapshot ? "页面快照已变化" : "声明未绑定当前事实"}。</p>}</div>}
     {!canSubmit && !canDecide && item.status === "awaiting_review" && !terminalApprovalState && <div className="content-inline-note"><ShieldCheck size={14} /><span>{changeStatus(change.state)}。请刷新任务状态以获取最新审核记录。</span></div>}
     {item.status !== "awaiting_review" && !["needs_information", "failed"].includes(item.status) && !revision && <div className="content-inline-note"><LoaderCircle size={14} className={item.status === "running" || item.status === "queued" ? "spin" : ""} /><span>后台任务尚未返回可审核改稿。刷新任务状态查看进度。</span></div>}
   </article>;
+}
+
+function SnapshotEvidence({ detail }: { detail: SnapshotDetail }) {
+  const body = snapshotContent(detail);
+  const attentionRules = (detail.rule_results || []).filter((rule) => ["fail", "unknown", "needs_review"].includes(rule.status));
+  return <div className="content-source-evidence">
+    <div className="content-source-meta"><span>状态 <strong>{detail.status_code ?? "--"}</strong></span><span>采集时间 <strong>{asDate(detail.fetched_at)}</strong></span><span>规则集 <strong>{detail.rule_set_version || "--"}</strong></span><span className={`source-badge ${detail.is_synthetic ? "source-fixture" : "source-live"}`}><span />{detail.is_synthetic ? "合成演示数据" : "真实采集数据"}</span></div>
+    <div className="content-source-hashes"><div><span>原始内容 hash</span><code>{detail.content_hash || "--"}</code></div><div><span>metadata hash</span><code>{detail.metadata_hash || "--"}</code></div><div><span>body hash</span><code>{detail.body_hash || "--"}</code></div><div><span>parser</span><code>{detail.parser_version || "未记录"}</code></div></div>
+    <div className="content-source-url-list"><span>请求地址</span><code>{detail.requested_url || detail.url || "--"}</code><span>最终地址</span><code>{detail.final_url || detail.url || "--"}</code></div>
+    <div className="content-source-canonical"><strong>Canonical 证据</strong><span>声明：{detail.declared_canonical?.length ? detail.declared_canonical.join(" · ") : "未发现"}</span><span>规范化：{detail.normalized_canonical?.length ? detail.normalized_canonical.map((value) => value || "无效").join(" · ") : "未记录"}</span></div>
+    {attentionRules.length > 0 ? <details className="content-source-rules" open><summary>需关注规则 · {attentionRules.length}</summary>{attentionRules.map((rule) => <div className="content-source-rule" key={`${rule.rule_id}:${rule.version}`}><span className={`content-status ${rule.status === "fail" ? "bad" : "working"}`}>{rule.status === "fail" ? "问题" : rule.status === "needs_review" ? "待复核" : "未确认"}</span><strong>{rule.rule_id}</strong><p>{rule.message}</p><pre>{formatEvidenceValue(rule.evidence)}</pre></div>)}</details> : <div className="content-inline-note"><Check size={14} /><span>当前快照没有 fail、unknown 或 needs_review 规则结果。</span></div>}
+    <details className="content-source-body"><summary>原文/正文片段</summary>{body ? <pre>{body.slice(0, 12000)}</pre> : <div className="content-inline-note warning"><Info size={14} /><span>当前 API 只返回 immutable 快照元数据与规则证据，未提供正文片段；不能把“已采集”当作正文证据。</span></div>}</details>
+  </div>;
+}
+
+function SnapshotLoading() {
+  return <div className="content-loading" aria-label="证据加载中"><span className="skeleton" /><span className="skeleton" /><span className="skeleton" /></div>;
+}
+
+function InlineRetry({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return <div className="content-inline-note warning" role="alert"><AlertCircle size={14} /><span>{message}</span><button type="button" className="button button-secondary small" onClick={onRetry}><RefreshCw size={13} />重试</button></div>;
+}
+
+function formatEvidenceValue(value: unknown) {
+  if (typeof value === "string") return value;
+  if (value === null || value === undefined) return "--";
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
 }

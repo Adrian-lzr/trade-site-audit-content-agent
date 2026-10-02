@@ -34,14 +34,15 @@ def test_five_page_local_readiness_rehearsal(tmp_path: Path):
     assert report["pages"] == 5
     assert report["published_attempts"] == 5
     assert report["deployment_callbacks"] == 5
-    assert report["verified_deployments"] == 5
+    assert report["verified_deployments"] == 0
+    assert report["verification_unavailable"] == 5
     assert report["idempotency"] == {
         "publication_outbox_unique": True,
         "publication_replay_rejected": True,
-        "rollback_replay_same_attempt": True,
+        "rollback_rejected_without_page_evidence": True,
     }
-    assert report["rollback"]["source_final_status"] == "rolled_back"
-    assert report["rollback"]["rollback_final_status"] == "verified"
+    assert report["rollback"]["status"] == "blocked_external"
+    assert report["rollback"]["reason"] == "fresh target-page read is not configured"
     assert report["external_side_effects"] == {
         "cms_write": False,
         "deployment_callbacks_are_local_state": True,

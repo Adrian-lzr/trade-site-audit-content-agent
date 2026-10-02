@@ -53,6 +53,11 @@ class JobWorker:
                         return True
                 from .publication_worker import PublicationWorker
 
+                from .review_worker import ReviewResumeWorker
+
+                if ReviewResumeWorker().run_once():
+                    return True
+
                 if PublicationWorker().run_once():
                     return True
                 from .visibility_worker import VisibilityWorker

@@ -14,7 +14,9 @@ from sqlalchemy import create_engine, func, select, update
 from sqlalchemy.orm import sessionmaker
 
 import backend.content_worker as content_worker
+import backend.review_worker as review_worker
 from backend.content_worker import ContentGenerationWorker, _postgres_checkpoint_url, checkpoint_saver
+from backend.review_worker import ReviewResumeWorker
 from backend.content_workflow import SQLAlchemyContentWorkflowRepository, build_content_workflow, content_workflow_input, workflow_config
 from backend.database import Base
 from backend.model_gateway import DraftNeedsInformation, FixtureModelDraftGateway
@@ -31,6 +33,9 @@ from backend.models import (
     ProcurementQuestionSetVersion,
     Site,
     Workspace,
+    ChangeApproval,
+    OutboxEvent,
+    WorkflowReviewEvent,
     utcnow,
 )
 
@@ -624,6 +629,69 @@ def test_content_worker_restart_skips_terminal_items_and_processes_remaining_ite
         assert len(gateway.calls) == 1
         assert db.scalar(select(func.count()).select_from(ChangeRevision).where(ChangeRevision.change_request_id == first_change_id)) == 1
         assert db.scalar(select(func.count()).select_from(ChangeRevision).where(ChangeRevision.change_request_id == second_item.change_request_id)) == 1
+
+
+def test_review_resume_worker_consumes_authoritative_approval_once(isolated_database, monkeypatch):
+    factory, path = isolated_database
+    task_id, item_id, workspace_id, _, change_id, _ = _records(factory)
+    checkpoint_path = path.with_name("review-resume-checkpoints.sqlite")
+    monkeypatch.setattr(content_worker, "checkpoint_saver", lambda: checkpoint_saver(f"sqlite:///{checkpoint_path.as_posix()}"))
+    monkeypatch.setattr(review_worker, "SessionLocal", factory)
+    monkeypatch.setattr(review_worker, "checkpoint_saver", lambda: checkpoint_saver(f"sqlite:///{checkpoint_path.as_posix()}"))
+
+    assert _claim_for_test(factory, task_id)
+    ContentGenerationWorker(gateway=FixtureModelDraftGateway())._process(task_id, "test-token")
+
+    with factory() as db:
+        item = db.get(ContentGenerationItem, item_id)
+        change = db.get(ChangeRequest, change_id)
+        revision = db.get(ChangeRevision, change.current_revision_id)
+        change.state = "approved"
+        revision.state = "approved"
+        decision_id = "review-decision-1"
+        db.add(ChangeApproval(change_request_id=change.id, revision_id=revision.id, revision_hash=revision.content_hash, reviewer="reviewer", decision="approved"))
+        review = WorkflowReviewEvent(
+            workspace_id=workspace_id,
+            change_request_id=change.id,
+            revision_id=revision.id,
+            revision_hash=revision.content_hash,
+            thread_id=item.thread_id,
+            decision_id=decision_id,
+            decision="approved",
+            actor="reviewer",
+            payload_hash="p" * 64,
+        )
+        db.add(review)
+        db.flush()
+        db.add(OutboxEvent(
+            event_type="workflow.review_decision",
+            aggregate_type="change_request",
+            aggregate_id=str(change.id),
+            idempotency_key="workflow-review:review-decision-1",
+            payload_json=json.dumps({
+                "workspace_id": workspace_id,
+                "change_request_id": change.id,
+                "revision_id": revision.id,
+                "revision_hash": revision.content_hash,
+                "thread_id": item.thread_id,
+                "decision_id": decision_id,
+                "decision": "approved",
+                "actor": "reviewer",
+            }),
+        ))
+        db.commit()
+
+    worker = ReviewResumeWorker()
+    assert worker.run_once() is True
+    assert worker.run_once() is False
+
+    with factory() as db:
+        assert db.get(ContentGenerationItem, item_id).status == "succeeded"
+        assert db.get(ContentGenerationTask, task_id).status == "succeeded"
+        review = db.query(WorkflowReviewEvent).filter(WorkflowReviewEvent.decision_id == "review-decision-1").one()
+        assert review.consumed_at is not None
+        outbox = db.query(OutboxEvent).filter(OutboxEvent.idempotency_key == "workflow-review:review-decision-1").one()
+        assert outbox.published_at is not None
 
 
 def _claim_for_test(factory, task_id):

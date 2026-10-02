@@ -74,6 +74,8 @@ class ContentWorkflowState(TypedDict, total=False):
     validation_passed: bool
     repair_attempts: int
     status: str
+    review_decision: str
+    review_error: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -325,6 +327,7 @@ def content_workflow_input(
     external_guidance: Sequence[Mapping[str, str]] | None = None,
     snapshot_context: str = "",
     snapshot_hash: str = "",
+    thread_id: str | None = None,
 ) -> ContentWorkflowState:
     summary = request_summary.strip()
     if not summary or len(summary) > MAX_SUMMARY_LENGTH:
@@ -387,7 +390,7 @@ def content_workflow_input(
     snapshot_context = snapshot_context[:MAX_SNAPSHOT_CONTEXT_LENGTH]
     if not isinstance(snapshot_hash, str):
         raise ValueError("snapshot_hash must be text")
-    return {
+    result: ContentWorkflowState = {
         "workspace_id": workspace_id,
         "site_id": site_id,
         "change_request_id": change_request_id,
@@ -400,6 +403,9 @@ def content_workflow_input(
         "repair_attempts": 0,
         "status": WorkflowStatus.retrieving_facts.value,
     }
+    if thread_id:
+        result["thread_id"] = workflow_config(thread_id)["configurable"]["thread_id"]
+    return result
 
 
 def workflow_config(thread_id: str | int) -> RunnableConfig:
@@ -493,15 +499,25 @@ def build_content_workflow(
         }
 
     def pause_for_human_review(state: ContentWorkflowState) -> dict[str, Any]:
-        interrupt(
-            {
-                "type": "content_draft_review",
-                "change_request_id": state["change_request_id"],
-                "revision_id": state["revision_id"],
-                "revision_hash": state["revision_hash"],
-            }
-        )
-        return {"status": WorkflowStatus.awaiting_review.value}
+        interrupt_payload = {
+            "type": "content_draft_review",
+            "change_request_id": state["change_request_id"],
+            "revision_id": state["revision_id"],
+            "revision_hash": state["revision_hash"],
+        }
+        if state.get("thread_id"):
+            interrupt_payload["thread_id"] = state["thread_id"]
+        response = interrupt(interrupt_payload)
+        # A legacy UI may resume with a simple acknowledgement. Keep that
+        # response non-terminal; the durable WorkflowReviewEvent consumer
+        # supplies an authoritative approved/rejected decision.
+        if not isinstance(response, Mapping) or response.get("decision") not in {"approved", "rejected"}:
+            return {"status": WorkflowStatus.awaiting_review.value}
+        return {
+            "status": str(response["decision"]),
+            "review_decision": str(response["decision"]),
+            "review_error": "",
+        }
 
     def route_after_retrieval(state: ContentWorkflowState) -> str:
         if state.get("status") == WorkflowStatus.needs_information.value:

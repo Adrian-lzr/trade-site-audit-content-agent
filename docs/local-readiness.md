@@ -21,10 +21,10 @@ result does not mean that a production deployment or a public page changed.
 
 The harness creates five synthetic page snapshots in a temporary SQLite
 database, creates one approved changeset per page, and submits each to a new
-local Git repository. It then records five local deployment callbacks, verifies
-the Git objects, and rolls back the first deployment with an expected-SHA
-compare-and-swap. Duplicate publication and rollback requests are checked for
-idempotency.
+local Git repository. It records five local deployment callbacks and confirms
+the API returns `verification_unavailable` because the rehearsal has no fresh
+target-page reader. Rollback remains blocked until page evidence exists.
+Duplicate publication requests are checked for idempotency.
 
 Use a new directory when the artifacts should remain available for inspection:
 
@@ -41,12 +41,13 @@ status = passed
 pages = 5
 published_attempts = 5
 deployment_callbacks = 5
-verified_deployments = 5
-rollback.source_final_status = rolled_back
-rollback.rollback_final_status = verified
+verified_deployments = 0
+verification_unavailable = 5
+rollback.status = blocked_external
+rollback.reason = fresh target-page read is not configured
 idempotency.publication_replay_rejected = true
 idempotency.publication_outbox_unique = true
-idempotency.rollback_replay_same_attempt = true
+idempotency.rollback_rejected_without_page_evidence = true
 external_side_effects.remote_git_push = false
 external_side_effects.cms_write = false
 external_side_effects.external_deployment = false
@@ -62,8 +63,9 @@ Run the focused test directly:
 & $py -m pytest -p no:cacheprovider backend/tests/test_local_readiness.py -q
 ```
 
-The test proves the local state machine and cleanup. It does not prove remote
-PR creation, CMS writes, deployment orchestration, or live HTTP content.
+The test proves the local artifact state machine, fail-closed verification gate,
+rollback guard, and cleanup. It does not prove remote PR creation, CMS writes,
+deployment orchestration, or live HTTP content.
 
 ## Docker Compose Boundary Check
 
@@ -151,8 +153,9 @@ and restore-time objectives remain deployment responsibilities.
 Record the JSON output and command date for each check. The following claims
 are valid from this document:
 
-- Five-page diffs and the local Git commit/revert state machine are reproducible
-  with synthetic data.
+- Five-page publication artifacts are reproducible with synthetic data. Local
+  Git commits do not count as deployed-page verification; rollback remains
+  blocked until a fresh target read is configured.
 - Compose profile and network exposure rules are statically validated.
 - PostgreSQL backup/restore is accepted only after the explicit source/target
   command completes successfully.
@@ -167,9 +170,12 @@ evidence.
 The following evidence was produced in this workspace, rather than inferred
 from configuration:
 
-- `scripts/local_readiness.py`: 5 pages, 5 submitted local publication
-  attempts, 5 verified deployment callbacks, and one verified rollback. The
-  report marked remote Git push, CMS write, and external deployment as false.
+- `scripts/local_readiness.py`: historical output from 2026-10-01 reported
+  local Git commits as verified deployments. That verification was not evidence
+  of target-page reads and is superseded by the fail-closed check added on
+  2026-10-02. Current output records five `verification_unavailable` results
+  and blocks rollback without target-page evidence. The report keeps remote
+  Git push, CMS write, and external deployment marked false.
 - `scripts/local_compose_check.py`: default and `demo` profiles passed; the
   report marked container start and image build as false.
 - `scripts/local_postgres_restore.py`: two temporary `postgres:16-alpine`

@@ -130,6 +130,33 @@ def test_draft_is_fact_grounded_checkpointed_by_reference_and_pauses_for_review(
     assert resumed["status"] == WorkflowStatus.awaiting_review.value
 
 
+def test_review_command_resume_reaches_authoritative_terminal_state(valve_fact):
+    repository = MemoryContentRepository([valve_fact])
+    gateway = FixtureDraftGateway([_valid_fixture_draft()])
+    graph = build_content_workflow(repository, gateway, InMemorySaver())
+    config = workflow_config("content-change:44-approved")
+    graph.invoke(_initial_state(), config=config)
+
+    approved = graph.invoke(Command(resume={"decision": "approved", "decision_id": "decision-1"}), config=config)
+
+    assert approved["status"] == "approved"
+    state = graph.get_state(config).values
+    assert state["review_decision"] == "approved"
+
+
+def test_review_command_rejection_reaches_terminal_state_without_publish_signal(valve_fact):
+    repository = MemoryContentRepository([valve_fact])
+    gateway = FixtureDraftGateway([_valid_fixture_draft()])
+    graph = build_content_workflow(repository, gateway, InMemorySaver())
+    config = workflow_config("content-change:44-rejected")
+    graph.invoke(_initial_state(), config=config)
+
+    rejected = graph.invoke(Command(resume={"decision": "rejected", "decision_id": "decision-2"}), config=config)
+
+    assert rejected["status"] == "rejected"
+    assert "review_decision" not in rejected or rejected["review_decision"] == "rejected"
+
+
 def test_missing_confirmed_fact_returns_needs_information_without_calling_gateway(valve_fact):
     proposed = replace(valve_fact, status="proposed")
     repository = MemoryContentRepository([proposed])

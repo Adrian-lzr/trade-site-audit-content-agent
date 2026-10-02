@@ -381,6 +381,7 @@ class ChangeRequest(Base):
     revisions: Mapped[list["ChangeRevision"]] = relationship(back_populates="request", cascade="all, delete-orphan", foreign_keys="ChangeRevision.change_request_id")
     approvals: Mapped[list["ChangeApproval"]] = relationship(back_populates="request", cascade="all, delete-orphan")
     publication_attempts: Mapped[list["PublicationAttempt"]] = relationship(back_populates="request", cascade="all, delete-orphan")
+    workflow_review_events: Mapped[list["WorkflowReviewEvent"]] = relationship(back_populates="change_request", cascade="all, delete-orphan")
 
 
 class ChangeRevision(Base):
@@ -510,6 +511,34 @@ class OutboxEvent(Base):
     lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class WorkflowReviewEvent(Base):
+    """Append-only review command bound to one graph thread and revision."""
+
+    __tablename__ = "workflow_review_events"
+    __table_args__ = (
+        UniqueConstraint("decision_id", name="uq_workflow_review_decision_id"),
+        CheckConstraint("decision IN ('approved', 'rejected')", name="ck_workflow_review_decision"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    change_request_id: Mapped[int] = mapped_column(ForeignKey("change_requests.id", ondelete="CASCADE"), nullable=False)
+    revision_id: Mapped[int] = mapped_column(ForeignKey("change_revisions.id", ondelete="CASCADE"), nullable=False)
+    revision_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    thread_id: Mapped[str] = mapped_column(String(200), nullable=False)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    decision: Mapped[str] = mapped_column(String(20), nullable=False)
+    actor: Mapped[str] = mapped_column(String(255), nullable=False)
+    payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    workspace: Mapped[Workspace] = relationship()
+    change_request: Mapped[ChangeRequest] = relationship(back_populates="workflow_review_events")
+    revision: Mapped[ChangeRevision] = relationship()
 
 
 class PublicationAttempt(Base):

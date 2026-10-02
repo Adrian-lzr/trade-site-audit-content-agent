@@ -199,6 +199,7 @@ class ContentGenerationWorker:
                             }),
                             snapshot_context=self._snapshot_context(db, item, task),
                             snapshot_hash=item.snapshot_hash,
+                            thread_id=item.thread_id,
                             required_fact_ids=(
                                 json.loads(item.required_fact_ids_json)
                                 if isinstance(item.required_fact_ids_json, str)

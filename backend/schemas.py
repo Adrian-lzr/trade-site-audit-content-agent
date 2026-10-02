@@ -214,6 +214,10 @@ class SnapshotOut(BaseModel):
     status_code: int
     title: str | None
     content_hash: str
+    # Immutable source excerpt for evidence review.  The API bounds this
+    # field; the full snapshot remains available only through the evidence
+    # store referenced by artifact_uri.
+    content: str | None = None
     content_type: str | None
     artifact_uri: str | None = None
     parser_version: str | None = None

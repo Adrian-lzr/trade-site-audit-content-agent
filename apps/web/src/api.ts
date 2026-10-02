@@ -41,6 +41,7 @@ export type PageSnapshot = {
   id: string;
   page_id?: number;
   url: string;
+  requested_url?: string;
   final_url?: string;
   title?: string;
   content_hash?: string;
@@ -53,6 +54,12 @@ export type PageSnapshot = {
   rule_problem_count?: number;
   rule_review_count?: number;
   rule_unknown_count?: number;
+  parser_version?: string | null;
+  artifact_uri?: string | null;
+  metadata_hash?: string | null;
+  body_hash?: string | null;
+  declared_canonical?: string[];
+  normalized_canonical?: Array<string | null>;
   is_synthetic?: boolean;
 };
 
@@ -71,6 +78,15 @@ export type SnapshotDetail = PageSnapshot & {
   page_id: number;
   job_id: number | null;
   content_type?: string | null;
+  /** Returned by evidence-capable deployments; absent on older API versions. */
+  content?: string | null;
+  findings?: Array<{
+    id: number;
+    code: string;
+    severity: string;
+    message: string;
+    evidence: Record<string, unknown>;
+  }>;
   rule_set_version: string;
   rule_results: RuleResult[];
 };
@@ -177,6 +193,8 @@ export type ChangeRevision = {
   fact_versions: Array<{ fact_id: number; series_id: string; version: number }>;
   content_hash: string;
   created_at: string;
+  schema_version?: number | string | null;
+  validation_report?: Record<string, unknown> | null;
 };
 
 export type ChangeApproval = {
@@ -188,6 +206,28 @@ export type ChangeApproval = {
   decision: string;
   comment: string | null;
   created_at: string;
+};
+
+export type PublicationAttempt = {
+  id: number;
+  change_request_id: number;
+  revision_id: number;
+  status: string;
+  target: string | null;
+  branch: string | null;
+  commit_sha: string | null;
+  external_id: string | null;
+  error: string | null;
+  deployment_status: string;
+  deployment_id: string | null;
+  deployed_commit_sha: string | null;
+  deployed_at: string | null;
+  verified_at: string | null;
+  rollback_of_attempt_id: number | null;
+  expected_current_sha: string | null;
+  rollback_reason: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type ChangeRequest = {
@@ -202,6 +242,7 @@ export type ChangeRequest = {
   updated_at: string;
   revision: ChangeRevision | null;
   approvals: ChangeApproval[];
+  publication_attempts?: PublicationAttempt[];
 };
 
 export type ContentGenerationItem = {
@@ -228,6 +269,7 @@ export type ContentGenerationTaskSummary = {
   site_id: number;
   question_set_version_id: number;
   status: string;
+  generation_source: "fixture" | "model_api" | string;
   attempts: number;
   last_error: string | null;
   created_at: string;
@@ -482,6 +524,43 @@ export async function createContentGenerationTask(workspaceKey: string, siteId: 
 export async function getContentGenerationTask(workspaceKey: string, siteId: string, taskId: number) {
   const path = `/api/workspaces/${encodeURIComponent(workspaceKey)}/sites/${encodeURIComponent(siteId)}/content-tasks/${encodeURIComponent(taskId)}`;
   return request<ContentGenerationTask>(path);
+}
+
+/**
+ * Save a new immutable revision for an existing change request.  The server
+ * recalculates the revision hash and checks the snapshot/fact bindings; the
+ * browser never supplies an approval or deployment status.
+ */
+export async function addChangeRevision(input: {
+  changeId: number;
+  workspaceKey?: string;
+  expectedVersion: number;
+  baseSnapshotId?: number | null;
+  baseContentHash?: string | null;
+  fieldDiff: Record<string, unknown>;
+  factVersions: Array<Record<string, unknown>>;
+}) {
+  const {
+    changeId,
+    workspaceKey = DEFAULT_WORKSPACE_ID,
+    expectedVersion,
+    baseSnapshotId,
+    baseContentHash,
+    fieldDiff,
+    factVersions,
+  } = input;
+  const path = `/api/changes/${encodeURIComponent(changeId)}/revisions?workspace_id=${encodeURIComponent(workspaceKey)}`;
+  return request<ChangeRequest>(path, {
+    method: "POST",
+    headers: { "If-Match": `\"${expectedVersion}\"` },
+    body: JSON.stringify({
+      expected_version: expectedVersion,
+      base_snapshot_id: baseSnapshotId ?? null,
+      base_content_hash: baseContentHash ?? null,
+      field_diff: fieldDiff,
+      fact_versions: factVersions,
+    }),
+  });
 }
 
 export async function submitChangeForApproval(changeId: number, expectedVersion: number, workspaceKey = DEFAULT_WORKSPACE_ID) {

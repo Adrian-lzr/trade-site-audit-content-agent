@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from backend.app import app
 from backend.database import SessionLocal
-from backend.models import ChangeApproval, ChangeRequest, Fact, OutboxEvent, Page, PageSnapshot, Site, Workspace, utcnow
+from backend.models import ChangeApproval, ChangeRequest, Fact, OutboxEvent, Page, PageSnapshot, Site, Workspace, WorkflowReviewEvent, utcnow
 from datetime import timedelta
 
 
@@ -72,6 +72,28 @@ def test_change_draft_submit_approval_and_idempotent_outbox():
             assert db.query(OutboxEvent).filter(OutboxEvent.aggregate_id == str(change["id"])).count() == 2
             first = db.query(OutboxEvent).filter(OutboxEvent.event_type == "change.approved").one()
             assert first.idempotency_key.endswith(":approved")
+
+
+def test_approval_persists_idempotent_workflow_review_event():
+    workspace_id, site_id = _site("review-event")
+    with TestClient(app) as client:
+        change = client.post(
+            f"/api/workspaces/{workspace_id}/sites/{site_id}/changes",
+            json=_change_payload(workspace_id, site_id),
+        ).json()
+        revision = change["revision"]
+        assert client.post(f"/api/changes/{change['id']}/submit-approval?workspace_id={workspace_id}", json={"expected_version": 1}).status_code == 200
+        body = {"reviewer": "alice", "decision": "approved", "revision_id": revision["id"], "revision_hash": revision["content_hash"], "expected_version": 1}
+        assert client.post(f"/api/changes/{change['id']}/approval?workspace_id={workspace_id}", json=body).status_code == 200
+        assert client.post(f"/api/changes/{change['id']}/approval?workspace_id={workspace_id}", json=body).status_code == 200
+
+    with SessionLocal() as db:
+        events = db.query(WorkflowReviewEvent).filter(WorkflowReviewEvent.change_request_id == change["id"]).all()
+        assert len(events) == 1
+        assert events[0].decision == "approved"
+        assert events[0].revision_hash == revision["content_hash"]
+        assert events[0].decision_id
+        assert db.query(OutboxEvent).filter(OutboxEvent.idempotency_key.like("workflow-review:%")).count() == 0
 
 
 def test_new_revision_invalidates_old_approval_and_requires_if_match():

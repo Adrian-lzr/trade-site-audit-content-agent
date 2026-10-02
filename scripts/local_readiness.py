@@ -1,10 +1,11 @@
 """Run the five-page local publication, deployment, and rollback rehearsal.
 
 The rehearsal creates a temporary SQLite database and an isolated local Git
-repository.  It exercises the same API and publication worker used by the
+repository. It exercises the same API and publication worker used by the
 application, but it never calls a remote Git, CMS, deployment, or website
-endpoint.  Pass ``--workdir`` when the generated database and repository
-should be retained for inspection; otherwise they are removed at process exit.
+endpoint. It confirms that local Git artifacts do not count as fresh target
+page verification and that rollback remains blocked without that evidence.
+Pass ``--workdir`` to retain generated artifacts for inspection.
 """
 
 from __future__ import annotations
@@ -153,7 +154,7 @@ def _run_rehearsal(root: Path) -> dict[str, Any]:
 
     from backend.app import app
     from backend.database import SessionLocal, init_db
-    from backend.models import ChangeRequest, OutboxEvent, PublicationAttempt
+    from backend.models import OutboxEvent, PublicationAttempt
     from backend.publication_worker import PublicationWorker
 
     init_db()
@@ -264,8 +265,8 @@ def _run_rehearsal(root: Path) -> dict[str, Any]:
                 200,
                 f"verify page {index} deployment",
             )
-            if verified["deployment_status"] != "verified":
-                raise RuntimeError(f"page {index} deployment did not verify")
+            if verified["deployment_status"] != "verification_unavailable":
+                raise RuntimeError(f"page {index} local rehearsal claimed target verification")
 
     for item in attempt_payload:
         marker_path = f".trade-visibility/changes/{item['change_request_id']}/revision-1.json"
@@ -280,66 +281,16 @@ def _run_rehearsal(root: Path) -> dict[str, Any]:
 
     first = attempt_payload[0]
     with TestClient(app) as client:
-        rollback = _assert_response(
-            client.post(
-                f"/api/publication-attempts/{first['id']}/rollback?workspace_id={workspace_id}",
-                json={"expected_current_sha": first["commit_sha"], "reason": "Local readiness rollback rehearsal"},
-            ),
-            200,
-            "queue rollback",
+        rollback_response = client.post(
+            f"/api/publication-attempts/{first['id']}/rollback?workspace_id={workspace_id}",
+            json={"expected_current_sha": first["commit_sha"], "reason": "Local readiness rollback rehearsal"},
         )
-        duplicate_rollback = _assert_response(
-            client.post(
-                f"/api/publication-attempts/{first['id']}/rollback?workspace_id={workspace_id}",
-                json={"expected_current_sha": first["commit_sha"], "reason": "Local readiness rollback rehearsal"},
-            ),
-            200,
-            "repeat rollback",
+        repeated_rollback_response = client.post(
+            f"/api/publication-attempts/{first['id']}/rollback?workspace_id={workspace_id}",
+            json={"expected_current_sha": first["commit_sha"], "reason": "Local readiness rollback rehearsal"},
         )
-        if duplicate_rollback["id"] != rollback["id"]:
-            raise RuntimeError("rollback request was not idempotent")
-
-    if not worker.run_once():
-        raise RuntimeError("rollback worker did not process the queued rollback")
-    with SessionLocal() as db:
-        rollback_attempt = db.get(PublicationAttempt, rollback["id"])
-        source_attempt = db.get(PublicationAttempt, first["id"])
-        if rollback_attempt is None or rollback_attempt.status != "submitted" or not rollback_attempt.commit_sha:
-            raise RuntimeError("rollback did not create a submitted local revert commit")
-        if source_attempt is None or source_attempt.deployment_status != "rollback_pending":
-            raise RuntimeError("source publication was not guarded during rollback")
-        rollback_sha = rollback_attempt.commit_sha
-        rollback_parent = _run_git(repository, "rev-parse", f"{rollback_sha}^")
-        if rollback_parent != first["commit_sha"]:
-            raise RuntimeError("rollback commit does not descend from the deployed source commit")
-
-    with TestClient(app) as client:
-        _assert_response(
-            client.post(
-                f"/api/publication-attempts/{rollback['id']}/deployment?workspace_id={workspace_id}",
-                json={"status": "deployed", "commit_sha": rollback_sha, "deployment_id": "local-rollback-deploy"},
-            ),
-            200,
-            "confirm rollback deployment",
-        )
-        verified_rollback = _assert_response(
-            client.post(f"/api/publication-attempts/{rollback['id']}/verify?workspace_id={workspace_id}"),
-            200,
-            "verify rollback deployment",
-        )
-        if verified_rollback["deployment_status"] != "verified":
-            raise RuntimeError("rollback deployment did not verify")
-
-    with SessionLocal() as db:
-        source_attempt = db.get(PublicationAttempt, first["id"])
-        rollback_attempt = db.get(PublicationAttempt, rollback["id"])
-        if source_attempt is None or source_attempt.status != "rolled_back":
-            raise RuntimeError("source publication did not close as rolled_back")
-        if rollback_attempt is None or rollback_attempt.status != "verified":
-            raise RuntimeError("rollback attempt did not close as verified")
-        rolled_back_change = db.get(ChangeRequest, first["change_request_id"])
-        if rolled_back_change is None or rolled_back_change.state != "rolled_back":
-            raise RuntimeError("change request did not enter rolled_back state")
+        if rollback_response.status_code != 409 or repeated_rollback_response.status_code != 409:
+            raise RuntimeError("rollback must remain blocked without fresh target-page verification")
 
     return {
         "status": "passed",
@@ -350,19 +301,18 @@ def _run_rehearsal(root: Path) -> dict[str, Any]:
         "pages": len(PAGE_PATHS),
         "published_attempts": len(attempt_payload),
         "deployment_callbacks": len(attempt_payload),
-        "verified_deployments": len(attempt_payload),
+        "verified_deployments": 0,
+        "verification_unavailable": len(attempt_payload),
         "rollback": {
             "source_attempt_id": first["id"],
-            "rollback_attempt_id": rollback["id"],
             "source_commit": first["commit_sha"],
-            "rollback_commit": rollback_sha,
-            "source_final_status": "rolled_back",
-            "rollback_final_status": "verified",
+            "status": "blocked_external",
+            "reason": "fresh target-page read is not configured",
         },
         "idempotency": {
             "publication_replay_rejected": True,
             "publication_outbox_unique": True,
-            "rollback_replay_same_attempt": True,
+            "rollback_rejected_without_page_evidence": True,
         },
         "external_side_effects": {
             "remote_git_push": False,

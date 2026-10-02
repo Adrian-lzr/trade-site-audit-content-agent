@@ -19,6 +19,7 @@ Updated: 2026-10-02 (Asia/Shanghai)
 | Independent evaluation reviewers | not_supplied | No reviewers or real holdout set supplied; synthetic evaluation must remain labeled synthetic |
 | Search Console / analytics / CRM export | not_supplied | No business outcome source or reporting window supplied |
 | Production deployment target | not_configured | No deployment adapter, callback secret, or rollback environment supplied |
+| Read-only site reachability | observed | Playwright opened `https://zoogo.club/` (title: `Compact Fitness Equipment Manufacturer | ZOOGO China`) and `https://zoogosports.com/` (title: `Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO`) on 2026-10-02; no write or deployment authorization inferred. Both pages exposed a favicon 404; zoogosports also emitted one preload warning. |
 
 Real secrets must be supplied through environment variables or a secret manager
 when a corresponding authorized test is ready. This file must contain only

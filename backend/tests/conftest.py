@@ -44,6 +44,7 @@ def clean_database():
         VisibilityRun,
         VisibilitySample,
         Workspace,
+        WorkflowReviewEvent,
     )
 
     command.upgrade(Config("backend/alembic.ini"), "head")
@@ -54,6 +55,7 @@ def clean_database():
             ModelCall,
             Membership,
             OutboxEvent,
+            WorkflowReviewEvent,
             VisibilitySample,
             VisibilityRun,
             PublicationAttempt,

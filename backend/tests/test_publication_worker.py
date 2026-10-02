@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from backend.app import app
 from backend.database import SessionLocal
-from backend.models import ChangeRequest, OutboxEvent, Page, PageSnapshot, PublicationAttempt, Site, Workspace
+from backend.models import ChangeRequest, OutboxEvent, Page, PageSnapshot, PublicationAttempt, Site, Workspace, utcnow
 from backend.publication_worker import PublicationWorker
 from backend.worker import JobWorker
 
@@ -118,8 +118,9 @@ def test_publication_worker_creates_idempotent_isolated_git_commit(tmp_path: Pat
         assert deployed.json()["deployment_status"] == "deployed"
         verified = client.post(f"/api/publication-attempts/{publication['id']}/verify?workspace_id={workspace_id}")
         assert verified.status_code == 200, verified.text
-        assert verified.json()["status"] == "verified"
-        assert verified.json()["deployment_status"] == "verified"
+        assert verified.json()["status"] == "deployed"
+        assert verified.json()["deployment_status"] == "verification_unavailable"
+        assert "fresh target page read" in verified.json()["error"]
     file_path = f".trade-visibility/changes/{publication['change_request_id']}/revision-1.json"
     listed = subprocess.run(["git", "cat-file", "-e", f"{commit_sha}:{file_path}"], cwd=tmp_path, check=False)
     assert listed.returncode == 0
@@ -127,7 +128,7 @@ def test_publication_worker_creates_idempotent_isolated_git_commit(tmp_path: Pat
     assert workspace_id > 0
 
 
-def test_publication_worker_creates_guarded_revert_and_closes_rollback(tmp_path: Path, monkeypatch):
+def test_publication_worker_creates_guarded_revert_and_keeps_verification_pending(tmp_path: Path, monkeypatch):
     subprocess.run(["git", "init", "-q", "--initial-branch=main"], cwd=tmp_path, check=True)
     (tmp_path / "README.md").write_text("demo\n", encoding="utf-8")
     subprocess.run(["git", "add", "README.md"], cwd=tmp_path, check=True)
@@ -156,6 +157,20 @@ def test_publication_worker_creates_guarded_revert_and_closes_rollback(tmp_path:
         assert deployed.status_code == 200, deployed.text
         verified = client.post(f"/api/publication-attempts/{publication['id']}/verify?workspace_id={workspace_id}")
         assert verified.status_code == 200, verified.text
+        assert verified.json()["deployment_status"] == "verification_unavailable"
+
+    # Fixture-only precondition for exercising the guarded rollback publisher.
+    # The public verification endpoint above correctly refuses to infer this
+    # state from a local Git object.
+    with SessionLocal() as db:
+        source = db.get(PublicationAttempt, publication["id"])
+        assert source is not None
+        source.status = "verified"
+        source.deployment_status = "verified"
+        source.verified_at = utcnow()
+        db.commit()
+
+    with TestClient(app) as client:
         rollback = client.post(
             f"/api/publication-attempts/{publication['id']}/rollback?workspace_id={workspace_id}",
             json={"expected_current_sha": source_commit, "reason": "Restore the previous page"},
@@ -189,14 +204,14 @@ def test_publication_worker_creates_guarded_revert_and_closes_rollback(tmp_path:
         assert deployed.status_code == 200, deployed.text
         verified = client.post(f"/api/publication-attempts/{rollback_payload['id']}/verify?workspace_id={workspace_id}")
         assert verified.status_code == 200, verified.text
-        assert verified.json()["status"] == "verified"
-        assert verified.json()["deployment_status"] == "verified"
+        assert verified.json()["status"] == "deployed"
+        assert verified.json()["deployment_status"] == "verification_unavailable"
 
     with SessionLocal() as db:
         source = db.get(PublicationAttempt, publication["id"])
-        assert source is not None and source.status == "rolled_back"
-        assert source.deployment_status == "rolled_back"
-        assert db.get(PublicationAttempt, rollback_payload["id"]).status == "verified"
+        assert source is not None and source.status == "verified"
+        assert source.deployment_status == "rollback_pending"
+        assert db.get(PublicationAttempt, rollback_payload["id"]).deployment_status == "verification_unavailable"
 
 
 def test_publication_worker_fails_rollback_after_manual_source_commit(tmp_path: Path, monkeypatch):
@@ -229,7 +244,21 @@ def test_publication_worker_fails_rollback_after_manual_source_commit(tmp_path: 
             f"/api/publication-attempts/{publication['id']}/deployment?workspace_id={workspace_id}",
             json={"status": "deployed", "commit_sha": source_commit, "deployment_id": "conflict-source"},
         ).status_code == 200
-        assert client.post(f"/api/publication-attempts/{publication['id']}/verify?workspace_id={workspace_id}").status_code == 200
+        verified = client.post(f"/api/publication-attempts/{publication['id']}/verify?workspace_id={workspace_id}")
+        assert verified.status_code == 200
+        assert verified.json()["deployment_status"] == "verification_unavailable"
+
+    # Simulate a separately verified source so this fixture can focus on a
+    # later source-branch conflict in the rollback worker.
+    with SessionLocal() as db:
+        source = db.get(PublicationAttempt, publication["id"])
+        assert source is not None
+        source.status = "verified"
+        source.deployment_status = "verified"
+        source.verified_at = utcnow()
+        db.commit()
+
+    with TestClient(app) as client:
         rollback = client.post(
             f"/api/publication-attempts/{publication['id']}/rollback?workspace_id={workspace_id}",
             json={"expected_current_sha": source_commit, "reason": "Restore safely"},

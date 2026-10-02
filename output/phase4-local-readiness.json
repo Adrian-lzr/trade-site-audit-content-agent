@@ -1,25 +1,24 @@
 {
   "status": "passed",
   "database": "sqlite",
-  "database_path": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\trade-visibility-readiness-nmfq_ei6\\readiness.sqlite",
-  "repository": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\trade-visibility-readiness-nmfq_ei6\\repository",
-  "initial_commit": "b541bd47b1bfed0c281bdd467426d873dab4c46d",
+  "database_path": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\trade-visibility-readiness-4t5hgcnk\\readiness.sqlite",
+  "repository": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\trade-visibility-readiness-4t5hgcnk\\repository",
+  "initial_commit": "6aaf176588b6d59487de96f7fb7f6720095746da",
   "pages": 5,
   "published_attempts": 5,
   "deployment_callbacks": 5,
-  "verified_deployments": 5,
+  "verified_deployments": 0,
+  "verification_unavailable": 5,
   "rollback": {
     "source_attempt_id": 1,
-    "rollback_attempt_id": 6,
-    "source_commit": "078117d6e2385116dd1a5f67a999950b0cb987c7",
-    "rollback_commit": "810fb20e2aff252a44be06080394889074bfe9e5",
-    "source_final_status": "rolled_back",
-    "rollback_final_status": "verified"
+    "source_commit": "9546b4a1f908263c6f24ac65d18c1a4135ff8a6a",
+    "status": "blocked_external",
+    "reason": "fresh target-page read is not configured"
   },
   "idempotency": {
     "publication_replay_rejected": true,
     "publication_outbox_unique": true,
-    "rollback_replay_same_attempt": true
+    "rollback_rejected_without_page_evidence": true
   },
   "external_side_effects": {
     "remote_git_push": false,

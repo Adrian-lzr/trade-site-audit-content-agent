@@ -7,7 +7,6 @@ import io
 import json
 import os
 import socket
-import subprocess
 from uuid import uuid4
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -24,10 +23,11 @@ from .crawler import CrawlError, allowed_paths_json, normalize_path
 from .database import get_db, init_db
 from .authz import Permission, authorize_workspace, effective_actor
 from .knowledge import curated_entries, filter_guidance
-from .models import AuditEvent, ChangeApproval, ChangeRequest, ChangeRevision, ChangeState, ContentGenerationItem, ContentGenerationTask, Fact, FactStatus, FactVisibility, Job, JobStatus, OutboxEvent, Page, PageSnapshot, ProcurementQuestion, ProcurementQuestionPageMapping, ProcurementQuestionSet, ProcurementQuestionSetVersion, PublicationAttempt, Site, VisibilityRun, VisibilitySample, Workspace, utcnow
+from .models import AuditEvent, ChangeApproval, ChangeRequest, ChangeRevision, ChangeState, ContentGenerationItem, ContentGenerationTask, Fact, FactStatus, FactVisibility, Job, JobStatus, OutboxEvent, Page, PageSnapshot, ProcurementQuestion, ProcurementQuestionPageMapping, ProcurementQuestionSet, ProcurementQuestionSetVersion, PublicationAttempt, Site, VisibilityRun, VisibilitySample, Workspace, WorkflowReviewEvent, utcnow
 from .time_utils import as_utc
 from .services.facts import FactResolutionError, assert_binding_current, assert_bindings_current, resolve_current_facts
 from .services.claims import validate_high_risk_claims
+from .observability import current_request_id
 from .observability import request_context_middleware
 from .schemas import AuditEventCreate, AuditEventOut, ChangeAction, ChangeApprovalCreate, ChangeApprovalOut, ChangeRequestCreate, ChangeRequestOut, ChangeRevisionCreate, ChangeRevisionOut, ContentGenerationItemCreate, ContentGenerationItemOut, ContentGenerationTaskCreate, ContentGenerationTaskOut, ContentGenerationTaskSummaryOut, DeploymentUpdate, FactCreate, FactOut, FactReview, FindingOut, JobOut, ProcurementQuestionCreate, ProcurementQuestionOut, ProcurementQuestionPageMappingOut, ProcurementQuestionSetCreate, ProcurementQuestionSetOut, ProcurementQuestionSetSummaryOut, ProcurementQuestionSetVersionCreate, ProcurementQuestionSetVersionOut, ProcurementQuestionSetVersionUpdate, PublicationAttemptOut, RollbackRequest, RuleResultOut, SiteCreate, SnapshotOut, VisibilityRunCreate, VisibilityRunOut, VisibilitySampleCapture, WorkspaceCreate, WorkspaceOut
 from .visibility_provider import build_visibility_provider, redact_sensitive_text
@@ -1853,7 +1853,7 @@ def _snapshot_response(snapshot: PageSnapshot) -> SnapshotOut:
         RuleResultOut(id=item.id, rule_id=item.rule_id, version=item.version, scope=item.scope, status=item.status, severity=item.severity, message=item.message, evidence=json.loads(item.evidence_json or "{}"), remediation_hint=item.remediation_hint)
         for item in sorted(snapshot.rule_results, key=lambda result: result.rule_id)
     ]
-    return SnapshotOut(id=snapshot.id, page_id=snapshot.page_id, job_id=snapshot.job_id, url=snapshot.url, requested_url=snapshot.requested_url, final_url=snapshot.final_url, status_code=snapshot.status_code, title=snapshot.title, content_hash=snapshot.content_hash, content_type=snapshot.content_type, artifact_uri=snapshot.artifact_uri, parser_version=snapshot.parser_version, declared_canonical=_json_array(snapshot.declared_canonical_json), normalized_canonical=_json_array(snapshot.normalized_canonical_json), metadata_hash=snapshot.metadata_hash, body_hash=snapshot.body_hash, fetched_at=snapshot.fetched_at, is_synthetic=snapshot.is_synthetic, findings=findings, rule_set_version=snapshot.audit_rule_version, rule_results=rule_results)
+    return SnapshotOut(id=snapshot.id, page_id=snapshot.page_id, job_id=snapshot.job_id, url=snapshot.url, requested_url=snapshot.requested_url, final_url=snapshot.final_url, status_code=snapshot.status_code, title=snapshot.title, content_hash=snapshot.content_hash, content=(snapshot.content or "")[:20000], content_type=snapshot.content_type, artifact_uri=snapshot.artifact_uri, parser_version=snapshot.parser_version, declared_canonical=_json_array(snapshot.declared_canonical_json), normalized_canonical=_json_array(snapshot.normalized_canonical_json), metadata_hash=snapshot.metadata_hash, body_hash=snapshot.body_hash, fetched_at=snapshot.fetched_at, is_synthetic=snapshot.is_synthetic, findings=findings, rule_set_version=snapshot.audit_rule_version, rule_results=rule_results)
 
 
 @app.get("/api/snapshots/{snapshot_id}", response_model=SnapshotOut)
@@ -2089,6 +2089,90 @@ def _enqueue_outbox(db: Session, *, event_type: str, aggregate_id: int | str, id
     return event
 
 
+def _record_audit(
+    db: Session,
+    *,
+    workspace_id: int,
+    actor: str,
+    action: str,
+    target_type: str,
+    target_id: int | str,
+    before: dict[str, object] | None = None,
+    after: dict[str, object] | None = None,
+) -> AuditEvent:
+    """Append a bounded, correlated business event in the caller transaction."""
+    event = AuditEvent(
+        workspace_id=workspace_id,
+        actor=actor[:255],
+        action=action[:120],
+        target_type=target_type[:120],
+        target_id=str(target_id)[:120],
+        before_version_json=json.dumps(before or {}, sort_keys=True, separators=(",", ":")),
+        after_version_json=json.dumps(after or {}, sort_keys=True, separators=(",", ":")),
+        run_id=current_request_id(),
+    )
+    db.add(event)
+    return event
+
+
+def _review_thread_id(db: Session, change: ChangeRequest, revision: ChangeRevision) -> str:
+    """Return the workflow thread bound to a revision, or a stable manual-review key."""
+    item = db.scalar(
+        select(ContentGenerationItem)
+        .where(ContentGenerationItem.change_request_id == change.id)
+        .order_by(ContentGenerationItem.id.desc())
+    )
+    return item.thread_id if item is not None else f"change:{change.id}:revision:{revision.id}"
+
+
+def _workflow_review_event(
+    db: Session,
+    *,
+    change: ChangeRequest,
+    revision: ChangeRevision,
+    reviewer: str,
+    decision: str,
+    comment: str | None,
+) -> WorkflowReviewEvent:
+    """Create or validate an idempotent review command in the current transaction."""
+    thread_id = _review_thread_id(db, change, revision)
+    decision_id = hashlib.sha256(
+        f"{change.id}:{revision.id}:{revision.content_hash}:{decision}:{reviewer}".encode("utf-8")
+    ).hexdigest()
+    payload = {
+        "change_request_id": change.id,
+        "revision_id": revision.id,
+        "revision_hash": revision.content_hash,
+        "thread_id": thread_id,
+        "decision_id": decision_id,
+        "decision": decision,
+        "actor": reviewer,
+        "comment": comment or "",
+    }
+    payload_hash = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    existing = db.scalar(select(WorkflowReviewEvent).where(WorkflowReviewEvent.decision_id == decision_id))
+    if existing is not None:
+        if existing.payload_hash != payload_hash or existing.revision_hash != revision.content_hash:
+            raise HTTPException(409, "review decision id is already bound to a different payload")
+        return existing
+    event = WorkflowReviewEvent(
+        workspace_id=change.workspace_id,
+        change_request_id=change.id,
+        revision_id=revision.id,
+        revision_hash=revision.content_hash,
+        thread_id=thread_id,
+        decision_id=decision_id,
+        decision=decision,
+        actor=reviewer,
+        payload_hash=payload_hash,
+    )
+    db.add(event)
+    db.flush()
+    return event
+
+
 def _create_revision(db: Session, change: ChangeRequest, payload: ChangeRevisionCreate, *, site: Site) -> ChangeRevision:
     _assert_expected_change_version(change, payload.expected_version, None)
     _validate_field_diff(payload.field_diff)
@@ -2194,6 +2278,7 @@ def _submit_change(db: Session, change: ChangeRequest, expected_version: int | N
     if change.state == ChangeState.pending_approval.value:
         revision = db.get(ChangeRevision, change.current_revision_id)
         _enqueue_outbox(db, event_type="change.pending_approval", aggregate_id=change.id, idempotency_key=f"change:{change.id}:revision:{revision.revision}:pending_approval", payload={"change_request_id": change.id, "revision_id": revision.id, "revision_hash": revision.content_hash})
+        _record_audit(db, workspace_id=change.workspace_id, actor="system", action="change.pending_approval", target_type="change_request", target_id=change.id, after={"revision_id": revision.id, "revision_hash": revision.content_hash})
         db.commit()
         db.refresh(change)
         return change
@@ -2203,6 +2288,7 @@ def _submit_change(db: Session, change: ChangeRequest, expected_version: int | N
     revision = db.get(ChangeRevision, change.current_revision_id)
     revision.state = ChangeState.pending_approval.value
     _enqueue_outbox(db, event_type="change.pending_approval", aggregate_id=change.id, idempotency_key=f"change:{change.id}:revision:{revision.revision}:pending_approval", payload={"change_request_id": change.id, "revision_id": revision.id, "revision_hash": revision.content_hash})
+    _record_audit(db, workspace_id=change.workspace_id, actor="system", action="change.pending_approval", target_type="change_request", target_id=change.id, after={"revision_id": revision.id, "revision_hash": revision.content_hash})
     db.commit()
     db.refresh(change)
     return change
@@ -2229,7 +2315,14 @@ def _decide_change(db: Session, change: ChangeRequest, payload: ChangeApprovalCr
         raise HTTPException(409, "approval revision hash is stale")
     existing = db.scalar(select(ChangeApproval).where(ChangeApproval.change_request_id == change.id, ChangeApproval.revision_id == revision.id, ChangeApproval.reviewer == payload.reviewer, ChangeApproval.decision == payload.decision))
     if change.state == payload.decision and existing is not None:
+        review_event = _workflow_review_event(
+            db, change=change, revision=revision, reviewer=payload.reviewer,
+            decision=payload.decision, comment=payload.comment,
+        )
         _enqueue_outbox(db, event_type=f"change.{payload.decision}", aggregate_id=change.id, idempotency_key=f"change:{change.id}:revision:{revision.revision}:{payload.decision}", payload={"change_request_id": change.id, "revision_id": revision.id, "revision_hash": revision.content_hash, "reviewer": payload.reviewer})
+        if review_event.thread_id.startswith("content-task:"):
+            _enqueue_outbox(db, event_type="workflow.review_decision", aggregate_id=change.id, idempotency_key=f"workflow-review:{review_event.decision_id}", payload={"workspace_id": change.workspace_id, "change_request_id": change.id, "revision_id": revision.id, "revision_hash": revision.content_hash, "thread_id": review_event.thread_id, "decision_id": review_event.decision_id, "decision": review_event.decision, "actor": review_event.actor})
+        _record_audit(db, workspace_id=change.workspace_id, actor=payload.reviewer, action=f"change.{payload.decision}.replayed", target_type="change_request", target_id=change.id, after={"revision_id": revision.id, "decision": payload.decision})
         db.commit()
         db.refresh(change)
         return change
@@ -2239,8 +2332,15 @@ def _decide_change(db: Session, change: ChangeRequest, payload: ChangeApprovalCr
         db.add(ChangeApproval(change_request_id=change.id, revision_id=revision.id, revision_hash=revision.content_hash, reviewer=payload.reviewer, decision=payload.decision, comment=payload.comment))
     change.state = payload.decision
     revision.state = payload.decision
+    review_event = _workflow_review_event(
+        db, change=change, revision=revision, reviewer=payload.reviewer,
+        decision=payload.decision, comment=payload.comment,
+    )
     event_type = f"change.{payload.decision}"
     _enqueue_outbox(db, event_type=event_type, aggregate_id=change.id, idempotency_key=f"change:{change.id}:revision:{revision.revision}:{payload.decision}", payload={"change_request_id": change.id, "revision_id": revision.id, "revision_hash": revision.content_hash, "reviewer": payload.reviewer})
+    _record_audit(db, workspace_id=change.workspace_id, actor=payload.reviewer, action=event_type, target_type="change_request", target_id=change.id, after={"revision_id": revision.id, "revision_hash": revision.content_hash, "decision": payload.decision})
+    if review_event.thread_id.startswith("content-task:"):
+        _enqueue_outbox(db, event_type="workflow.review_decision", aggregate_id=change.id, idempotency_key=f"workflow-review:{review_event.decision_id}", payload={"workspace_id": change.workspace_id, "change_request_id": change.id, "revision_id": revision.id, "revision_hash": revision.content_hash, "thread_id": review_event.thread_id, "decision_id": review_event.decision_id, "decision": review_event.decision, "actor": review_event.actor})
     db.commit()
     db.refresh(change)
     return change
@@ -2337,6 +2437,7 @@ def publish_change(change_id: int, request: Request, payload: ChangeAction | Non
         status="queued",
     )
     db.add(attempt)
+    db.flush()
     change.state = ChangeState.publishing.value
     _enqueue_outbox(
         db,
@@ -2345,6 +2446,7 @@ def publish_change(change_id: int, request: Request, payload: ChangeAction | Non
         idempotency_key=idempotency_key,
         payload={"change_request_id": change.id, "revision_id": revision.id, "site_id": change.site_id, "target": target},
     )
+    _record_audit(db, workspace_id=change.workspace_id, actor=effective_actor(authorize_workspace(request, db, workspace, Permission.operate)), action="change.publish_requested", target_type="publication_attempt", target_id=attempt.id, after={"revision_id": revision.id, "target": target})
     db.commit()
     db.refresh(attempt)
     return _publication_attempt_out(attempt)
@@ -2375,6 +2477,7 @@ def record_deployment(attempt_id: int, request: Request, payload: DeploymentUpda
         attempt.deployed_commit_sha = payload.commit_sha
         attempt.deployed_at = utcnow()
         change.state = ChangeState.published.value
+        _record_audit(db, workspace_id=change.workspace_id, actor=effective_actor(authorize_workspace(request, db, workspace, Permission.operate)), action="publication.deployed", target_type="publication_attempt", target_id=attempt.id, after={"commit_sha": payload.commit_sha, "deployment_id": payload.deployment_id})
     else:
         if attempt.deployment_status == "verified":
             raise HTTPException(409, "a verified deployment cannot be marked failed")
@@ -2382,6 +2485,7 @@ def record_deployment(attempt_id: int, request: Request, payload: DeploymentUpda
         attempt.deployment_status = "failed"
         attempt.error = "deployment reported failed"
         change.state = ChangeState.failed.value
+        _record_audit(db, workspace_id=change.workspace_id, actor=effective_actor(authorize_workspace(request, db, workspace, Permission.operate)), action="publication.deployment_failed", target_type="publication_attempt", target_id=attempt.id, after={"deployment_id": payload.deployment_id})
     db.commit()
     db.refresh(attempt)
     return _publication_attempt_out(attempt)
@@ -2399,44 +2503,25 @@ def verify_deployment(attempt_id: int, request: Request, workspace_id: str = Que
     authorize_workspace(request, db, workspace, Permission.operate)
     if attempt.deployment_status == "verified":
         return _publication_attempt_out(attempt)
-    if attempt.deployment_status != "deployed" or not attempt.deployed_commit_sha:
+    if attempt.deployment_status not in {"deployed", "verification_unavailable"} or not attempt.deployed_commit_sha:
         raise HTTPException(409, "deployment must be confirmed before verification")
-    repository = os.getenv("GIT_PUBLISH_REPOSITORY", "").strip()
-    if not repository:
-        attempt.status = "failed"
-        attempt.deployment_status = "verify_failed"
-        attempt.error = "GIT_PUBLISH_REPOSITORY is not configured; live verification is unavailable"
-        db.commit()
-        db.refresh(attempt)
-        return _publication_attempt_out(attempt)
-    if any(character not in "0123456789abcdefABCDEF" for character in attempt.deployed_commit_sha) or len(attempt.deployed_commit_sha) not in {40, 64}:
-        raise HTTPException(409, "recorded commit is not a valid Git object id")
-    result = subprocess.run(
-        ["git", "-C", repository, "cat-file", "-e", f"{attempt.deployed_commit_sha}^{{commit}}"],
-        text=True,
-        capture_output=True,
-        timeout=10,
-        check=False,
+    # A local Git object only proves that an artifact exists. Marking a
+    # deployment verified requires a fresh read of the target page plus a
+    # comparison with the approved revision; this repository has no configured
+    # target fetch/deployment callback yet, so fail closed and allow a retry once
+    # that adapter is installed.
+    attempt.status = "deployed"
+    attempt.deployment_status = "verification_unavailable"
+    attempt.error = "fresh target page read is not configured; local Git commit is not deployment verification evidence"
+    _record_audit(
+        db,
+        workspace_id=change.workspace_id,
+        actor=effective_actor(authorize_workspace(request, db, workspace, Permission.operate)),
+        action="publication.verification_unavailable",
+        target_type="publication_attempt",
+        target_id=attempt.id,
+        after={"commit_sha": attempt.deployed_commit_sha, "deployment_id": attempt.deployment_id},
     )
-    if result.returncode != 0:
-        attempt.status = "failed"
-        attempt.deployment_status = "verify_failed"
-        attempt.error = "deployed commit could not be found in the configured local repository"
-        db.commit()
-        db.refresh(attempt)
-        return _publication_attempt_out(attempt)
-    attempt.status = "verified"
-    attempt.deployment_status = "verified"
-    attempt.verified_at = utcnow()
-    attempt.error = None
-    if attempt.rollback_of_attempt_id is not None:
-        source = db.get(PublicationAttempt, attempt.rollback_of_attempt_id)
-        if source is None or source.deployment_status not in {"rollback_pending", "verified"}:
-            raise HTTPException(409, "rollback source is no longer in a rollback-compatible state")
-        source.status = "rolled_back"
-        source.deployment_status = "rolled_back"
-        source.error = None
-        change.state = ChangeState.rolled_back.value
     db.commit()
     db.refresh(attempt)
     return _publication_attempt_out(attempt)
@@ -2489,6 +2574,7 @@ def propose_rollback(attempt_id: int, request: Request, payload: RollbackRequest
             "expected_current_sha": payload.expected_current_sha,
         },
     )
+    _record_audit(db, workspace_id=change.workspace_id, actor=effective_actor(authorize_workspace(request, db, workspace, Permission.operate)), action="publication.rollback_requested", target_type="publication_attempt", target_id=rollback.id, after={"source_attempt_id": source.id, "expected_current_sha": payload.expected_current_sha})
     db.commit()
     db.refresh(rollback)
     return _publication_attempt_out(rollback)
