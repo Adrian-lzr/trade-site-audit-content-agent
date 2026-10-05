@@ -1,6 +1,6 @@
 # Optimization Status
 
-Updated: 2026-10-02 (Asia/Shanghai)
+Updated: 2026-10-05 (Asia/Shanghai)
 
 Task status values are `not_started`, `in_progress`, `code_done`,
 `fixture_verified`, `real_verified`, `blocked_external`, and `failed`.
@@ -21,20 +21,20 @@ Fixture or protocol evidence is never reported as real business evidence.
 | T10 | fixture_verified | 868c91b | CSV/PDF ingestion, source locator and hash tests | `backend/tests/test_ingestion.py`, `backend/ingestion.py` | approved business documents not supplied | ingest the pilot document set |
 | T11 | in_progress | 53fd516 | web build passed; empty-state Playwright screenshot | `apps/web/src/ContentReviewWorkspace.tsx`, `output/playwright/t11-content-empty.png` | API returned 502 and no real task/evidence data; OIDC/Membership UI not exercised | rerun the complete browser journey with a live API and authorized user |
 | T12 | fixture_verified | 868c91b | constrained static HTML publisher and preservation tests | `backend/tests/test_static_html_publisher.py`, `backend/static_html_publisher.py` | no authorized staging repository supplied | apply an approved revision to staging |
-| T13 | in_progress | 53fd516 | verifier policy unit tests; API returns `verification_unavailable` without a fresh target read; rollback stays pending | `backend/services/deployment.py`, `backend/app.py`, `backend/tests/test_deployment_verification.py`, `backend/tests/test_publication_worker.py` | no staging callback or page fetch configured | integrate fresh target read and deployment callback |
+| T13 | fixture_verified | 3821850 | signed callback, nonce replay protection, target/revision/commit binding, fresh observer fail-closed tests | `backend/services/deployment.py`, `backend/app.py`, `backend/schemas.py`, `backend/tests/test_deployment_verification.py`, `output/optimization/T13/evidence.json` | no authorized staging callback, target observer, deployment target, or rollback environment | connect approved staging adapter and collect real callback/fetch/rollback evidence |
 | T14 | blocked_external | 868c91b | adapter and metric fixtures only | `INPUTS.md`, `backend/visibility_provider.py` | authorized Provider, consumer surface and budget not supplied | run the 30-sample real cohort |
 | T15 | blocked_external | 868c91b | synthetic evaluation manifest and annotation tooling | `evals/optimization_t15_manifest.py`, `evals/tests` | real 30-case holdout and independent reviewers not supplied | freeze and run an independently reviewed holdout |
-| T16 | in_progress | 53fd516 | request/audit correlation paths added | `backend/observability.py`, `backend/app.py` | full cross-service event report not assembled | produce the audit/workflow/model/publication correlation report |
+| T16 | blocked_external | 3821850 | correlation report schema, redaction, selector scoping, artifact hash and blocker reporting; focused tests passed | `backend/observability.py`, `scripts/correlation_report.py`, `output/optimization/T16/correlation_report.json`, `output/optimization/T16/evidence.json` | current local DB has no matching runtime rows, no selector, and missing model_calls migration | run against migrated PostgreSQL with a bounded real request/workflow scope |
 | T17 | blocked_external | 868c91b | source-level migration and readiness checks | `backend/tests/test_container_build_check.py`, `INPUTS.md` | Docker daemon and PostgreSQL runtime unavailable | run clean Compose and PostgreSQL recovery checks |
 | T18 | blocked_external | 868c91b | cohort-safe fixture reporting only | `INPUTS.md` | analytics/CRM source and 28-day observation window not supplied | configure the approved business cohort and window |
-| T19 | in_progress | 53fd516 | optimization artifacts and evidence references are present | `docs/optimization/STATUS.md`, `docs/optimization/PLAN.md` | depends on T11, T16 and external gates | finalize O/C matrices and runtime/evaluation pack |
+| T19 | blocked_external | 3821850 | status/evidence pack updated with T13/T16/T17 artifacts and explicit blockers | `docs/optimization/STATUS.md`, `docs/optimization/INPUTS.md`, `output/optimization/` | T11 browser journey, T16 runtime correlation, T17 Docker/PostgreSQL, and M2 inputs remain open | complete authorized runtime gates, then finalize O/C matrices and release pack |
 
 ## Milestones
 
 | milestone | status | evidence |
 | --- | --- | --- |
 | M0 | fixture_verified | T00-T05 have reproducible code/fixture evidence |
-| M1 | in_progress | T06-T13 and T16 have substantial code evidence; T11/T16/T19 remain open and T17 needs runtime verification |
+| M1 | blocked_external | T06-T13 and T16 have code/fixture evidence; T13 is fixture_verified and T16/T17 are blocked by runtime inputs; T11 remains open |
 | M2 | blocked_external | real identity, authorized site, Provider, deployment and independent review inputs are absent |
 | M3 | blocked_external | requires M2 plus a separately measured business observation window |
 
@@ -45,13 +45,13 @@ Fixture or protocol evidence is never reported as real business evidence.
 | O01 | fixture_verified | claim binding, current-fact resolution and review recovery tests | validate against approved pilot facts and PostgreSQL |
 | O02 | fixture_verified | parser, snapshot metadata and rule evidence tests | add live representative pages when authorized |
 | O03 | fixture_verified | LangGraph resume and review outbox recovery tests | exercise with staging worker runtime |
-| O04 | in_progress | constrained HTML publisher plus verification policy | connect authorized staging apply, callback, fresh fetch and rollback |
+| O04 | in_progress | constrained HTML publisher plus signed callback and fresh target verification adapter | connect authorized staging apply, callback, fresh fetch and rollback |
 | O05 | fixture_verified | separated visibility metric definitions and fixtures | run authorized real Provider cohort |
 | O06 | fixture_verified | CSV/PDF ingestion, source hash and locator tests | ingest approved business materials and measure retrieval |
 | O07 | blocked_external | JWT protocol tests; local actor is not production identity | configure real OIDC and complete login/workspace role journey |
 | O08 | in_progress | model ledger and worker recovery paths | finish fairness/cost reconciliation under real runtime |
 | O09 | blocked_external | synthetic manifest only; zero independent human cases | run blinded 30-case holdout with independent reviewers |
-| O10 | in_progress | migrations, audit hooks, API/UI builds and tests | prove clean PostgreSQL/Docker startup, worker consumption and recovery |
+| O10 | in_progress | migrations, audit hooks, API/UI builds and tests; 242 tests, web build and source container gate pass | prove clean PostgreSQL/Docker startup, worker consumption and recovery |
 
 ## Critical Cases
 
@@ -62,7 +62,7 @@ Fixture or protocol evidence is never reported as real business evidence.
 | C07 | fixture_verified | independent visibility metric cases | execute real Provider samples |
 | C08-C11 | fixture_verified | review resume, lease fencing, idempotency and restart tests | validate with staging worker/outbox |
 | C12 | fixture_verified | signed-token and workspace authorization fixtures | configure real issuer and memberships |
-| C13-C14 | fixture_verified | constrained publisher and deployment verification unit tests | perform authorized staging page apply/fetch/rollback |
+| C13-C14 | fixture_verified | constrained publisher, signed deployment callback, nonce replay and fresh observer unit tests | perform authorized staging page apply/fetch/rollback |
 | C15 | blocked_external | synthetic fixtures only; no independent human evaluation | obtain holdout and reviewers |
 | C16 | blocked_external | source readiness checks only | run full container and PostgreSQL runtime |
 

@@ -3,7 +3,7 @@
 This file records configuration names and non-sensitive status only. Do not add
 credentials, personal data, customer records, or private source content here.
 
-Updated: 2026-10-02 (Asia/Shanghai)
+Updated: 2026-10-05 (Asia/Shanghai)
 
 | Input | Status | Notes |
 | --- | --- | --- |
@@ -18,7 +18,7 @@ Updated: 2026-10-02 (Asia/Shanghai)
 | Business source documents | not_supplied | No approved product documents for the pilot have been supplied in this task |
 | Independent evaluation reviewers | not_supplied | No reviewers or real holdout set supplied; synthetic evaluation must remain labeled synthetic |
 | Search Console / analytics / CRM export | not_supplied | No business outcome source or reporting window supplied |
-| Production deployment target | not_configured | No deployment adapter, callback secret, or rollback environment supplied |
+| Production deployment target | adapter_ready_external_unverified | Signed callback and configurable fresh target observer are implemented; no authorized callback secret, staging target, or rollback environment supplied |
 | Read-only site reachability | observed | Playwright opened `https://zoogo.club/` (title: `Compact Fitness Equipment Manufacturer | ZOOGO China`) and `https://zoogosports.com/` (title: `Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO`) on 2026-10-02; no write or deployment authorization inferred. Both pages exposed a favicon 404; zoogosports also emitted one preload warning. |
 
 Real secrets must be supplied through environment variables or a secret manager
