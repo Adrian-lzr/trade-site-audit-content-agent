@@ -167,3 +167,123 @@ def test_correlation_report_does_not_call_partial_chain_runtime_verified():
 
     assert report["verification"] == "blocked_external"
     assert any(item["code"] == "audit_request_link_missing" for item in report["blockers"])
+
+
+def test_correlation_report_fails_closed_for_unmatched_child_rows():
+    """A bounded report must never scan child tables without a parent match."""
+    from backend.database import SessionLocal
+    from backend.models import (
+        ChangeRevision,
+        ChangeRequest,
+        ContentGenerationTask,
+        ContentGenerationItem,
+        Page,
+        PageSnapshot,
+        ProcurementQuestion,
+        ProcurementQuestionSet,
+        ProcurementQuestionSetVersion,
+        PublicationAttempt,
+        Site,
+        VisibilityRun,
+        VisibilitySample,
+        Workspace,
+    )
+
+    with SessionLocal() as db:
+        workspace = Workspace(name="correlation-empty-parent")
+        other = Workspace(name="correlation-other-workspace")
+        db.add_all([workspace, other])
+        db.flush()
+        site = Site(workspace_id=other.id, name="other-site", base_url="https://other.invalid")
+        db.add(site)
+        db.flush()
+        page = Page(site_id=site.id, canonical_url="https://other.invalid/page")
+        snapshot = PageSnapshot(page=page, url=page.canonical_url, status_code=200, content_hash="a" * 64)
+        question_set = ProcurementQuestionSet(workspace_id=other.id, site_id=site.id, name="other-set")
+        db.add_all([page, snapshot, question_set])
+        db.flush()
+        version = ProcurementQuestionSetVersion(question_set_id=question_set.id, version=1, state="frozen")
+        db.add(version)
+        db.flush()
+        question = ProcurementQuestion(
+            question_set_version_id=version.id, position=1, question="Question?", product="Product",
+            use_case="Use", buyer_role="Buyer", purchase_stage="Stage", target_market="Market", language="en",
+        )
+        change = ChangeRequest(workspace_id=other.id, site_id=site.id, title="Other change")
+        db.add_all([question, change])
+        db.flush()
+        revision = ChangeRevision(change_request_id=change.id, revision=1, content_hash="b" * 64)
+        task = ContentGenerationTask(
+            workspace_id=other.id, site_id=site.id, question_set_version_id=version.id, status="queued",
+        )
+        db.add_all([revision, task])
+        db.flush()
+        item = ContentGenerationItem(
+            task_id=task.id, question_id=question.id, page_id=page.id, change_request_id=change.id,
+            snapshot_id=snapshot.id, snapshot_hash=snapshot.content_hash, request_summary="Other item",
+            thread_id="other-thread",
+        )
+        publication = PublicationAttempt(
+            change_request_id=change.id, revision_id=revision.id, idempotency_key="other-publication", status="queued",
+        )
+        run = VisibilityRun(
+            workspace_id=other.id, site_id=site.id, question_set_id=question_set.id,
+            question_set_version_id=version.id, provider="fixture", provider_kind="fixture", market="US",
+            language="en", request_id="other-request", status="queued",
+        )
+        db.add_all([item, publication, run])
+        db.flush()
+        db.add(VisibilitySample(run_id=run.id, question_id=question.id, position=1, status="failed", request_id="other-request"))
+        db.commit()
+        reports = [
+            build_correlation_report(db, workspace_id=workspace.id),
+            build_correlation_report(db, task_id=999901),
+            build_correlation_report(db, change_request_id=999902),
+            build_correlation_report(db, visibility_run_id=999903),
+        ]
+
+    for index, report in enumerate(reports):
+        correlation = report["correlation"]
+        populated = {key: len(value) for key, value in correlation.items() if isinstance(value, list) and value}
+        assert report["verification"] == "blocked_external", (index, report["scope"], populated)
+        assert correlation["content_items"] == []
+        assert correlation["revisions"] == []
+        assert correlation["publication_attempts"] == []
+        assert correlation["visibility_samples"] == []
+
+
+def test_correlation_report_request_selector_does_not_scan_unrelated_task_chain():
+    from backend.database import SessionLocal
+    from backend.models import (
+        ChangeRequest,
+        ContentGenerationTask,
+        ProcurementQuestionSet,
+        ProcurementQuestionSetVersion,
+        Site,
+        Workspace,
+    )
+
+    with SessionLocal() as db:
+        workspace = Workspace(name="correlation-request-only")
+        db.add(workspace)
+        db.flush()
+        site = Site(workspace_id=workspace.id, name="request-only-site", base_url="https://fixture.invalid")
+        db.add(site)
+        db.flush()
+        question_set = ProcurementQuestionSet(workspace_id=workspace.id, site_id=site.id, name="request-only-set")
+        db.add(question_set)
+        db.flush()
+        version = ProcurementQuestionSetVersion(question_set_id=question_set.id, version=1, state="frozen")
+        db.add(version)
+        db.flush()
+        change = ChangeRequest(workspace_id=workspace.id, site_id=site.id, title="unrelated change")
+        db.add(change)
+        db.flush()
+        db.add(ContentGenerationTask(workspace_id=workspace.id, site_id=site.id, question_set_version_id=version.id))
+        db.commit()
+        report = build_correlation_report(db, request_id="request-without-task-link")
+
+    correlation = report["correlation"]
+    assert correlation["content_tasks"] == []
+    assert correlation["revisions"] == []
+    assert correlation["publication_attempts"] == []

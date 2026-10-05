@@ -28,7 +28,7 @@ from .time_utils import as_utc
 from .services.facts import FactResolutionError, assert_binding_current, assert_bindings_current, resolve_current_facts
 from .services.claims import validate_high_risk_claims
 from .services.deployment import TargetObservationUnavailable, fetch_target_observation, verify_callback_signature, verify_deployment as evaluate_deployment
-from .observability import current_request_id
+from .observability import current_request_id, redact
 from .observability import request_context_middleware
 from .schemas import AuditEventCreate, AuditEventOut, ChangeAction, ChangeApprovalCreate, ChangeApprovalOut, ChangeRequestCreate, ChangeRequestOut, ChangeRevisionCreate, ChangeRevisionOut, ContentGenerationItemCreate, ContentGenerationItemOut, ContentGenerationTaskCreate, ContentGenerationTaskOut, ContentGenerationTaskSummaryOut, DeploymentUpdate, FactCreate, FactOut, FactReview, FindingOut, JobOut, ProcurementQuestionCreate, ProcurementQuestionOut, ProcurementQuestionPageMappingOut, ProcurementQuestionSetCreate, ProcurementQuestionSetOut, ProcurementQuestionSetSummaryOut, ProcurementQuestionSetVersionCreate, ProcurementQuestionSetVersionOut, ProcurementQuestionSetVersionUpdate, PublicationAttemptOut, RollbackRequest, RuleResultOut, SiteCreate, SnapshotOut, VisibilityRunCreate, VisibilityRunOut, VisibilitySampleCapture, WorkspaceCreate, WorkspaceOut
 from .visibility_provider import build_visibility_provider, redact_sensitive_text
@@ -320,8 +320,8 @@ def append_audit_event(workspace_key: str, payload: AuditEventCreate, request: R
         action=payload.action,
         target_type=payload.target_type,
         target_id=payload.target_id,
-        before_version_json=json.dumps(payload.before_version, sort_keys=True, separators=(",", ":")),
-        after_version_json=json.dumps(payload.after_version, sort_keys=True, separators=(",", ":")),
+        before_version_json=json.dumps(redact(payload.before_version), sort_keys=True, separators=(",", ":")),
+        after_version_json=json.dumps(redact(payload.after_version), sort_keys=True, separators=(",", ":")),
         run_id=payload.run_id,
     )
     db.add(event)
@@ -2233,8 +2233,8 @@ def _record_audit(
         action=action[:120],
         target_type=target_type[:120],
         target_id=str(target_id)[:120],
-        before_version_json=json.dumps(before or {}, sort_keys=True, separators=(",", ":")),
-        after_version_json=json.dumps(after or {}, sort_keys=True, separators=(",", ":")),
+        before_version_json=json.dumps(redact(before or {}), sort_keys=True, separators=(",", ":")),
+        after_version_json=json.dumps(redact(after or {}), sort_keys=True, separators=(",", ":")),
         run_id=current_request_id(),
     )
     db.add(event)

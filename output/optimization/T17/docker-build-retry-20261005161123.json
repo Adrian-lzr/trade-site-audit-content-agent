@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-10-05T08:11:27.0908355Z",
+  "command": "docker compose --progress plain build api worker web",
+  "exit_code": 1,
+  "duration_seconds": 3.805,
+  "log": "output/optimization/T17/docker-build-retry-20261005161123.log",
+  "evidence_kind": "real_runtime_attempt",
+  "side_effects": "local image build only"
+}

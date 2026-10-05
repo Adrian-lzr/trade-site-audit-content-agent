@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from fastapi.testclient import TestClient
 
 from backend.app import app
@@ -199,6 +201,32 @@ def test_local_identity_rejects_cross_workspace_audit_event_and_allows_viewer_re
             headers={"X-Local-User": "other", "X-Workspace-Id": str(owner["id"])},
         )
         assert read.status_code == 403, read.text
+
+
+def test_audit_event_payload_is_redacted_before_persistence_and_readback():
+    with TestClient(app) as client:
+        owner = _workspace(client, "audit redaction", ("owner", "operator"))
+        path = f"/api/workspaces/{owner['id']}/audit-events"
+        payload = {
+            "actor": "spoofed",
+            "action": "sensitive-test",
+            "target_type": "workspace",
+            "target_id": str(owner["id"]),
+            "before_version": {"token": "secret-token", "content": "private body", "safe_id": "abc"},
+            "after_version": {"api_key": "secret-key", "status": "ok"},
+        }
+        created = client.post(
+            path,
+            json=payload,
+            headers={"X-Local-User": "owner", "X-Workspace-Id": str(owner["id"])},
+        )
+        assert created.status_code == 201, created.text
+        response = created.json()
+        assert response["before_version"] == {"content": "[redacted]", "safe_id": "abc", "token": "[redacted]"}
+        assert response["after_version"] == {"api_key": "[redacted]", "status": "ok"}
+        listed = client.get(path, headers={"X-Local-User": "owner", "X-Workspace-Id": str(owner["id"])})
+        assert listed.status_code == 200
+        assert "secret-token" not in json.dumps(listed.json())
 
 
 def test_change_approval_requires_reviewer_or_admin_and_binds_reviewer():

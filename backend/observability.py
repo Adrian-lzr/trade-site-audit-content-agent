@@ -195,33 +195,48 @@ def build_correlation_report(
     def workspace_filter(model: Any) -> tuple[Any, ...]:
         return (model.workspace_id == workspace_id,) if workspace_id is not None and hasattr(model, "workspace_id") else ()
 
-    audits = rows(AuditEvent, *workspace_filter(AuditEvent), *([AuditEvent.run_id == request_id] if request_id else []))
-    tasks = rows(ContentGenerationTask, *workspace_filter(ContentGenerationTask), *([ContentGenerationTask.id == task_id] if task_id else []))
+    audit_predicates: list[Any] = list(workspace_filter(AuditEvent))
+    if request_id:
+        audit_predicates.append(AuditEvent.run_id == request_id)
+    elif task_id is not None or change_request_id is not None or visibility_run_id is not None or (scope_bounded and workspace_id is None):
+        # Task/change/run selectors have no safe join to AuditEvent.
+        audit_predicates.append(AuditEvent.id == -1)
+    audits = rows(AuditEvent, *audit_predicates)
+    task_predicates: list[Any] = list(workspace_filter(ContentGenerationTask))
+    if task_id is not None:
+        task_predicates.append(ContentGenerationTask.id == task_id)
+    elif any(value is not None for value in (request_id, change_request_id, visibility_run_id)):
+        # Request/change/run selectors do not have a foreign key to content
+        # tasks. Do not broaden them into a full task-table scan.
+        task_predicates.append(ContentGenerationTask.id == -1)
+    tasks = rows(ContentGenerationTask, *task_predicates)
     task_ids = {task.id for task in tasks}
-    items = rows(ContentGenerationItem, *([ContentGenerationItem.task_id.in_(task_ids)] if task_ids else []))
+    # Child tables have no workspace column of their own. Never let an empty
+    # parent result turn a bounded report into an unfiltered child-table scan.
+    items = rows(ContentGenerationItem, ContentGenerationItem.task_id.in_(task_ids) if task_ids else ContentGenerationItem.id == -1)
     item_change_ids = {item.change_request_id for item in items}
     change_predicates: list[Any] = list(workspace_filter(ChangeRequest))
     if change_request_id is not None:
         change_predicates.append(ChangeRequest.id == change_request_id)
     elif item_change_ids:
         change_predicates.append(ChangeRequest.id.in_(item_change_ids))
-    elif task_id is not None:
+    elif task_id is not None or request_id is not None or visibility_run_id is not None or (scope_bounded and workspace_id is None):
         change_predicates.append(ChangeRequest.id == -1)
     changes = rows(ChangeRequest, *change_predicates)
     change_ids = {change.id for change in changes}
-    revisions = rows(ChangeRevision, *([ChangeRevision.change_request_id.in_(change_ids)] if change_ids else []))
+    revisions = rows(ChangeRevision, ChangeRevision.change_request_id.in_(change_ids) if change_ids else ChangeRevision.id == -1)
     revision_ids = {revision.id for revision in revisions}
     generation_ids = {revision.generation_id for revision in revisions if revision.generation_id}
     model_predicates: list[Any] = list(workspace_filter(ModelCall))
     if generation_ids:
         model_predicates.append(ModelCall.generation_id.in_(generation_ids))
-    elif task_id is not None or change_request_id is not None:
+    elif scope_bounded:
         model_predicates.append(ModelCall.id == -1)
     model_calls = rows(ModelCall, *model_predicates)
     publication_predicates: list[Any] = []
     if revision_ids:
         publication_predicates.append(PublicationAttempt.revision_id.in_(revision_ids))
-    elif task_id is not None or change_request_id is not None:
+    elif scope_bounded:
         publication_predicates.append(PublicationAttempt.id == -1)
     publications = rows(PublicationAttempt, *publication_predicates)
     visibility_predicates: list[Any] = list(workspace_filter(VisibilityRun))
@@ -229,9 +244,12 @@ def build_correlation_report(
         visibility_predicates.append(VisibilityRun.id == visibility_run_id)
     elif request_id:
         visibility_predicates.append(VisibilityRun.request_id == request_id)
+    elif scope_bounded:
+        # Task/change selectors have no safe join to visibility runs.
+        visibility_predicates.append(VisibilityRun.id == -1)
     visibility_runs = rows(VisibilityRun, *visibility_predicates)
     run_ids = {run.id for run in visibility_runs}
-    sample_predicates: list[Any] = [VisibilitySample.run_id.in_(run_ids)] if run_ids else []
+    sample_predicates: list[Any] = [VisibilitySample.run_id.in_(run_ids) if run_ids else VisibilitySample.id == -1]
     if request_id:
         sample_predicates.append(VisibilitySample.request_id == request_id)
     samples = rows(VisibilitySample, *sample_predicates)

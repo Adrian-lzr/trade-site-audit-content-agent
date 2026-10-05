@@ -57,6 +57,19 @@
       "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests -q",
       "exit_code": 0,
       "result": "245 passed"
+    },
+    {
+      "command": "docker compose --progress plain build api worker web (2026-10-05 16:11 Asia/Shanghai)",
+      "exit_code": 1,
+      "result": "Docker Desktop responded, but auth.docker.io/token TCP connection was forcibly closed while resolving python:3.12-slim, node:22-alpine, and nginx:1.27-alpine",
+      "evidence_ref": "output/optimization/T17/docker-build-retry-20261005161123.json",
+      "log_ref": "output/optimization/T17/docker-build-retry-20261005161123.log",
+      "images_built": false
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests -q (post-audit changes)",
+      "exit_code": 0,
+      "result": "248 passed"
     }
   ],
   "artifacts": [
@@ -68,5 +81,5 @@
     "output/optimization/T17/backup-restore-20261005134014b.json",
     "output/optimization/T17/worker-postgres-rehearsal-2026100514.json"
   ],
-  "external_blocker": "Docker Hub OAuth token access remains unavailable; the 2026-10-05 15:10 retry failed while resolving python:3.12-slim, node:22-alpine, and nginx:1.27-alpine. Full Compose API/Web/Worker consumption and production backup retention/recovery policy remain unverified."
+  "external_blocker": "Docker Hub OAuth token access remains unavailable; the 2026-10-05 16:11 retry failed while resolving python:3.12-slim, node:22-alpine, and nginx:1.27-alpine. Full Compose API/Web/Worker consumption and production backup retention/recovery policy remain unverified."
 }

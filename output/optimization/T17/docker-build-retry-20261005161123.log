@@ -1,0 +1,65 @@
+ Image trade-visibility-worker Building 
+ Image trade-visibility-web Building 
+ Image trade-visibility-api Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.54kB 0.0s done
+#1 DONE 0.0s
+
+#2 [web internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.09kB done
+#2 DONE 0.0s
+
+#3 [worker internal] load build definition from Dockerfile
+#3 transferring dockerfile: 1.03kB done
+#3 DONE 0.0s
+
+#4 [worker internal] load metadata for docker.io/library/python:3.12-slim
+#4 ...
+
+#5 [auth] library/python:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#6 [auth] library/nginx:pull token for registry-1.docker.io
+#6 DONE 0.0s
+
+#7 [auth] library/node:pull token for registry-1.docker.io
+#7 DONE 0.0s
+
+#8 [web internal] load metadata for docker.io/library/nginx:1.27-alpine
+#8 ...
+
+#9 [web internal] load metadata for docker.io/library/node:22-alpine
+#9 ERROR: failed to authorize: failed to fetch oauth token: Post "https://auth.docker.io/token": read tcp 10.224.121.211:57589->39.109.122.128:443: wsarecv: An existing connection was forcibly closed by the remote host.
+
+#8 [web internal] load metadata for docker.io/library/nginx:1.27-alpine
+#8 ERROR: failed to authorize: failed to fetch oauth token: Post "https://auth.docker.io/token": read tcp 10.224.121.211:57588->39.109.122.128:443: wsarecv: An existing connection was forcibly closed by the remote host.
+
+#4 [api internal] load metadata for docker.io/library/python:3.12-slim
+#4 ERROR: failed to authorize: failed to fetch oauth token: Post "https://auth.docker.io/token": read tcp 10.224.121.211:57590->39.109.122.128:443: wsarecv: An existing connection was forcibly closed by the remote host.
+------
+ > [api internal] load metadata for docker.io/library/python:3.12-slim:
+------
+------
+ > [web internal] load metadata for docker.io/library/nginx:1.27-alpine:
+------
+------
+ > [web internal] load metadata for docker.io/library/node:22-alpine:
+------
+Dockerfile:1
+
+--------------------
+
+   1 | >>> FROM python:3.12-slim
+
+   2 |     
+
+   3 |     ENV PYTHONDONTWRITEBYTECODE=1 \
+
+--------------------
+
+target api: failed to solve: failed to fetch oauth token: Post "https://auth.docker.io/token": read tcp 10.224.121.211:57590->39.109.122.128:443: wsarecv: An existing connection was forcibly closed by the remote host.
+
+
+
+View build details: docker-desktop://dashboard/build/default/default/lmekmcf6r3tye6sol8wehz0tv
+
