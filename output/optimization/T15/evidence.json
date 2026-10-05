@@ -1,0 +1,28 @@
+{
+  "audit_artifact": "output/optimization/T14-T15-T18/public-readonly-source-audit-20261005.json",
+  "audit_mode": "public_https_get_external_input_audit",
+  "checks": [
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider evals/tests/test_t15_synthetic_manifest.py evals/tests/test_phase6_completion.py -q",
+      "exit_code": 0,
+      "result": "synthetic split and human gate tests pass; no human labels created"
+    },
+    {
+      "command": "public HTTPS GET probe set (artifact above)",
+      "exit_code": 0,
+      "result": "public references may exercise parser paths only and remain unverified source material"
+    }
+  ],
+  "external_blocker": "No approved 20-dev/30-holdout source set, real model run, or independent reviewers supplied. Public pages cannot replace business facts or blind labels.",
+  "methods": [
+    "GET"
+  ],
+  "next_action": "Freeze an approved holdout with access control, run all three strategies, then obtain independent human labels and second-reviewer sample.",
+  "paid_provider_called": false,
+  "production_interfaces_called": false,
+  "source": "synthetic manifest/annotation protocol plus bounded public GET input audit",
+  "status": "blocked_external",
+  "task_id": "T15",
+  "user_sites_contacted": false,
+  "writes_attempted": false
+}

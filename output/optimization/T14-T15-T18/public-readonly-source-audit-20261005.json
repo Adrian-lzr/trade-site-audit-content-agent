@@ -1,0 +1,187 @@
+{
+  "code_boundary": {
+    "adapter": "backend.visibility_provider.StructuredHTTPVisibilityProvider",
+    "availability_condition": "url and api_key",
+    "fixture_boundary": "FixtureVisibilityProvider.is_synthetic=true and source_boundary=offline_fixture",
+    "missing_key_behavior": "VisibilityResponse(status=unavailable, error_code=provider_unavailable)"
+  },
+  "conclusion": {
+    "T14": {
+      "next_input": "Authorized Provider endpoint, model/surface configuration, API credential or approved no-key contract, pricing/budget policy, and >=30-sample cohort permission.",
+      "public_data_can_support": [
+        "protocol/parser metadata checks",
+        "public reference retrieval fixtures"
+      ],
+      "public_data_cannot_prove": [
+        "real answering Provider sample",
+        "native citations from an authorized model API",
+        "usage/cost ledger",
+        "consumer search surface"
+      ],
+      "status": "blocked_external"
+    },
+    "T15": {
+      "next_input": "Approved source set with frozen 20/30 split, holdout access control, real model configuration, and independent reviewers with recorded timestamps/identities.",
+      "public_data_can_support": [
+        "source ingestion/parser regression when frozen and clearly labeled public_web_unverified"
+      ],
+      "public_data_cannot_prove": [
+        "approved business facts",
+        "30 holdout cases x 3 real workflow outputs",
+        "independent human labels and second-reviewer agreement"
+      ],
+      "status": "blocked_external"
+    },
+    "T18": {
+      "next_input": "Authorized, hashed Search Console/analytics/CRM export or read-only API credentials, fixed cohort/version, event definitions, and >=28-day observation windows.",
+      "public_data_can_support": [
+        "schema/import failure-path tests and synthetic trend fixtures"
+      ],
+      "public_data_cannot_prove": [
+        "Search Console ownership data",
+        "analytics cohort attribution",
+        "CRM form_submit/qualified_inquiry events",
+        ">=28-day before/after business observation"
+      ],
+      "status": "blocked_external"
+    }
+  },
+  "evidence_boundary": "No probe response is treated as enterprise fact, production authorization, real Provider evidence, human review, or CRM outcome evidence.",
+  "generated_at": "2026-10-05T06:58:51.364232+00:00",
+  "mode": "public_https_get_external_input_audit",
+  "probes": [
+    {
+      "classification": "public_search_data_only",
+      "content_bytes": 1252,
+      "content_sha256": "475bca74ddf7ad5c440ae1ba42a6e3983d3f4474aa37d301c7cccd0bd9b09dfe",
+      "content_type": "application/x-javascript",
+      "final_url": "https://api.duckduckgo.com/?q=industrial+valve+procurement&format=json&no_html=1&skip_disambig=1",
+      "id": "duckduckgo_instant_answer",
+      "json_root_keys": [
+        "Abstract",
+        "AbstractSource",
+        "AbstractText",
+        "AbstractURL",
+        "Answer",
+        "AnswerType",
+        "Definition",
+        "DefinitionSource",
+        "DefinitionURL",
+        "Entity",
+        "Heading",
+        "Image",
+        "ImageHeight",
+        "ImageIsLogo",
+        "ImageWidth",
+        "Infobox",
+        "Redirect",
+        "RelatedTopics",
+        "Results",
+        "Type",
+        "meta"
+      ],
+      "json_shape": {
+        "abstract_text_present": false,
+        "related_topics_count": 0,
+        "results_count": 0
+      },
+      "method": "GET",
+      "purpose": "public search/answer metadata candidate",
+      "status_code": 200,
+      "url": "https://api.duckduckgo.com/?q=industrial+valve+procurement&format=json&no_html=1&skip_disambig=1"
+    },
+    {
+      "classification": "public_reference_only",
+      "content_bytes": 141,
+      "content_sha256": "5acd94d243dd7f528c9d94bf959426aec35285cfc605553743cc3251acbc5212",
+      "content_type": "text/plain",
+      "final_url": "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=info&titles=Industrial_valve&origin=*",
+      "id": "wikipedia_api_article_info",
+      "method": "GET",
+      "purpose": "public reference article metadata candidate",
+      "status_code": 403,
+      "url": "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=info&titles=Industrial_valve&origin=*"
+    },
+    {
+      "classification": "model_catalog_only",
+      "content_bytes": 1798,
+      "content_sha256": "c40bb72187cd3df3eaaa59139247bd8c5705cdf29648cb02f0ad12461e5014fa",
+      "content_type": "application/json; charset=utf-8",
+      "final_url": "https://huggingface.co/api/models?limit=1&full=false",
+      "id": "huggingface_model_catalog",
+      "method": "GET",
+      "purpose": "public model catalog metadata candidate",
+      "status_code": 200,
+      "url": "https://huggingface.co/api/models?limit=1&full=false"
+    },
+    {
+      "classification": "official_api_metadata_requires_auth",
+      "content_bytes": 57160,
+      "content_sha256": "f741de2baf0080d9e0440d063aca5da5f6b7d12a43a1f187b5bd9987d6f77e26",
+      "content_type": "application/json; charset=UTF-8",
+      "final_url": "https://www.googleapis.com/discovery/v1/apis/searchconsole/v1/rest",
+      "id": "google_search_console_discovery",
+      "json_root_keys": [
+        "auth",
+        "basePath",
+        "baseUrl",
+        "batchPath",
+        "canonicalName",
+        "description",
+        "discoveryVersion",
+        "documentationLink",
+        "fullyEncodeReservedExpansion",
+        "icons",
+        "id",
+        "kind",
+        "mtlsRootUrl",
+        "name",
+        "ownerDomain",
+        "ownerName",
+        "parameters",
+        "protocol",
+        "resources",
+        "revision",
+        "rootUrl",
+        "schemas",
+        "servicePath",
+        "title",
+        "version",
+        "version_module"
+      ],
+      "json_shape": {
+        "auth_keys": [
+          "oauth2"
+        ],
+        "auth_present": true,
+        "title": "Google Search Console API"
+      },
+      "method": "GET",
+      "purpose": "official Search Console API discovery metadata",
+      "status_code": 200,
+      "url": "https://www.googleapis.com/discovery/v1/apis/searchconsole/v1/rest"
+    },
+    {
+      "classification": "official_auth_documentation",
+      "content_bytes": 71391,
+      "content_sha256": "675bcc328c68560560c4b21fbb392092a04cd63ac1028fc094e6228bc4d5a8a2",
+      "content_type": "text/html; charset=utf-8",
+      "final_url": "https://developers.google.com/webmaster-tools/v1/how-tos/authorizing",
+      "id": "google_search_console_authorization_docs",
+      "method": "GET",
+      "purpose": "official Search Console authorization documentation",
+      "status_code": 200,
+      "url": "https://developers.google.com/webmaster-tools/v1/how-tos/authorizing"
+    }
+  ],
+  "purpose": "Determine whether unauthenticated public sources can legally provide local regression evidence for T14/T15/T18 without being promoted to real Provider, human review, enterprise facts, CRM, or production evidence.",
+  "request_policy": {
+    "methods": [
+      "GET"
+    ],
+    "model_generation_attempted": false,
+    "paid_provider_called": false,
+    "user_sites_contacted": false,
+    "writes_attempted": false
+  }
+}

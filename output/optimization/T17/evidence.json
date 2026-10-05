@@ -2,7 +2,7 @@
   "task_id": "T17",
   "status": "blocked_external",
   "source": "runtime plus source gate",
-  "code_commit": "b1b8f5a3b81257a906e361103dc2ee2cf36bf4c7",
+  "code_commit": "84692d383d3601f243fdf0317b216377676d7180",
   "checks": [
     {
       "command": "docker compose -p optvalidation postgres:16-alpine; alembic upgrade head",
@@ -44,6 +44,19 @@
       "command": "docker info / docker compose config / docker compose build --progress plain api worker web (2026-10-05 14:34 Asia/Shanghai)",
       "exit_code": 1,
       "result": "Docker Desktop 29.8.1 daemon and Compose source interpolation passed with POSTGRES_PASSWORD=local-test-password; application image metadata failed before build because auth.docker.io:443 actively refused the OAuth token request for python:3.12-slim, node:22-alpine, and nginx:1.27-alpine"
+    },
+    {
+      "command": "docker compose --progress plain build api worker web (2026-10-05 15:10 Asia/Shanghai)",
+      "exit_code": 1,
+      "result": "Docker Desktop 29.8.1 responded, but application image metadata failed before build: auth.docker.io:443 OAuth token connection failed for python:3.12-slim, node:22-alpine, and nginx:1.27-alpine",
+      "evidence_ref": "output/optimization/T17/docker-build-retry-20261005151019.json",
+      "log_ref": "output/optimization/T17/docker-build-retry-20261005151019.log",
+      "images_built": false
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests -q",
+      "exit_code": 0,
+      "result": "245 passed"
     }
   ],
   "artifacts": [
@@ -55,5 +68,5 @@
     "output/optimization/T17/backup-restore-20261005134014b.json",
     "output/optimization/T17/worker-postgres-rehearsal-2026100514.json"
   ],
-  "external_blocker": "Docker Hub OAuth token access remains unavailable (auth.docker.io:443 connection refused during 2026-10-05 retry); full Compose API/Web/Worker consumption and production backup retention/recovery policy remain unverified."
+  "external_blocker": "Docker Hub OAuth token access remains unavailable; the 2026-10-05 15:10 retry failed while resolving python:3.12-slim, node:22-alpine, and nginx:1.27-alpine. Full Compose API/Web/Worker consumption and production backup retention/recovery policy remain unverified."
 }

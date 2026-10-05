@@ -1,0 +1,26 @@
+{
+  "task_id": "T17",
+  "status": "blocked_external",
+  "evidence_kind": "docker_image_build_retry",
+  "command": "docker compose --progress plain build api worker web",
+  "started_local": "2026-10-05T15:10:19.9421183+08:00",
+  "ended_local": "2026-10-05T15:10:42.4450500+08:00",
+  "started_utc": "2026-10-05T07:10:19.9421183Z",
+  "ended_utc": "2026-10-05T07:10:42.4450500Z",
+  "exit_code": 1,
+  "docker_server_version": "29.8.1",
+  "image_targets": [
+    "api",
+    "worker",
+    "web"
+  ],
+  "images_built": false,
+  "log_file": "docker-build-retry-20261005151019.log",
+  "error_lines": [
+    "#7 ERROR: failed to authorize: failed to fetch oauth token: Post \"https://auth.docker.io/token\": dial tcp 108.160.170.33:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.",
+    "#9 ERROR: failed to authorize: failed to fetch oauth token: Post \"https://auth.docker.io/token\": dial tcp 108.160.170.33:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.",
+    "#8 ERROR: failed to authorize: failed to fetch oauth token: Post \"https://auth.docker.io/token\": dial tcp 108.160.170.33:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.",
+    "target web: failed to solve: failed to fetch oauth token: Post \"https://auth.docker.io/token\": dial tcp 108.160.170.33:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond."
+  ],
+  "limitation": "Build metadata resolution requires Docker Hub OAuth token access; this retry does not establish Compose runtime consumption."
+}

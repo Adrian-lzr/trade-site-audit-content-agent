@@ -1,0 +1,23 @@
+{
+  "audit_artifact": "output/optimization/T14-T15-T18/public-readonly-source-audit-20261005.json",
+  "audit_mode": "public_https_get_external_input_audit",
+  "checks": [
+    {
+      "command": "public HTTPS GET probe set (artifact above)",
+      "exit_code": 0,
+      "result": "Search Console discovery/auth documentation reachable; no property, analytics, or CRM data read"
+    }
+  ],
+  "external_blocker": "No authorized Search Console/analytics/CRM export or read-only account and no >=28-day before/after window supplied.",
+  "methods": [
+    "GET"
+  ],
+  "next_action": "Import an authorized hashed export or use an approved read-only API, freeze cohort/event definitions, and collect the required observation windows.",
+  "paid_provider_called": false,
+  "production_interfaces_called": false,
+  "source": "cohort/report fixtures plus official public API/documentation GET audit",
+  "status": "blocked_external",
+  "task_id": "T18",
+  "user_sites_contacted": false,
+  "writes_attempted": false
+}

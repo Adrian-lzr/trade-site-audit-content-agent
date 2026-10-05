@@ -1,0 +1,68 @@
+ Image trade-visibility-api Building 
+ Image trade-visibility-worker Building 
+ Image trade-visibility-web Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.54kB 0.0s done
+#1 DONE 0.0s
+
+#2 [worker internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.03kB done
+#2 DONE 0.0s
+
+#3 [web internal] load build definition from Dockerfile
+#3 transferring dockerfile: 1.09kB done
+#3 DONE 0.0s
+
+#4 [auth] library/python:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#5 [auth] library/nginx:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#6 [auth] library/node:pull token for registry-1.docker.io
+#6 DONE 0.0s
+
+#7 [api internal] load metadata for docker.io/library/python:3.12-slim
+#7 ...
+
+#8 [web internal] load metadata for docker.io/library/node:22-alpine
+#8 ...
+
+#9 [web internal] load metadata for docker.io/library/nginx:1.27-alpine
+#9 ...
+
+#7 [api internal] load metadata for docker.io/library/python:3.12-slim
+#7 ERROR: failed to authorize: failed to fetch oauth token: Post "https://auth.docker.io/token": dial tcp 108.160.170.33:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+
+#9 [web internal] load metadata for docker.io/library/nginx:1.27-alpine
+#9 ERROR: failed to authorize: failed to fetch oauth token: Post "https://auth.docker.io/token": dial tcp 108.160.170.33:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+
+#8 [web internal] load metadata for docker.io/library/node:22-alpine
+#8 ERROR: failed to authorize: failed to fetch oauth token: Post "https://auth.docker.io/token": dial tcp 108.160.170.33:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+------
+ > [worker internal] load metadata for docker.io/library/python:3.12-slim:
+------
+------
+ > [web internal] load metadata for docker.io/library/node:22-alpine:
+------
+------
+ > [web internal] load metadata for docker.io/library/nginx:1.27-alpine:
+------
+Dockerfile:1
+
+--------------------
+
+   1 | >>> FROM node:22-alpine AS build
+
+   2 |     
+
+   3 |     WORKDIR /app
+
+--------------------
+
+target web: failed to solve: failed to fetch oauth token: Post "https://auth.docker.io/token": dial tcp 108.160.170.33:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+
+
+
+View build details: docker-desktop://dashboard/build/default/default/e7db5gioc2yr8gek5516ic3q1
+

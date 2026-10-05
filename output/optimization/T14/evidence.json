@@ -1,0 +1,28 @@
+{
+  "audit_artifact": "output/optimization/T14-T15-T18/public-readonly-source-audit-20261005.json",
+  "audit_mode": "public_https_get_external_input_audit",
+  "checks": [
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_visibility_phase5.py -q",
+      "exit_code": 0,
+      "result": "fixture/provider boundary tests pass; no real Provider call"
+    },
+    {
+      "command": "public HTTPS GET probe set (artifact above)",
+      "exit_code": 0,
+      "result": "public catalog/API metadata only; no authorized answering Provider or native citation source"
+    }
+  ],
+  "external_blocker": "No authorized Provider endpoint/model/surface, budget policy, or >=30-sample permission supplied. Public metadata cannot prove real answer/citation/usage/cost evidence.",
+  "methods": [
+    "GET"
+  ],
+  "next_action": "Configure the approved Provider and run the frozen 30-sample cohort, preserving failures and accounting evidence.",
+  "paid_provider_called": false,
+  "production_interfaces_called": false,
+  "source": "protocol fixtures plus bounded public GET input audit",
+  "status": "blocked_external",
+  "task_id": "T14",
+  "user_sites_contacted": false,
+  "writes_attempted": false
+}
