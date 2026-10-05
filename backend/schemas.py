@@ -445,6 +445,10 @@ class DeploymentUpdate(BaseModel):
     status: Literal["deployed", "failed"]
     commit_sha: str | None = None
     deployment_id: str | None = Field(default=None, max_length=255)
+    nonce: str | None = Field(default=None, min_length=8, max_length=255)
+    signature: str | None = Field(default=None, max_length=255)
+    revision_hash: str | None = Field(default=None, max_length=128)
+    target: str | None = Field(default=None, max_length=2048)
 
 
 class RollbackRequest(BaseModel):

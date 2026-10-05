@@ -27,6 +27,7 @@ from .models import AuditEvent, ChangeApproval, ChangeRequest, ChangeRevision, C
 from .time_utils import as_utc
 from .services.facts import FactResolutionError, assert_binding_current, assert_bindings_current, resolve_current_facts
 from .services.claims import validate_high_risk_claims
+from .services.deployment import TargetObservationUnavailable, fetch_target_observation, verify_callback_signature, verify_deployment as evaluate_deployment
 from .observability import current_request_id
 from .observability import request_context_middleware
 from .schemas import AuditEventCreate, AuditEventOut, ChangeAction, ChangeApprovalCreate, ChangeApprovalOut, ChangeRequestCreate, ChangeRequestOut, ChangeRevisionCreate, ChangeRevisionOut, ContentGenerationItemCreate, ContentGenerationItemOut, ContentGenerationTaskCreate, ContentGenerationTaskOut, ContentGenerationTaskSummaryOut, DeploymentUpdate, FactCreate, FactOut, FactReview, FindingOut, JobOut, ProcurementQuestionCreate, ProcurementQuestionOut, ProcurementQuestionPageMappingOut, ProcurementQuestionSetCreate, ProcurementQuestionSetOut, ProcurementQuestionSetSummaryOut, ProcurementQuestionSetVersionCreate, ProcurementQuestionSetVersionOut, ProcurementQuestionSetVersionUpdate, PublicationAttemptOut, RollbackRequest, RuleResultOut, SiteCreate, SnapshotOut, VisibilityRunCreate, VisibilityRunOut, VisibilitySampleCapture, WorkspaceCreate, WorkspaceOut
@@ -2464,6 +2465,57 @@ def record_deployment(attempt_id: int, request: Request, payload: DeploymentUpda
     authorize_workspace(request, db, workspace, Permission.operate)
     if attempt.status not in {"submitted", "deployed", "verified"}:
         raise HTTPException(409, "only a submitted publication can receive a deployment callback")
+    revision = db.get(ChangeRevision, attempt.revision_id)
+    if revision is None:
+        raise HTTPException(409, "publication revision is unavailable")
+    expected_target = attempt.target or ""
+    if payload.target is not None and payload.target != expected_target:
+        raise HTTPException(409, "deployment callback target does not match the publication target")
+    if payload.revision_hash is not None and payload.revision_hash != revision.content_hash:
+        raise HTTPException(409, "deployment callback revision does not match the approved revision")
+    if payload.status == "deployed" and payload.commit_sha is not None and attempt.commit_sha and payload.commit_sha != attempt.commit_sha:
+        raise HTTPException(409, "deployment commit does not match the submitted commit")
+    callback_secret = os.getenv("DEPLOYMENT_CALLBACK_SECRET", "").strip()
+    if callback_secret:
+        if not payload.nonce or not payload.signature or not payload.revision_hash or not payload.target:
+            raise HTTPException(401, "deployment callback signature, nonce, revision, and target are required")
+        if not verify_callback_signature(
+            secret=callback_secret,
+            signature=payload.signature,
+            attempt_id=attempt.id,
+            status=payload.status,
+            commit_sha=payload.commit_sha,
+            deployment_id=payload.deployment_id,
+            nonce=payload.nonce,
+            revision_hash=payload.revision_hash,
+            target=payload.target,
+        ):
+            raise HTTPException(401, "invalid deployment callback signature")
+        replay = None
+        callback_events = db.scalars(
+            select(AuditEvent).where(
+                AuditEvent.workspace_id == change.workspace_id,
+                AuditEvent.action == "publication.deployment_callback",
+                AuditEvent.target_id == str(attempt.id),
+            )
+        ).all()
+        for event in callback_events:
+            try:
+                details = json.loads(event.after_version_json or "{}")
+            except (TypeError, ValueError):
+                details = {}
+            if details.get("nonce") == payload.nonce:
+                replay = event
+                expected_callback = {
+                    "revision_hash": payload.revision_hash,
+                    "target": payload.target or expected_target,
+                    "commit_sha": payload.commit_sha,
+                }
+                if any(details.get(key) != value for key, value in expected_callback.items()):
+                    raise HTTPException(409, "deployment callback nonce was already used for a different payload")
+                break
+        if replay is not None:
+            return _publication_attempt_out(attempt)
     if payload.status == "deployed":
         if not attempt.commit_sha or payload.commit_sha != attempt.commit_sha:
             raise HTTPException(409, "deployment commit does not match the submitted commit")
@@ -2486,6 +2538,13 @@ def record_deployment(attempt_id: int, request: Request, payload: DeploymentUpda
         attempt.error = "deployment reported failed"
         change.state = ChangeState.failed.value
         _record_audit(db, workspace_id=change.workspace_id, actor=effective_actor(authorize_workspace(request, db, workspace, Permission.operate)), action="publication.deployment_failed", target_type="publication_attempt", target_id=attempt.id, after={"deployment_id": payload.deployment_id})
+    if payload.nonce:
+        _record_audit(
+            db, workspace_id=change.workspace_id, actor="deployment-callback",
+            action="publication.deployment_callback", target_type="publication_attempt",
+            target_id=attempt.id, after={"nonce": payload.nonce, "revision_hash": payload.revision_hash,
+                                          "target": payload.target or expected_target, "commit_sha": payload.commit_sha},
+        )
     db.commit()
     db.refresh(attempt)
     return _publication_attempt_out(attempt)
@@ -2505,22 +2564,42 @@ def verify_deployment(attempt_id: int, request: Request, workspace_id: str = Que
         return _publication_attempt_out(attempt)
     if attempt.deployment_status not in {"deployed", "verification_unavailable"} or not attempt.deployed_commit_sha:
         raise HTTPException(409, "deployment must be confirmed before verification")
-    # A local Git object only proves that an artifact exists. Marking a
-    # deployment verified requires a fresh read of the target page plus a
-    # comparison with the approved revision; this repository has no configured
-    # target fetch/deployment callback yet, so fail closed and allow a retry once
-    # that adapter is installed.
-    attempt.status = "deployed"
-    attempt.deployment_status = "verification_unavailable"
-    attempt.error = "fresh target page read is not configured; local Git commit is not deployment verification evidence"
+    revision = db.get(ChangeRevision, attempt.revision_id)
+    if revision is None:
+        raise HTTPException(409, "publication revision is unavailable")
+    try:
+        observation = fetch_target_observation(attempt.target or "", attempt=attempt)
+        result = evaluate_deployment(
+            expected_commit=attempt.commit_sha,
+            observed_commit=observation.commit,
+            expected_revision_hash=revision.content_hash,
+            observed_revision_hash=observation.revision_hash,
+            expected_content_hash=revision.content_hash,
+            observed_content_hash=observation.content_hash,
+        )
+    except TargetObservationUnavailable as exc:
+        result = evaluate_deployment(
+            expected_commit=attempt.commit_sha, observed_commit=None,
+            expected_revision_hash=revision.content_hash, observed_revision_hash=None,
+            expected_content_hash=revision.content_hash, observed_content_hash=None,
+            fetch_error=str(exc),
+        )
+        observation = None
+    attempt.status = "verified" if result.verified else "deployed"
+    attempt.deployment_status = result.status
+    attempt.error = result.error
+    if result.verified:
+        attempt.verified_at = utcnow()
     _record_audit(
         db,
         workspace_id=change.workspace_id,
         actor=effective_actor(authorize_workspace(request, db, workspace, Permission.operate)),
-        action="publication.verification_unavailable",
+        action="publication.verified" if result.verified else "publication.verification_unavailable" if result.status == "verification_unavailable" else "publication.verification_mismatch",
         target_type="publication_attempt",
         target_id=attempt.id,
-        after={"commit_sha": attempt.deployed_commit_sha, "deployment_id": attempt.deployment_id},
+        after={"commit_sha": attempt.deployed_commit_sha, "deployment_id": attempt.deployment_id,
+               "verification": result.evidence, "target": attempt.target,
+               "fresh_observation": observation.evidence if observation else None},
     )
     db.commit()
     db.refresh(attempt)
