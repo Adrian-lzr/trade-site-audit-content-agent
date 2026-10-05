@@ -1,0 +1,54 @@
+{
+  "artifacts": [],
+  "blockers": [
+    {
+      "code": "no_runtime_rows",
+      "reason": "no matching runtime rows were supplied; this report does not invent business activity",
+      "status": "blocked_external"
+    }
+  ],
+  "business_data_claim": false,
+  "code_commit": "b1b8f5a3b81257a906e361103dc2ee2cf36bf4c7",
+  "command": [
+    "python",
+    "scripts/correlation_report.py",
+    "--workspace-id",
+    "1",
+    "--output",
+    "output/optimization/T16/postgres_correlation_report.json"
+  ],
+  "correlation": {
+    "audit_events": [],
+    "content_items": [],
+    "content_tasks": [],
+    "model_calls": [],
+    "publication_attempts": [],
+    "revisions": [],
+    "visibility_runs": [],
+    "visibility_samples": []
+  },
+  "coverage": {
+    "request_to_audit": false,
+    "request_to_visibility_sample": false,
+    "revision_to_model_call": false,
+    "revision_to_publication": false,
+    "task_to_revision": false
+  },
+  "environment": {
+    "database_engine": "postgresql",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10"
+  },
+  "generated_at": "2026-10-05T05:19:27.329501+00:00",
+  "report_sha256": "e99458fcdde0365bc461f6e8b3622426d03fa02c4cc1d7537c1402386affb698",
+  "schema_version": "t16.correlation.v1",
+  "scope": {
+    "change_request_id": null,
+    "request_id": null,
+    "task_id": null,
+    "visibility_run_id": null,
+    "workspace_id": 1
+  },
+  "task_id": "T16",
+  "verification": "blocked_external"
+}

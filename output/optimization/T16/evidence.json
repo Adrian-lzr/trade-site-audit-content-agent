@@ -1,8 +1,8 @@
 {
   "task_id": "T16",
   "status": "blocked_external",
-  "source": "runtime report with no business claim",
-  "code_commit": "3821850634eecc2f914a94cea99bc9f0e5e554a3",
+  "source": "bounded PostgreSQL runtime report with no business claim",
+  "code_commit": "b1b8f5a3b81257a906e361103dc2ee2cf36bf4c7",
   "checks": [
     {
       "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_observability.py -q",
@@ -10,20 +10,18 @@
       "result": "8 passed"
     },
     {
-      "command": "backend/.venv/Scripts/python.exe scripts/correlation_report.py --output output/optimization/T16/correlation_report.json",
+      "command": "scripts/correlation_report.py --workspace-id 1 --output output/optimization/T16/postgres_correlation_report.json",
       "exit_code": 0,
-      "result": "report emitted with blockers"
+      "result": "PostgreSQL report emitted; no matching runtime rows"
     }
   ],
   "artifacts": [
     "backend/observability.py",
     "scripts/correlation_report.py",
-    "output/optimization/T16/correlation_report.json"
+    "output/optimization/T16/postgres_correlation_report.json"
   ],
   "blockers": [
-    "no_runtime_rows",
-    "scope_unbounded",
-    "database_query_failed:model_calls table missing"
+    "no_runtime_rows"
   ],
   "business_data_claim": false
 }

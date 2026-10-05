@@ -19,22 +19,22 @@ Fixture or protocol evidence is never reported as real business evidence.
 | T08 | fixture_verified | 868c91b | graph resume, approval idempotency, restart and rejection tests | `backend/review_worker.py`, `backend/tests/test_content_worker_recovery.py` | external publishing remains unconfigured | run worker recovery with staging outbox |
 | T09 | fixture_verified | 868c91b | signed JWT issuer/audience/expiry/JWKS protocol tests | `backend/tests/test_identity.py`, `backend/identity.py` | real OIDC issuer/audience/JWKS not supplied | configure and verify the production issuer |
 | T10 | fixture_verified | 868c91b | CSV/PDF ingestion, source locator and hash tests | `backend/tests/test_ingestion.py`, `backend/ingestion.py` | approved business documents not supplied | ingest the pilot document set |
-| T11 | in_progress | 53fd516 | web build passed; empty-state Playwright screenshot | `apps/web/src/ContentReviewWorkspace.tsx`, `output/playwright/t11-content-empty.png` | API returned 502 and no real task/evidence data; OIDC/Membership UI not exercised | rerun the complete browser journey with a live API and authorized user |
+| T11 | fixture_verified | b1b8f5a | local API/Vite/Worker synthetic content journey via Playwright; build passed; task reached needs_more_information with fact/snapshot evidence | `output/playwright/t11-local-content.png`, `output/playwright/t11-local-content-task-needs-data.png`, `output/playwright/t11-seed.json`, `output/optimization/T11/evidence.json` | real OIDC/Membership, approved business documents and real Provider not supplied | repeat with authorized real identity and pilot data |
 | T12 | fixture_verified | 868c91b | constrained static HTML publisher and preservation tests | `backend/tests/test_static_html_publisher.py`, `backend/static_html_publisher.py` | no authorized staging repository supplied | apply an approved revision to staging |
 | T13 | fixture_verified | 3821850 | signed callback, nonce replay protection, target/revision/commit binding, fresh observer fail-closed tests | `backend/services/deployment.py`, `backend/app.py`, `backend/schemas.py`, `backend/tests/test_deployment_verification.py`, `output/optimization/T13/evidence.json` | no authorized staging callback, target observer, deployment target, or rollback environment | connect approved staging adapter and collect real callback/fetch/rollback evidence |
 | T14 | blocked_external | 868c91b | adapter and metric fixtures only | `INPUTS.md`, `backend/visibility_provider.py` | authorized Provider, consumer surface and budget not supplied | run the 30-sample real cohort |
 | T15 | blocked_external | 868c91b | synthetic evaluation manifest and annotation tooling | `evals/optimization_t15_manifest.py`, `evals/tests` | real 30-case holdout and independent reviewers not supplied | freeze and run an independently reviewed holdout |
-| T16 | blocked_external | 3821850 | correlation report schema, redaction, selector scoping, artifact hash and blocker reporting; focused tests passed | `backend/observability.py`, `scripts/correlation_report.py`, `output/optimization/T16/correlation_report.json`, `output/optimization/T16/evidence.json` | current local DB has no matching runtime rows, no selector, and missing model_calls migration | run against migrated PostgreSQL with a bounded real request/workflow scope |
-| T17 | blocked_external | 868c91b | source-level migration and readiness checks | `backend/tests/test_container_build_check.py`, `INPUTS.md` | Docker daemon and PostgreSQL runtime unavailable | run clean Compose and PostgreSQL recovery checks |
+| T16 | blocked_external | b1b8f5a | bounded PostgreSQL correlation report, redaction, selector scoping and artifact hash; no matching runtime rows | `backend/observability.py`, `scripts/correlation_report.py`, `output/optimization/T16/postgres_correlation_report.json`, `output/optimization/T16/evidence.json` | no real request/workflow rows in the migrated validation database | collect a bounded real workflow run and regenerate report |
+| T17 | blocked_external | b1b8f5a | fresh PostgreSQL 16 migration, API/checkpoint smoke, concurrency/lease smoke, source and Compose gates passed | `output/optimization/T17/evidence.json`, `scripts/postgres_smoke.py`, `scripts/postgres_concurrency_smoke.py` | Docker Hub OAuth timeout blocked image build; production backup/recovery and worker consumption remain unverified | rerun image build with registry access and execute full Compose/backup gates |
 | T18 | blocked_external | 868c91b | cohort-safe fixture reporting only | `INPUTS.md` | analytics/CRM source and 28-day observation window not supplied | configure the approved business cohort and window |
-| T19 | blocked_external | 3821850 | status/evidence pack updated with T13/T16/T17 artifacts and explicit blockers | `docs/optimization/STATUS.md`, `docs/optimization/INPUTS.md`, `output/optimization/` | T11 browser journey, T16 runtime correlation, T17 Docker/PostgreSQL, and M2 inputs remain open | complete authorized runtime gates, then finalize O/C matrices and release pack |
+| T19 | blocked_external | b1b8f5a | status/evidence pack now includes T11/T13/T16/T17 runtime artifacts | `docs/optimization/STATUS.md`, `docs/optimization/INPUTS.md`, `output/optimization/` | T14/T15/T18 and real identity/site/deployment inputs remain open | complete authorized M2 inputs, then finalize O/C release matrix |
 
 ## Milestones
 
 | milestone | status | evidence |
 | --- | --- | --- |
 | M0 | fixture_verified | T00-T05 have reproducible code/fixture evidence |
-| M1 | blocked_external | T06-T13 and T16 have code/fixture evidence; T13 is fixture_verified and T16/T17 are blocked by runtime inputs; T11 remains open |
+| M1 | blocked_external | T06-T13 and T16 code/fixture evidence; T11 fixture journey and PostgreSQL runtime gates now pass locally, but Docker image build and remaining runtime gates are open |
 | M2 | blocked_external | real identity, authorized site, Provider, deployment and independent review inputs are absent |
 | M3 | blocked_external | requires M2 plus a separately measured business observation window |
 
@@ -51,7 +51,7 @@ Fixture or protocol evidence is never reported as real business evidence.
 | O07 | blocked_external | JWT protocol tests; local actor is not production identity | configure real OIDC and complete login/workspace role journey |
 | O08 | in_progress | model ledger and worker recovery paths | finish fairness/cost reconciliation under real runtime |
 | O09 | blocked_external | synthetic manifest only; zero independent human cases | run blinded 30-case holdout with independent reviewers |
-| O10 | in_progress | migrations, audit hooks, API/UI builds and tests; 243 tests, web build and source container gate pass | prove clean PostgreSQL/Docker startup, worker consumption and recovery |
+| O10 | in_progress | 236 backend tests, 10 eval tests, Web build, PostgreSQL head/smoke/concurrency, source and Compose gates pass | complete Docker image build, backup/recovery, worker consumption and real identity checks |
 
 ## Critical Cases
 

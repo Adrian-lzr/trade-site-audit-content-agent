@@ -1,17 +1,40 @@
 {
   "task_id": "T17",
   "status": "blocked_external",
-  "source": "source-level gate only",
-  "code_commit": "3821850634eecc2f914a94cea99bc9f0e5e554a3",
+  "source": "runtime plus source gate",
+  "code_commit": "b1b8f5a3b81257a906e361103dc2ee2cf36bf4c7",
   "checks": [
     {
-      "command": "backend/.venv/Scripts/python.exe scripts/container_build_check.py",
+      "command": "docker compose -p optvalidation postgres:16-alpine; alembic upgrade head",
       "exit_code": 0,
-      "result": "source and Compose checks passed; images_built=false"
+      "result": "fresh PostgreSQL 16 database migrated from 0001 to 0019_workflow_review_events"
+    },
+    {
+      "command": "scripts/postgres_smoke.py",
+      "exit_code": 0,
+      "result": "health/api health, site registration/listing, LangGraph checkpoint reopen passed"
+    },
+    {
+      "command": "scripts/postgres_concurrency_smoke.py",
+      "exit_code": 0,
+      "result": "budget reservation race, outbox claim race, lease recovery passed; alembic_head=0019_workflow_review_events"
+    },
+    {
+      "command": "docker compose build",
+      "exit_code": 1,
+      "result": "blocked by Docker Hub OAuth token network timeout while fetching base image metadata"
+    },
+    {
+      "command": "scripts/container_build_check.py; scripts/local_compose_check.py",
+      "exit_code": 0,
+      "result": "source/Compose gates passed; images_built=false"
     }
   ],
   "artifacts": [
-    "scripts/container_build_check.py"
+    "scripts/migration_head.py",
+    "scripts/postgres_smoke.py",
+    "scripts/postgres_concurrency_smoke.py",
+    "backend/migrations/versions/0018_model_call_budget_accounting.py"
   ],
-  "external_blocker": "Docker daemon and PostgreSQL 16 integration runtime unavailable; no image or Compose runtime claim."
+  "external_blocker": "Docker image build requires reachable registry metadata; production backup/recovery and worker consumption remain unverified."
 }

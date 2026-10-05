@@ -1,0 +1,25 @@
+{
+  "task_id": "T11",
+  "status": "fixture_verified",
+  "source": "local synthetic fixture only",
+  "code_commit": "b1b8f5a3b81257a906e361103dc2ee2cf36bf4c7",
+  "checks": [
+    {
+      "command": "npm run build --prefix apps/web",
+      "exit_code": 0,
+      "result": "Vite production build passed"
+    },
+    {
+      "command": "Playwright local API/Vite synthetic content journey",
+      "exit_code": 0,
+      "result": "health/api health 200; site, question set, fact/snapshot binding, task POST 202; worker status needs_more_information"
+    }
+  ],
+  "artifacts": [
+    "output/playwright/t11-local-content.png",
+    "output/playwright/t11-local-content-task-needs-data.png",
+    "output/playwright/t11-content-selected-snapshot.yml",
+    "output/playwright/t11-seed.json"
+  ],
+  "external_blocker": "Real OIDC/Membership, approved business documents, and real Provider are unavailable; this evidence is synthetic local fixture evidence."
+}

@@ -1,0 +1,599 @@
+### Page
+- Page URL: http://127.0.0.1:5173/
+- Page Title: Trade Visibility Agent
+### Snapshot
+```yaml
+- generic [ref=f1e3]:
+  - complementary [ref=f1e4]:
+    - link "Trade Visibility 工作台首页" [ref=f1e5] [cursor=pointer]:
+      - /url: "#top"
+      - generic [ref=f1e9]:
+        - strong [ref=f1e10]: Trade Visibility
+        - generic [ref=f1e11]: 站点运营工作台
+    - generic "工作区：demo-workspace" [ref=f1e12]:
+      - generic [ref=f1e13]: TV
+      - generic [ref=f1e14]:
+        - generic [ref=f1e15]: 当前工作区
+        - strong [ref=f1e16]: 演示工作区
+    - generic [ref=f1e19]: 工作区
+    - navigation "主导航" [ref=f1e20]:
+      - button "站点与审计" [ref=f1e21]
+      - button "采购问题" [ref=f1e27]
+      - button "内容改稿" [ref=f1e31]
+      - button "可见性监测" [ref=f1e37]
+    - generic [ref=f1e41]:
+      - generic [ref=f1e42]:
+        - generic [ref=f1e44]: API 服务已连接
+        - button "重新检查 API" [ref=f1e45] [cursor=pointer]
+      - generic [ref=f1e51]:
+        - text: Trade Visibility Agent
+        - generic [ref=f1e52]: v0.1
+  - main [ref=f1e53]:
+    - generic [ref=f1e54]:
+      - generic [ref=f1e55]:
+        - generic [ref=f1e56]: 工作区
+        - generic [ref=f1e57]: /
+        - strong [ref=f1e58]: 内容改稿
+      - generic "演示工作区" [ref=f1e66]: TV
+    - generic [ref=f1e1040]:
+      - generic [ref=f1e1041]:
+        - generic [ref=f1e1042]:
+          - generic [ref=f1e1043]: 事实约束改稿 · 人工审核
+          - heading "内容任务" [level=1] [ref=f1e1044]
+          - paragraph [ref=f1e1045]: 用已冻结的采购问题、当前页面快照和已确认公开事实生成可审核的改稿草案。
+        - button "刷新资料" [ref=f1e1047] [cursor=pointer]
+      - region "选择站点" [ref=f1e1053]:
+        - generic [ref=f1e1054]: 站点
+        - combobox "站点" [ref=f1e1056]:
+          - option "Synthetic demo fixture · http://127.0.0.1:8765" [selected]
+          - option "Example.com public check · https://example.com"
+          - option "zoogo.club · https://zoogo.club"
+        - generic [ref=f1e1057]: 合成演示站点
+      - region [ref=f1e1058]:
+        - generic [ref=f1e1059]:
+          - heading "创建前检查" [level=2] [ref=f1e1060]
+          - generic [ref=f1e1061]: 3 项条件
+        - list [ref=f1e1062]:
+          - listitem [ref=f1e1063]:
+            - generic [ref=f1e1068]:
+              - strong [ref=f1e1069]: 冻结的问题集
+              - generic [ref=f1e1070]: v1 已冻结，包含 20 个问题。
+          - listitem [ref=f1e1071]:
+            - generic [ref=f1e1076]:
+              - strong [ref=f1e1077]: 可用页面快照
+              - generic [ref=f1e1078]: 20 个问题关联了带内容校验值的页面快照。
+          - listitem [ref=f1e1079]:
+            - generic [ref=f1e1084]:
+              - strong [ref=f1e1085]: 可公开的当前事实
+              - generic [ref=f1e1086]: 7 条事实已确认、可公开且当前有效。
+              - generic [ref=f1e1087]: 创建任务后，系统还会校验所选事实是否与问题相关。
+      - region [ref=f1e1088]:
+        - generic [ref=f1e1089]:
+          - generic [ref=f1e1094]:
+            - heading "写作边界参考" [level=2] [ref=f1e1095]
+            - paragraph [ref=f1e1096]: 外部指导用于核对政策与来源边界，不是企业事实。
+          - generic [ref=f1e1097]: 29/29 条
+        - searchbox "筛选知识来源、主题或市场" [ref=f1e1102]
+        - generic [ref=f1e1103]:
+          - group [ref=f1e1104]:
+            - generic "Google SEO 入门 2025-12-18" [ref=f1e1105] [cursor=pointer]:
+              - strong [ref=f1e1106]: Google SEO 入门
+              - generic [ref=f1e1107]: 2025-12-18
+          - group [ref=f1e1108]:
+            - generic "Google AI 搜索功能 2025-12-31" [ref=f1e1109] [cursor=pointer]:
+              - strong [ref=f1e1110]: Google AI 搜索功能
+              - generic [ref=f1e1111]: 2025-12-31
+          - group [ref=f1e1112]:
+            - generic "商品结构化数据 2025-12-18" [ref=f1e1113] [cursor=pointer]:
+              - strong [ref=f1e1114]: 商品结构化数据
+              - generic [ref=f1e1115]: 2025-12-18
+          - group [ref=f1e1116]:
+            - generic "来源追踪（PROV-O） 2013-04-30" [ref=f1e1117] [cursor=pointer]:
+              - strong [ref=f1e1118]: 来源追踪（PROV-O）
+              - generic [ref=f1e1119]: 2013-04-30
+          - group [ref=f1e1120]:
+            - generic "广告事实证据 1984-11-23" [ref=f1e1121] [cursor=pointer]:
+              - strong [ref=f1e1122]: 广告事实证据
+              - generic [ref=f1e1123]: 1984-11-23
+          - group [ref=f1e1124]:
+            - generic "询价型 B2B 页面内容最低集 持续维护" [ref=f1e1125] [cursor=pointer]:
+              - strong [ref=f1e1126]: 询价型 B2B 页面内容最低集
+              - generic [ref=f1e1127]: 持续维护
+          - group [ref=f1e1128]:
+            - generic "Product snippets 与 Merchant listings 资格边界 持续更新" [ref=f1e1129] [cursor=pointer]:
+              - strong [ref=f1e1130]: Product snippets 与 Merchant listings 资格边界
+              - generic [ref=f1e1131]: 持续更新
+          - group [ref=f1e1132]:
+            - generic "技术审计信号解释 持续更新" [ref=f1e1133] [cursor=pointer]:
+              - strong [ref=f1e1134]: 技术审计信号解释
+              - generic [ref=f1e1135]: 持续更新
+          - group [ref=f1e1136]:
+            - generic "国际化 B2B 页面与 hreflang 持续更新" [ref=f1e1137] [cursor=pointer]:
+              - strong [ref=f1e1138]: 国际化 B2B 页面与 hreflang
+              - generic [ref=f1e1139]: 持续更新
+          - group [ref=f1e1140]:
+            - generic "可访问性与内容可用性检查 2023-10-05" [ref=f1e1141] [cursor=pointer]:
+              - strong [ref=f1e1142]: 可访问性与内容可用性检查
+              - generic [ref=f1e1143]: 2023-10-05
+          - group [ref=f1e1144]:
+            - generic "来源时效与企业事实分层 2013-04-30" [ref=f1e1145] [cursor=pointer]:
+              - strong [ref=f1e1146]: 来源时效与企业事实分层
+              - generic [ref=f1e1147]: 2013-04-30
+          - group [ref=f1e1148]:
+            - generic "Google Search Essentials 2025-12-10" [ref=f1e1149] [cursor=pointer]:
+              - strong [ref=f1e1150]: Google Search Essentials
+              - generic [ref=f1e1151]: 2025-12-10
+          - group [ref=f1e1152]:
+            - generic "Search Console 观测口径 2025-12-10" [ref=f1e1153] [cursor=pointer]:
+              - strong [ref=f1e1154]: Search Console 观测口径
+              - generic [ref=f1e1155]: 2025-12-10
+          - group [ref=f1e1156]:
+            - generic "结构化数据政策 2026-07-10" [ref=f1e1157] [cursor=pointer]:
+              - strong [ref=f1e1158]: 结构化数据政策
+              - generic [ref=f1e1159]: 2026-07-10
+          - group [ref=f1e1160]:
+            - generic "FTC Green Guides 持续维护" [ref=f1e1161] [cursor=pointer]:
+              - strong [ref=f1e1162]: FTC Green Guides
+              - generic [ref=f1e1163]: 持续维护
+          - group [ref=f1e1164]:
+            - generic "FTC 评价与背书披露 持续维护" [ref=f1e1165] [cursor=pointer]:
+              - strong [ref=f1e1166]: FTC 评价与背书披露
+              - generic [ref=f1e1167]: 持续维护
+          - group [ref=f1e1168]:
+            - generic "EU Access2Markets 查询入口 持续维护" [ref=f1e1169] [cursor=pointer]:
+              - strong [ref=f1e1170]: EU Access2Markets 查询入口
+              - generic [ref=f1e1171]: 持续维护
+          - group [ref=f1e1172]:
+            - generic "USITC Harmonized Tariff Schedule 持续维护" [ref=f1e1173] [cursor=pointer]:
+              - strong [ref=f1e1174]: USITC Harmonized Tariff Schedule
+              - generic [ref=f1e1175]: 持续维护
+          - group [ref=f1e1176]:
+            - generic "UK Trade Tariff 持续维护" [ref=f1e1177] [cursor=pointer]:
+              - strong [ref=f1e1178]: UK Trade Tariff
+              - generic [ref=f1e1179]: 持续维护
+          - group [ref=f1e1180]:
+            - generic "WTO Tariff and Trade Data 持续维护" [ref=f1e1181] [cursor=pointer]:
+              - strong [ref=f1e1182]: WTO Tariff and Trade Data
+              - generic [ref=f1e1183]: 持续维护
+          - group [ref=f1e1184]:
+            - generic "ICC Incoterms 2020 2026-07-03" [ref=f1e1185] [cursor=pointer]:
+              - strong [ref=f1e1186]: ICC Incoterms 2020
+              - generic [ref=f1e1187]: 2026-07-03
+          - group [ref=f1e1188]:
+            - generic "Google 搜索结果标题链接 持续维护" [ref=f1e1189] [cursor=pointer]:
+              - strong [ref=f1e1190]: Google 搜索结果标题链接
+              - generic [ref=f1e1191]: 持续维护
+          - group [ref=f1e1192]:
+            - generic "Google 搜索摘要与 Meta Description 持续维护" [ref=f1e1193] [cursor=pointer]:
+              - strong [ref=f1e1194]: Google 搜索摘要与 Meta Description
+              - generic [ref=f1e1195]: 持续维护
+          - group [ref=f1e1196]:
+            - generic "阀门选型资料收集清单 持续维护" [ref=f1e1197] [cursor=pointer]:
+              - strong [ref=f1e1198]: 阀门选型资料收集清单
+              - generic [ref=f1e1199]: 持续维护
+          - group [ref=f1e1200]:
+            - generic "产品证书与测试报告适用性核对 持续维护" [ref=f1e1201] [cursor=pointer]:
+              - strong [ref=f1e1202]: 产品证书与测试报告适用性核对
+              - generic [ref=f1e1203]: 持续维护
+          - group [ref=f1e1204]:
+            - generic "阀门执行器与自动化资料清单 2026-09-30" [ref=f1e1205] [cursor=pointer]:
+              - strong [ref=f1e1206]: 阀门执行器与自动化资料清单
+              - generic [ref=f1e1207]: 2026-09-30
+          - group [ref=f1e1208]:
+            - generic "阀门测试记录与批次适用性核对 2026-09-30" [ref=f1e1209] [cursor=pointer]:
+              - strong [ref=f1e1210]: 阀门测试记录与批次适用性核对
+              - generic [ref=f1e1211]: 2026-09-30
+          - group [ref=f1e1212]:
+            - generic "阀门图纸、安装与维护资料清单 2026-09-30" [ref=f1e1213] [cursor=pointer]:
+              - strong [ref=f1e1214]: 阀门图纸、安装与维护资料清单
+              - generic [ref=f1e1215]: 2026-09-30
+          - group [ref=f1e1216]:
+            - generic "欧盟压力设备指令（PED） 2014-05-15" [ref=f1e1217] [cursor=pointer]:
+              - strong [ref=f1e1218]: 欧盟压力设备指令（PED）
+              - generic [ref=f1e1219]: 2014-05-15
+      - generic [ref=f1e1220]:
+        - region "创建内容任务" [ref=f1e1221]:
+          - generic [ref=f1e1223]:
+            - generic [ref=f1e1224]: "01"
+            - generic [ref=f1e1225]:
+              - heading "选择采购问题" [level=2] [ref=f1e1226]
+              - paragraph [ref=f1e1227]: 只使用已冻结版本与显式页面映射。
+          - generic [ref=f1e1228]:
+            - generic [ref=f1e1229]:
+              - text: 问题集
+              - combobox "问题集" [ref=f1e1230]:
+                - option "选择问题集"
+                - option "Synthetic valve procurement questions · v1 · 已冻结" [selected]
+            - generic [ref=f1e1262]:
+              - text: 冻结版本
+              - combobox "冻结版本" [ref=f1e1263]:
+                - option "v1 · 已冻结" [selected]
+          - generic [ref=f1e1264]:
+            - article [ref=f1e1265]:
+              - generic [ref=f1e1266]:
+                - generic [ref=f1e1267]: "01"
+                - strong [ref=f1e1268]: What process-fluid details should a buyer provide when screening valve materials?
+              - generic [ref=f1e1269]:
+                - generic [ref=f1e1270]: industrial valve
+                - generic [ref=f1e1271]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1272]: procurement engineer
+                - generic [ref=f1e1273]: To be confirmed · en
+              - generic [ref=f1e1274]:
+                - generic [ref=f1e1275]:
+                  - generic [ref=f1e1276]: 关联页面
+                  - combobox "关联页面" [ref=f1e1277]:
+                    - option "http://127.0.0.1:8765/" [selected]
+                - button "加入任务" [active] [ref=f1e1278] [cursor=pointer]
+            - article [ref=f1e1280]:
+              - generic [ref=f1e1281]:
+                - generic [ref=f1e1282]: "02"
+                - strong [ref=f1e1283]: Which pressure and temperature limits should a buyer compare across valve models?
+              - generic [ref=f1e1284]:
+                - generic [ref=f1e1285]: industrial valve
+                - generic [ref=f1e1286]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1287]: procurement engineer
+                - generic [ref=f1e1288]: To be confirmed · en
+              - generic [ref=f1e1289]:
+                - generic [ref=f1e1290]:
+                  - generic [ref=f1e1291]: 关联页面
+                  - combobox "关联页面" [ref=f1e1292]:
+                    - option "http://127.0.0.1:8765/missing-title.html" [selected]
+                - button "加入任务" [ref=f1e1293] [cursor=pointer]
+            - article [ref=f1e1295]:
+              - generic [ref=f1e1296]:
+                - generic [ref=f1e1297]: "03"
+                - strong [ref=f1e1298]: What connection standards should a buyer confirm before requesting a valve quote?
+              - generic [ref=f1e1299]:
+                - generic [ref=f1e1300]: industrial valve
+                - generic [ref=f1e1301]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1302]: procurement engineer
+                - generic [ref=f1e1303]: To be confirmed · en
+              - generic [ref=f1e1304]:
+                - generic [ref=f1e1305]:
+                  - generic [ref=f1e1306]: 关联页面
+                  - combobox "关联页面" [ref=f1e1307]:
+                    - option "http://127.0.0.1:8765/applications/food-processing.html" [selected]
+                - button "加入任务" [ref=f1e1308] [cursor=pointer]
+            - article [ref=f1e1310]:
+              - generic [ref=f1e1311]:
+                - generic [ref=f1e1312]: "04"
+                - strong [ref=f1e1313]: How should a buyer compare the pressure and temperature limits stated for valve models?
+              - generic [ref=f1e1314]:
+                - generic [ref=f1e1315]: industrial valve
+                - generic [ref=f1e1316]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1317]: procurement engineer
+                - generic [ref=f1e1318]: To be confirmed · en
+              - generic [ref=f1e1319]:
+                - generic [ref=f1e1320]:
+                  - generic [ref=f1e1321]: 关联页面
+                  - combobox "关联页面" [ref=f1e1322]:
+                    - option "http://127.0.0.1:8765/applications/selection.html" [selected]
+                - button "加入任务" [ref=f1e1323] [cursor=pointer]
+            - article [ref=f1e1325]:
+              - generic [ref=f1e1326]:
+                - generic [ref=f1e1327]: "05"
+                - strong [ref=f1e1328]: What maintenance details should a buyer review before choosing an industrial valve?
+              - generic [ref=f1e1329]:
+                - generic [ref=f1e1330]: industrial valve
+                - generic [ref=f1e1331]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1332]: procurement engineer
+                - generic [ref=f1e1333]: To be confirmed · en
+              - generic [ref=f1e1334]:
+                - generic [ref=f1e1335]:
+                  - generic [ref=f1e1336]: 关联页面
+                  - combobox "关联页面" [ref=f1e1337]:
+                    - option "http://127.0.0.1:8765/applications/utilities.html" [selected]
+                - button "加入任务" [ref=f1e1338] [cursor=pointer]
+            - article [ref=f1e1340]:
+              - generic [ref=f1e1341]:
+                - generic [ref=f1e1342]: "06"
+                - strong [ref=f1e1343]: Which spare parts should a buyer identify for planned valve maintenance?
+              - generic [ref=f1e1344]:
+                - generic [ref=f1e1345]: industrial valve
+                - generic [ref=f1e1346]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1347]: procurement engineer
+                - generic [ref=f1e1348]: To be confirmed · en
+              - generic [ref=f1e1349]:
+                - generic [ref=f1e1350]:
+                  - generic [ref=f1e1351]: 关联页面
+                  - combobox "关联页面" [ref=f1e1352]:
+                    - option "http://127.0.0.1:8765/applications/water-treatment.html" [selected]
+                - button "加入任务" [ref=f1e1353] [cursor=pointer]
+            - article [ref=f1e1355]:
+              - generic [ref=f1e1356]:
+                - generic [ref=f1e1357]: "07"
+                - strong [ref=f1e1358]: What packaging details should be confirmed for valves shipped overseas?
+              - generic [ref=f1e1359]:
+                - generic [ref=f1e1360]: industrial valve
+                - generic [ref=f1e1361]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1362]: procurement engineer
+                - generic [ref=f1e1363]: To be confirmed · en
+              - generic [ref=f1e1364]:
+                - generic [ref=f1e1365]:
+                  - generic [ref=f1e1366]: 关联页面
+                  - combobox "关联页面" [ref=f1e1367]:
+                    - option "http://127.0.0.1:8765/engineering/connections.html" [selected]
+                - button "加入任务" [ref=f1e1368] [cursor=pointer]
+            - article [ref=f1e1370]:
+              - generic [ref=f1e1371]:
+                - generic [ref=f1e1372]: "08"
+                - strong [ref=f1e1373]: Which lead-time details should a buyer confirm before placing a valve order?
+              - generic [ref=f1e1374]:
+                - generic [ref=f1e1375]: industrial valve
+                - generic [ref=f1e1376]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1377]: procurement engineer
+                - generic [ref=f1e1378]: To be confirmed · en
+              - generic [ref=f1e1379]:
+                - generic [ref=f1e1380]:
+                  - generic [ref=f1e1381]: 关联页面
+                  - combobox "关联页面" [ref=f1e1382]:
+                    - option "http://127.0.0.1:8765/engineering/materials.html" [selected]
+                - button "加入任务" [ref=f1e1383] [cursor=pointer]
+            - article [ref=f1e1385]:
+              - generic [ref=f1e1386]:
+                - generic [ref=f1e1387]: "09"
+                - strong [ref=f1e1388]: What information is needed to evaluate a valve sample for a new application?
+              - generic [ref=f1e1389]:
+                - generic [ref=f1e1390]: industrial valve
+                - generic [ref=f1e1391]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1392]: procurement engineer
+                - generic [ref=f1e1393]: To be confirmed · en
+              - generic [ref=f1e1394]:
+                - generic [ref=f1e1395]:
+                  - generic [ref=f1e1396]: 关联页面
+                  - combobox "关联页面" [ref=f1e1397]:
+                    - option "http://127.0.0.1:8765/engineering/pressure.html" [selected]
+                - button "加入任务" [ref=f1e1398] [cursor=pointer]
+            - article [ref=f1e1400]:
+              - generic [ref=f1e1401]:
+                - generic [ref=f1e1402]: "10"
+                - strong [ref=f1e1403]: How can a buyer identify the correct actuator requirements for an automated valve?
+              - generic [ref=f1e1404]:
+                - generic [ref=f1e1405]: industrial valve
+                - generic [ref=f1e1406]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1407]: procurement engineer
+                - generic [ref=f1e1408]: To be confirmed · en
+              - generic [ref=f1e1409]:
+                - generic [ref=f1e1410]:
+                  - generic [ref=f1e1411]: 关联页面
+                  - combobox "关联页面" [ref=f1e1412]:
+                    - option "http://127.0.0.1:8765/procurement/order-details.html" [selected]
+                - button "加入任务" [ref=f1e1413] [cursor=pointer]
+            - article [ref=f1e1415]:
+              - generic [ref=f1e1416]:
+                - generic [ref=f1e1417]: "11"
+                - strong [ref=f1e1418]: What installation clearances should a buyer verify for a selected valve assembly?
+              - generic [ref=f1e1419]:
+                - generic [ref=f1e1420]: industrial valve
+                - generic [ref=f1e1421]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1422]: procurement engineer
+                - generic [ref=f1e1423]: To be confirmed · en
+              - generic [ref=f1e1424]:
+                - generic [ref=f1e1425]:
+                  - generic [ref=f1e1426]: 关联页面
+                  - combobox "关联页面" [ref=f1e1427]:
+                    - option "http://127.0.0.1:8765/procurement/request-a-quote.html" [selected]
+                - button "加入任务" [ref=f1e1428] [cursor=pointer]
+            - article [ref=f1e1430]:
+              - generic [ref=f1e1431]:
+                - generic [ref=f1e1432]: "12"
+                - strong [ref=f1e1433]: Which documentation should accompany a valve for installation and maintenance?
+              - generic [ref=f1e1434]:
+                - generic [ref=f1e1435]: industrial valve
+                - generic [ref=f1e1436]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1437]: procurement engineer
+                - generic [ref=f1e1438]: To be confirmed · en
+              - generic [ref=f1e1439]:
+                - generic [ref=f1e1440]:
+                  - generic [ref=f1e1441]: 关联页面
+                  - combobox "关联页面" [ref=f1e1442]:
+                    - option "http://127.0.0.1:8765/products/valve-series.html" [selected]
+                - button "加入任务" [ref=f1e1443] [cursor=pointer]
+            - article [ref=f1e1445]:
+              - generic [ref=f1e1446]:
+                - generic [ref=f1e1447]: "13"
+                - strong [ref=f1e1448]: What questions should a buyer ask when comparing valve options for water treatment?
+              - generic [ref=f1e1449]:
+                - generic [ref=f1e1450]: industrial valve
+                - generic [ref=f1e1451]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1452]: procurement engineer
+                - generic [ref=f1e1453]: To be confirmed · en
+              - generic [ref=f1e1454]:
+                - generic [ref=f1e1455]:
+                  - generic [ref=f1e1456]: 关联页面
+                  - combobox "关联页面" [ref=f1e1457]:
+                    - option "http://127.0.0.1:8765/products/vx-21.html" [selected]
+                - button "加入任务" [ref=f1e1458] [cursor=pointer]
+            - article [ref=f1e1460]:
+              - generic [ref=f1e1461]:
+                - generic [ref=f1e1462]: "14"
+                - strong [ref=f1e1463]: How can a buyer check whether a proposed valve configuration matches the stated duty?
+              - generic [ref=f1e1464]:
+                - generic [ref=f1e1465]: industrial valve
+                - generic [ref=f1e1466]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1467]: procurement engineer
+                - generic [ref=f1e1468]: To be confirmed · en
+              - generic [ref=f1e1469]:
+                - generic [ref=f1e1470]:
+                  - generic [ref=f1e1471]: 关联页面
+                  - combobox "关联页面" [ref=f1e1472]:
+                    - option "http://127.0.0.1:8765/products/vx-22.html" [selected]
+                - button "加入任务" [ref=f1e1473] [cursor=pointer]
+            - article [ref=f1e1475]:
+              - generic [ref=f1e1476]:
+                - generic [ref=f1e1477]: "15"
+                - strong [ref=f1e1478]: Which body and trim materials should a buyer verify for corrosive service?
+              - generic [ref=f1e1479]:
+                - generic [ref=f1e1480]: industrial valve
+                - generic [ref=f1e1481]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1482]: procurement engineer
+                - generic [ref=f1e1483]: To be confirmed · en
+              - generic [ref=f1e1484]:
+                - generic [ref=f1e1485]:
+                  - generic [ref=f1e1486]: 关联页面
+                  - combobox "关联页面" [ref=f1e1487]:
+                    - option "http://127.0.0.1:8765/products/vx-23.html" [selected]
+                - button "加入任务" [ref=f1e1488] [cursor=pointer]
+            - article [ref=f1e1490]:
+              - generic [ref=f1e1491]:
+                - generic [ref=f1e1492]: "16"
+                - strong [ref=f1e1493]: What test records should a buyer request when evaluating a valve supplier?
+              - generic [ref=f1e1494]:
+                - generic [ref=f1e1495]: industrial valve
+                - generic [ref=f1e1496]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1497]: procurement engineer
+                - generic [ref=f1e1498]: To be confirmed · en
+              - generic [ref=f1e1499]:
+                - generic [ref=f1e1500]:
+                  - generic [ref=f1e1501]: 关联页面
+                  - combobox "关联页面" [ref=f1e1502]:
+                    - option "http://127.0.0.1:8765/products/vx-24.html" [selected]
+                - button "加入任务" [ref=f1e1503] [cursor=pointer]
+            - article [ref=f1e1505]:
+              - generic [ref=f1e1506]:
+                - generic [ref=f1e1507]: "17"
+                - strong [ref=f1e1508]: How should a buyer confirm that a selected valve fits the intended pipe size?
+              - generic [ref=f1e1509]:
+                - generic [ref=f1e1510]: industrial valve
+                - generic [ref=f1e1511]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1512]: procurement engineer
+                - generic [ref=f1e1513]: To be confirmed · en
+              - generic [ref=f1e1514]:
+                - generic [ref=f1e1515]:
+                  - generic [ref=f1e1516]: 关联页面
+                  - combobox "关联页面" [ref=f1e1517]:
+                    - option "http://127.0.0.1:8765/products/vx-25.html" [selected]
+                - button "加入任务" [ref=f1e1518] [cursor=pointer]
+            - article [ref=f1e1520]:
+              - generic [ref=f1e1521]:
+                - generic [ref=f1e1522]: "18"
+                - strong [ref=f1e1523]: What certificate details should a buyer check before approving a valve order?
+              - generic [ref=f1e1524]:
+                - generic [ref=f1e1525]: industrial valve
+                - generic [ref=f1e1526]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1527]: procurement engineer
+                - generic [ref=f1e1528]: To be confirmed · en
+              - generic [ref=f1e1529]:
+                - generic [ref=f1e1530]:
+                  - generic [ref=f1e1531]: 关联页面
+                  - combobox "关联页面" [ref=f1e1532]:
+                    - option "http://127.0.0.1:8765/resources/certificates.html" [selected]
+                - button "加入任务" [ref=f1e1533] [cursor=pointer]
+            - article [ref=f1e1535]:
+              - generic [ref=f1e1536]:
+                - generic [ref=f1e1537]: "19"
+                - strong [ref=f1e1538]: Which application details should be included in a valve request for quotation?
+              - generic [ref=f1e1539]:
+                - generic [ref=f1e1540]: industrial valve
+                - generic [ref=f1e1541]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1542]: procurement engineer
+                - generic [ref=f1e1543]: To be confirmed · en
+              - generic [ref=f1e1544]:
+                - generic [ref=f1e1545]:
+                  - generic [ref=f1e1546]: 关联页面
+                  - combobox "关联页面" [ref=f1e1547]:
+                    - option "http://127.0.0.1:8765/resources/documents.html" [selected]
+                - button "加入任务" [ref=f1e1548] [cursor=pointer]
+            - article [ref=f1e1550]:
+              - generic [ref=f1e1551]:
+                - generic [ref=f1e1552]: "20"
+                - strong [ref=f1e1553]: What delivery and order details should a buyer record before a valve purchase?
+              - generic [ref=f1e1554]:
+                - generic [ref=f1e1555]: industrial valve
+                - generic [ref=f1e1556]: synthetic valve supplier demo; buyer evaluating process requirements
+                - generic [ref=f1e1557]: procurement engineer
+                - generic [ref=f1e1558]: To be confirmed · en
+              - generic [ref=f1e1559]:
+                - generic [ref=f1e1560]:
+                  - generic [ref=f1e1561]: 关联页面
+                  - combobox "关联页面" [ref=f1e1562]:
+                    - option "http://127.0.0.1:8765/resources/packaging.html" [selected]
+                - button "加入任务" [ref=f1e1563] [cursor=pointer]
+          - generic [ref=f1e1565]:
+            - generic [ref=f1e1566]:
+              - generic [ref=f1e1567]:
+                - generic [ref=f1e1568]: "02"
+                - generic [ref=f1e1569]:
+                  - heading "设置本次任务" [level=2] [ref=f1e1570]
+                  - paragraph [ref=f1e1571]: 1 / 5 个问题与页面组合
+              - button "清空" [ref=f1e1572] [cursor=pointer]
+            - article [ref=f1e1584]:
+              - generic [ref=f1e1585]:
+                - strong [ref=f1e1586]: 1. What process-fluid details should a buyer provide when screening valve materials?
+                - button "移除" [ref=f1e1587] [cursor=pointer]
+              - generic [ref=f1e1588]:
+                - generic [ref=f1e1589]: 目标页面
+                - strong [ref=f1e1590]: http://127.0.0.1:8765/
+                - generic [ref=f1e1591]: http://127.0.0.1:8765/
+                - code [ref=f1e1592]: "快照 #3 · fbba0282f7cb1a45345d3a096ff00fbb0310e419abf6974d0c992dd5f0f4842f"
+              - generic [ref=f1e1593]:
+                - text: 本次改稿要求
+                - textbox "本次改稿要求 最多 800 字；任务会在后台运行，结果需要人工审核，不会自动发布。" [ref=f1e1594]:
+                  - /placeholder: 说明需要补充或修订的内容
+                  - text: What process-fluid details should a buyer provide when screening valve materials?
+                - generic [ref=f1e1595]: 最多 800 字；任务会在后台运行，结果需要人工审核，不会自动发布。
+              - generic [ref=f1e1596]:
+                - strong [ref=f1e1597]: 选择事实依据
+                - generic [ref=f1e1598]: 0 项已选
+              - generic [ref=f1e1599]:
+                - textbox "筛选可用事实" [ref=f1e1600]:
+                  - /placeholder: 筛选事实、产品或来源
+                - generic [ref=f1e1601]: 7 / 7
+              - generic [ref=f1e1602]:
+                - generic [ref=f1e1603] [cursor=pointer]:
+                  - checkbox "synthetic valve series · body_material stainless steel synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00" [ref=f1e1604]
+                  - generic [ref=f1e1605]:
+                    - strong [ref=f1e1606]: synthetic valve series · body_material
+                    - generic [ref=f1e1607]: stainless steel
+                    - generic [ref=f1e1608]: synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00
+                - generic [ref=f1e1609] [cursor=pointer]:
+                  - checkbox "synthetic valve series · connection flanged synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00" [ref=f1e1610]
+                  - generic [ref=f1e1611]:
+                    - strong [ref=f1e1612]: synthetic valve series · connection
+                    - generic [ref=f1e1613]: flanged
+                    - generic [ref=f1e1614]: synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00
+                - generic [ref=f1e1615] [cursor=pointer]:
+                  - checkbox "synthetic valve series · documentation installation and maintenance guide synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00" [ref=f1e1616]
+                  - generic [ref=f1e1617]:
+                    - strong [ref=f1e1618]: synthetic valve series · documentation
+                    - generic [ref=f1e1619]: installation and maintenance guide
+                    - generic [ref=f1e1620]: synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00
+                - generic [ref=f1e1621] [cursor=pointer]:
+                  - checkbox "synthetic valve series · lead_time 2-4 weeks synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00" [ref=f1e1622]
+                  - generic [ref=f1e1623]:
+                    - strong [ref=f1e1624]: synthetic valve series · lead_time
+                    - generic [ref=f1e1625]: 2-4 weeks
+                    - generic [ref=f1e1626]: synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00
+                - generic [ref=f1e1627] [cursor=pointer]:
+                  - checkbox "synthetic valve series · pressure_rating 10 bar synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00" [ref=f1e1628]
+                  - generic [ref=f1e1629]:
+                    - strong [ref=f1e1630]: synthetic valve series · pressure_rating
+                    - generic [ref=f1e1631]: 10 bar
+                    - generic [ref=f1e1632]: synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00
+                - generic [ref=f1e1633] [cursor=pointer]:
+                  - checkbox "synthetic valve series · product_family VX synthetic industrial valve series synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00" [ref=f1e1634]
+                  - generic [ref=f1e1635]:
+                    - strong [ref=f1e1636]: synthetic valve series · product_family
+                    - generic [ref=f1e1637]: VX synthetic industrial valve series
+                    - generic [ref=f1e1638]: synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00
+                - generic [ref=f1e1639] [cursor=pointer]:
+                  - checkbox "synthetic valve series · temperature_range -20 to 120 deg C synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00" [ref=f1e1640]
+                  - generic [ref=f1e1641]:
+                    - strong [ref=f1e1642]: synthetic valve series · temperature_range
+                    - generic [ref=f1e1643]: "-20 to 120 deg C"
+                    - generic [ref=f1e1644]: synthetic-demo-site-v1 · v1 · 2026/1/1 00:00:00
+            - status [ref=f1e1645]:
+              - generic [ref=f1e1649]: 第 1 项需要填写不超过 800 字的任务说明、选择至少一个事实，并绑定有效页面快照。
+            - generic [ref=f1e1578]:
+              - generic [ref=f1e1579]: 每个内容任务最多 5 项；只提交事实 ID 与快照绑定信息。
+              - button "创建内容任务" [disabled] [ref=f1e1580]
+        - complementary "内容任务与人工审核" [ref=f1e1231]:
+          - generic [ref=f1e1232]:
+            - generic [ref=f1e1233]:
+              - generic [ref=f1e1234]: "03"
+              - generic [ref=f1e1235]:
+                - heading "任务与审核" [level=2] [ref=f1e1236]
+                - paragraph [ref=f1e1237]: 0 个任务
+            - button "刷新任务状态" [ref=f1e1238] [cursor=pointer]
+          - generic [ref=f1e1244]: 当前站点还没有内容任务。
+```

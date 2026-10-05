@@ -1,0 +1,447 @@
+{
+  "created": {
+    "facts": true,
+    "pages": true,
+    "question_set": true,
+    "site": true,
+    "snapshots": true,
+    "workspace": false
+  },
+  "database": {
+    "backend": "sqlite",
+    "local_only": true
+  },
+  "dataset": "phase1-demo-seed",
+  "dataset_version": "phase1-demo-seed-v1",
+  "fact_ids": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "facts": [
+    {
+      "id": 6,
+      "is_synthetic": true,
+      "predicate": "product_family",
+      "series_id": "synthetic-demo-valve-family",
+      "source_id": "synthetic-demo-site-v1",
+      "source_locator": "demo-site/products/valve-series.html#product-family",
+      "status": "confirmed",
+      "subject": "synthetic valve series",
+      "synthetic": true,
+      "unit": null,
+      "validity": {
+        "valid_from": "2026-01-01T00:00:00+00:00",
+        "valid_until": null
+      },
+      "value": "VX synthetic industrial valve series",
+      "visibility": "public"
+    },
+    {
+      "id": 7,
+      "is_synthetic": true,
+      "predicate": "pressure_rating",
+      "series_id": "synthetic-demo-pressure-rating",
+      "source_id": "synthetic-demo-site-v1",
+      "source_locator": "demo-site/engineering/pressure.html#pressure-rating",
+      "status": "confirmed",
+      "subject": "synthetic valve series",
+      "synthetic": true,
+      "unit": "bar",
+      "validity": {
+        "valid_from": "2026-01-01T00:00:00+00:00",
+        "valid_until": null
+      },
+      "value": "10",
+      "visibility": "public"
+    },
+    {
+      "id": 8,
+      "is_synthetic": true,
+      "predicate": "temperature_range",
+      "series_id": "synthetic-demo-temperature-range",
+      "source_id": "synthetic-demo-site-v1",
+      "source_locator": "demo-site/engineering/pressure.html#temperature-range",
+      "status": "confirmed",
+      "subject": "synthetic valve series",
+      "synthetic": true,
+      "unit": "deg C",
+      "validity": {
+        "valid_from": "2026-01-01T00:00:00+00:00",
+        "valid_until": null
+      },
+      "value": "-20 to 120",
+      "visibility": "public"
+    },
+    {
+      "id": 9,
+      "is_synthetic": true,
+      "predicate": "body_material",
+      "series_id": "synthetic-demo-body-material",
+      "source_id": "synthetic-demo-site-v1",
+      "source_locator": "demo-site/engineering/materials.html#body-material",
+      "status": "confirmed",
+      "subject": "synthetic valve series",
+      "synthetic": true,
+      "unit": null,
+      "validity": {
+        "valid_from": "2026-01-01T00:00:00+00:00",
+        "valid_until": null
+      },
+      "value": "stainless steel",
+      "visibility": "public"
+    },
+    {
+      "id": 10,
+      "is_synthetic": true,
+      "predicate": "connection",
+      "series_id": "synthetic-demo-connections",
+      "source_id": "synthetic-demo-site-v1",
+      "source_locator": "demo-site/engineering/connections.html#connection",
+      "status": "confirmed",
+      "subject": "synthetic valve series",
+      "synthetic": true,
+      "unit": null,
+      "validity": {
+        "valid_from": "2026-01-01T00:00:00+00:00",
+        "valid_until": null
+      },
+      "value": "flanged",
+      "visibility": "public"
+    },
+    {
+      "id": 11,
+      "is_synthetic": true,
+      "predicate": "lead_time",
+      "series_id": "synthetic-demo-lead-time",
+      "source_id": "synthetic-demo-site-v1",
+      "source_locator": "demo-site/procurement/order-details.html#lead-time",
+      "status": "confirmed",
+      "subject": "synthetic valve series",
+      "synthetic": true,
+      "unit": null,
+      "validity": {
+        "valid_from": "2026-01-01T00:00:00+00:00",
+        "valid_until": null
+      },
+      "value": "2-4 weeks",
+      "visibility": "public"
+    },
+    {
+      "id": 12,
+      "is_synthetic": true,
+      "predicate": "documentation",
+      "series_id": "synthetic-demo-documentation",
+      "source_id": "synthetic-demo-site-v1",
+      "source_locator": "demo-site/resources/documents.html#documentation",
+      "status": "confirmed",
+      "subject": "synthetic valve series",
+      "synthetic": true,
+      "unit": null,
+      "validity": {
+        "valid_from": "2026-01-01T00:00:00+00:00",
+        "valid_until": null
+      },
+      "value": "installation and maintenance guide",
+      "visibility": "public"
+    }
+  ],
+  "limitations": [
+    "Local synthetic demo evidence only; it is not customer data.",
+    "The seed does not publish, call a CMS, push Git, call a remote provider, or represent an online release."
+  ],
+  "mode": "synthetic_local_fixture",
+  "ok": true,
+  "page_ids": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+  ],
+  "question_count": 20,
+  "question_set": {
+    "current_version": 1,
+    "id": 2,
+    "name": "Synthetic valve procurement questions",
+    "site_id": 4,
+    "workspace_id": 1
+  },
+  "question_set_version": {
+    "created": true,
+    "edit_version": 2,
+    "frozen_at": "2026-01-01T00:05:00+00:00",
+    "id": 2,
+    "question_set_id": 2,
+    "state": "frozen",
+    "version": 1
+  },
+  "schema": {
+    "initialization": "alembic",
+    "migration_head": "0019_workflow_review_events"
+  },
+  "seed_version": "phase1-demo-seed-v1",
+  "site": {
+    "allowed_paths": [
+      "/"
+    ],
+    "created": true,
+    "id": 4,
+    "is_synthetic": true,
+    "name": "Synthetic demo fixture",
+    "origin": "http://127.0.0.1:8765",
+    "workspace_id": 1
+  },
+  "snapshot": {
+    "created": true,
+    "kind": "checked_in_demo_site",
+    "manifest_sha256": "b4b4491166a6c38287e5020b4c8697e2d600d03e20f9b16cef621291d3fa04c4",
+    "manifest_version": "demo-site-v1",
+    "page_count": 20,
+    "pages": [
+      "/",
+      "/missing-title.html",
+      "/applications/food-processing.html",
+      "/applications/selection.html",
+      "/applications/utilities.html",
+      "/applications/water-treatment.html",
+      "/engineering/connections.html",
+      "/engineering/materials.html",
+      "/engineering/pressure.html",
+      "/procurement/order-details.html",
+      "/procurement/request-a-quote.html",
+      "/products/valve-series.html",
+      "/products/vx-21.html",
+      "/products/vx-22.html",
+      "/products/vx-23.html",
+      "/products/vx-24.html",
+      "/products/vx-25.html",
+      "/resources/certificates.html",
+      "/resources/documents.html",
+      "/resources/packaging.html"
+    ],
+    "rows": [
+      {
+        "content_hash": "fbba0282f7cb1a45345d3a096ff00fbb0310e419abf6974d0c992dd5f0f4842f",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 3,
+        "is_synthetic": true,
+        "page_id": 4,
+        "url": "http://127.0.0.1:8765/"
+      },
+      {
+        "content_hash": "de0888a0f033903f7ae68b1a56a5813c690b89fe8e0ea18b267ac7e1c8394702",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 4,
+        "is_synthetic": true,
+        "page_id": 5,
+        "url": "http://127.0.0.1:8765/missing-title.html"
+      },
+      {
+        "content_hash": "f80b60455cdf7f7cc8215e4ad77243812292e204526fb99e60e4a4c10e0bd25e",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 5,
+        "is_synthetic": true,
+        "page_id": 6,
+        "url": "http://127.0.0.1:8765/applications/food-processing.html"
+      },
+      {
+        "content_hash": "70c05547ab4683417e946970209ae322afe32be307f4ffde2602177e42634c83",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 6,
+        "is_synthetic": true,
+        "page_id": 7,
+        "url": "http://127.0.0.1:8765/applications/selection.html"
+      },
+      {
+        "content_hash": "7b2c45c6f591160e110559c2c54aad0b6587f015afc2f8b9294b96aceba41b33",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 7,
+        "is_synthetic": true,
+        "page_id": 8,
+        "url": "http://127.0.0.1:8765/applications/utilities.html"
+      },
+      {
+        "content_hash": "ba44aec6eb5ab9e91388200387a650b1648ef090d2056e2cec4bb07b74bdf3aa",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 8,
+        "is_synthetic": true,
+        "page_id": 9,
+        "url": "http://127.0.0.1:8765/applications/water-treatment.html"
+      },
+      {
+        "content_hash": "8f2bb087872a895904b03ae7e0ff805d65cc90fc3dafdf5a65e1989c263bb294",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 9,
+        "is_synthetic": true,
+        "page_id": 10,
+        "url": "http://127.0.0.1:8765/engineering/connections.html"
+      },
+      {
+        "content_hash": "848c1cb0e23186c48e4a893eba783f4bf8ec2912eaa1e043dfcb67fcc172b2c9",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 10,
+        "is_synthetic": true,
+        "page_id": 11,
+        "url": "http://127.0.0.1:8765/engineering/materials.html"
+      },
+      {
+        "content_hash": "aad33300dd3bade3551d8a21d718a45290d73ffb5802fe29d265550a6111c4ea",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 11,
+        "is_synthetic": true,
+        "page_id": 12,
+        "url": "http://127.0.0.1:8765/engineering/pressure.html"
+      },
+      {
+        "content_hash": "1de4fc1aa4cf91ca5b9c077b220c07f7edf39e769479338198d3cee51115c8a7",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 12,
+        "is_synthetic": true,
+        "page_id": 13,
+        "url": "http://127.0.0.1:8765/procurement/order-details.html"
+      },
+      {
+        "content_hash": "c0039c711a29de5363ecbc40a75f9881118134de5c0ca43fae8a1aaf2b735ba3",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 13,
+        "is_synthetic": true,
+        "page_id": 14,
+        "url": "http://127.0.0.1:8765/procurement/request-a-quote.html"
+      },
+      {
+        "content_hash": "70fd208d3d4d0320d0de940ff08b946a73f2bd02f91fdbd910c733dddf6e999a",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 14,
+        "is_synthetic": true,
+        "page_id": 15,
+        "url": "http://127.0.0.1:8765/products/valve-series.html"
+      },
+      {
+        "content_hash": "9b6794b0b2409e0d2f7bcebbc44ac9a790d665c0514d32f61060261b6f35c096",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 15,
+        "is_synthetic": true,
+        "page_id": 16,
+        "url": "http://127.0.0.1:8765/products/vx-21.html"
+      },
+      {
+        "content_hash": "aac75b7b841726c342b4fc2664c8e8b58f7de3dddc56e276f5434201f56ba099",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 16,
+        "is_synthetic": true,
+        "page_id": 17,
+        "url": "http://127.0.0.1:8765/products/vx-22.html"
+      },
+      {
+        "content_hash": "49cf5a1e92e921d1e672a5adb124df102f3f37df276b8bfa70d65b957ddbbe38",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 17,
+        "is_synthetic": true,
+        "page_id": 18,
+        "url": "http://127.0.0.1:8765/products/vx-23.html"
+      },
+      {
+        "content_hash": "be1a3d79f82b31a747e628e88fb281c14e31333bf3a5a8813dc8437b571bfb5c",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 18,
+        "is_synthetic": true,
+        "page_id": 19,
+        "url": "http://127.0.0.1:8765/products/vx-24.html"
+      },
+      {
+        "content_hash": "d89cc341085261d198b81b1edcffe88dbfe52c8d4f5b479b84175e5bf88c1227",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 19,
+        "is_synthetic": true,
+        "page_id": 20,
+        "url": "http://127.0.0.1:8765/products/vx-25.html"
+      },
+      {
+        "content_hash": "d6b0dd8d4a22826b028efea4f7cb27f910c3c621e02b6cc341cd0b5f5fa5ec76",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 20,
+        "is_synthetic": true,
+        "page_id": 21,
+        "url": "http://127.0.0.1:8765/resources/certificates.html"
+      },
+      {
+        "content_hash": "2cefd84685fd43bccb6f2bea8ab8d2bac83096fbd0704013ecaec104e15dc560",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 21,
+        "is_synthetic": true,
+        "page_id": 22,
+        "url": "http://127.0.0.1:8765/resources/documents.html"
+      },
+      {
+        "content_hash": "01eaf4355c7f32c4b08875bfa23b88db2ec36f742778c29b295d57c9879a3dae",
+        "fetched_at": "2026-01-01T00:00:00+00:00",
+        "id": 22,
+        "is_synthetic": true,
+        "page_id": 23,
+        "url": "http://127.0.0.1:8765/resources/packaging.html"
+      }
+    ],
+    "source_root": "demo-site"
+  },
+  "snapshot_ids": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22
+  ],
+  "source_metadata": {
+    "mode": "synthetic",
+    "network_access": false,
+    "provider_calls": false,
+    "remote_writes": false,
+    "source_id": "synthetic-demo-site-v1",
+    "source_kind": "checked_in_local_fixture",
+    "source_root": "demo-site",
+    "validity": {
+      "valid_from": "2026-01-01T00:00:00+00:00",
+      "valid_until": null
+    }
+  },
+  "workspace": {
+    "created": false,
+    "external_id": "demo-workspace",
+    "id": 1,
+    "name": "\u6f14\u793a\u5de5\u4f5c\u533a"
+  }
+}
