@@ -2,7 +2,7 @@
   "task_id": "T16",
   "status": "blocked_external",
   "source": "bounded PostgreSQL runtime report with no business claim",
-  "code_commit": "84692d383d3601f243fdf0317b216377676d7180",
+  "code_commit": "85b911db03bff9ba1bd4f103ea71ea75da46274a",
   "checks": [
     {
       "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_observability.py -q",
@@ -18,6 +18,11 @@
       "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_worker_audit.py -q",
       "exit_code": 0,
       "result": "2 passed; hashed lease and type-only error audit regression"
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_publication_worker.py -q",
+      "exit_code": 0,
+      "result": "4 passed; publication rollback lifecycle audit"
     }
   ],
   "artifacts": [
@@ -28,8 +33,7 @@
     "backend/tests/test_worker_audit.py"
   ],
   "blockers": [
-    "no_runtime_rows",
-    "publication_rollback_lifecycle_event_pending"
+    "no_runtime_rows"
   ],
   "business_data_claim": false
 }
