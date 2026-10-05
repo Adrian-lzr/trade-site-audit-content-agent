@@ -6,7 +6,8 @@ from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import CheckConstraint, create_engine, inspect, text
+from sqlalchemy.dialects import postgresql, sqlite
 from sqlalchemy.exc import IntegrityError
 import pytest
 
@@ -51,6 +52,31 @@ def test_alembic_upgrade_head_creates_minimal_schema(monkeypatch):
     finally:
         os.environ.pop("DATABASE_URL", None)
         path.unlink(missing_ok=True)
+
+
+@pytest.mark.parametrize(
+    ("dialect", "expected_literals"),
+    [
+        (sqlite.dialect(), "cost_known IN (0, 1)"),
+        (postgresql.dialect(), "cost_known IN (false, true)"),
+    ],
+)
+def test_model_call_boolean_constraint_compiles_for_database_dialect(monkeypatch, dialect, expected_literals):
+    """Compile the actual 0018 table definition using both SQL dialects."""
+    import importlib
+
+    migration = importlib.import_module("backend.migrations.versions.0018_model_call_budget_accounting")
+    constraints = []
+
+    def capture_table(_name, *elements, **_kwargs):
+        constraints.extend(element for element in elements if isinstance(element, CheckConstraint))
+
+    monkeypatch.setattr(migration.op, "create_table", capture_table)
+    migration.upgrade()
+
+    cost_constraint = next(item for item in constraints if item.name == "ck_model_call_cost_known")
+    rendered = str(cost_constraint.sqltext.compile(dialect=dialect, compile_kwargs={"literal_binds": True}))
+    assert rendered == expected_literals
 
 
 def test_worker_lease_migration_requeues_legacy_running_jobs(monkeypatch):

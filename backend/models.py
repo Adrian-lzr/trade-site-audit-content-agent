@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from enum import StrEnum
 from uuid import uuid4
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, ForeignKeyConstraint, Integer, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, ForeignKeyConstraint, Integer, Numeric, String, Text, UniqueConstraint, column
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -661,7 +661,12 @@ class ModelCall(Base):
     __table_args__ = (
         UniqueConstraint("workspace_id", "call_key", name="uq_model_call_workspace_key"),
         CheckConstraint("status IN ('reserved', 'succeeded', 'failed', 'unknown_result')", name="ck_model_call_status"),
-        CheckConstraint("cost_known IN (0, 1)", name="ck_model_call_cost_known"),
+        # Let SQLAlchemy render boolean literals for each database dialect
+        # (SQLite uses 0/1, PostgreSQL uses false/true).
+        CheckConstraint(
+            column("cost_known", Boolean()).in_([False, True]),
+            name="ck_model_call_cost_known",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

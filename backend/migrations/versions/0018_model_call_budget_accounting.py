@@ -38,7 +38,12 @@ def upgrade() -> None:
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
         sa.UniqueConstraint("workspace_id", "call_key", name="uq_model_call_workspace_key"),
         sa.CheckConstraint("status IN ('reserved', 'succeeded', 'failed', 'unknown_result')", name="ck_model_call_status"),
-        sa.CheckConstraint("cost_known IN (0, 1)", name="ck_model_call_cost_known"),
+        # Compile Boolean literals per dialect: SQLite stores booleans as 0/1,
+        # while PostgreSQL rejects comparing a boolean column with integers.
+        sa.CheckConstraint(
+            sa.column("cost_known", sa.Boolean()).in_([False, True]),
+            name="ck_model_call_cost_known",
+        ),
     )
     op.create_table(
         "budget_reservations",
