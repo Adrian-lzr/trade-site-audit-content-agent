@@ -102,4 +102,4 @@
     "output/optimization/T17/compose-ps-202610051751.json"
   ],
   "external_blocker": "Production backup retention/recovery policy, production identity, and approved immutable production image provenance remain external. The local fixture runtime and mirror-based image build are not production evidence."
-}\n
+}
