@@ -5,55 +5,10 @@
       "code": "no_runtime_rows",
       "reason": "no matching runtime rows were supplied; this report does not invent business activity",
       "status": "blocked_external"
-    },
-    {
-      "code": "database_query_failed",
-      "reason": "could not read audit_events (OperationalError); migrate the database before collecting runtime evidence",
-      "status": "blocked_external"
-    },
-    {
-      "code": "database_query_failed",
-      "reason": "could not read content_generation_tasks (OperationalError); migrate the database before collecting runtime evidence",
-      "status": "blocked_external"
-    },
-    {
-      "code": "database_query_failed",
-      "reason": "could not read content_generation_items (OperationalError); migrate the database before collecting runtime evidence",
-      "status": "blocked_external"
-    },
-    {
-      "code": "database_query_failed",
-      "reason": "could not read change_requests (OperationalError); migrate the database before collecting runtime evidence",
-      "status": "blocked_external"
-    },
-    {
-      "code": "database_query_failed",
-      "reason": "could not read change_revisions (OperationalError); migrate the database before collecting runtime evidence",
-      "status": "blocked_external"
-    },
-    {
-      "code": "database_query_failed",
-      "reason": "could not read model_calls (OperationalError); migrate the database before collecting runtime evidence",
-      "status": "blocked_external"
-    },
-    {
-      "code": "database_query_failed",
-      "reason": "could not read publication_attempts (OperationalError); migrate the database before collecting runtime evidence",
-      "status": "blocked_external"
-    },
-    {
-      "code": "database_query_failed",
-      "reason": "could not read visibility_runs (OperationalError); migrate the database before collecting runtime evidence",
-      "status": "blocked_external"
-    },
-    {
-      "code": "database_query_failed",
-      "reason": "could not read visibility_samples (OperationalError); migrate the database before collecting runtime evidence",
-      "status": "blocked_external"
     }
   ],
   "business_data_claim": false,
-  "code_commit": "2aa8140b7824aec16662032cbc2211070f771f22",
+  "code_commit": "6a754121fcb5b4f6804475a012fe2f5954308f3e",
   "command": [
     "python",
     "scripts/correlation_report.py",
@@ -84,8 +39,8 @@
     "platform": "Windows-11-10.0.26200-SP0",
     "python": "3.12.10"
   },
-  "generated_at": "2026-10-05T09:13:02.420910+00:00",
-  "report_sha256": "fb838b746fa0bc94f61a37a32134d3dc45bb39732f7842291e473211716016dc",
+  "generated_at": "2026-10-05T10:50:52.468316+00:00",
+  "report_sha256": "241957cde3bc530bf95234109b9699f6e0c5a8dde271db87ec0befaebcc3fc8c",
   "schema_version": "t16.correlation.v1",
   "scope": {
     "change_request_id": null,

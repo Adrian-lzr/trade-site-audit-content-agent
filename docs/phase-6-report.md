@@ -9,7 +9,7 @@
 
 | 检查 | 本轮结果 | 证据 |
 | --- | --- | --- |
-| Python 后端测试 | `248 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider backend/tests -q` |
+| Python 后端测试 | `249 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider backend/tests -q` |
 | 评测工具测试 | `10 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider -q evals\\tests` |
 | Web 构建 | 通过，Vite 8.3.1 | `npm --prefix apps/web run build` |
 | 数据库迁移 | 通过，当前 `0019_workflow_review_events (head)` | `backend\\.venv\\Scripts\\python.exe -m alembic -c backend\\alembic.ini upgrade head` 和 `current` |

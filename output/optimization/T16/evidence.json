@@ -2,7 +2,7 @@
   "task_id": "T16",
   "status": "blocked_external",
   "source": "bounded local/PostgreSQL correlation reports with no production business claim",
-  "code_commit": "2aa8140b7824aec16662032cbc2211070f771f22",
+  "code_commit": "6a754121fcb5b4f6804475a012fe2f5954308f3e",
   "checks": [
     {
       "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_observability.py -q",
@@ -30,6 +30,28 @@
       "exit_code": 0,
       "result": "local PostgreSQL report emitted with fail-closed empty correlation; current target could not be migrated because its stored local credential was unavailable; no business claim",
       "evidence_ref": "output/optimization/T16/postgres_correlation_report.json"
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_observability.py -q",
+      "exit_code": 0,
+      "result": "11 passed; request-only selector follows only audited numeric task/change IDs and joins revision/model/publication without unbounded scans"
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests -q",
+      "exit_code": 0,
+      "result": "249 passed"
+    },
+    {
+      "command": "scripts/correlation_report.py --workspace-id 1 --output output/optimization/T16/correlation_report.json",
+      "exit_code": 0,
+      "result": "SQLite report regenerated against commit 6a75412; fixture rows remain blocked and business_data_claim=false",
+      "evidence_ref": "output/optimization/T16/correlation_report.json"
+    },
+    {
+      "command": "fresh PostgreSQL 16 tmpfs container; alembic upgrade head; scripts/correlation_report.py --workspace-id 1 --output output/optimization/T16/postgres_correlation_report.json",
+      "exit_code": 0,
+      "result": "current 0019 head report regenerated with no runtime rows and no query errors; business_data_claim=false",
+      "evidence_ref": "output/optimization/T16/postgres_correlation_report.json"
     }
   ],
   "artifacts": [
@@ -44,8 +66,7 @@
     "output/optimization/T16/postgres_correlation_report.json"
   ],
   "blockers": [
-    "no real production workflow rows in an authorized runtime database; local fixture evidence cannot be promoted to production business evidence",
-    "current local PostgreSQL target requires the operator-managed credential/migration before a fresh runtime report"
+    "no real request/workflow rows in an authorized production runtime; local fixture and fresh isolated PostgreSQL reports cannot be promoted to production business evidence"
   ],
   "business_data_claim": false
 }

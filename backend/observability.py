@@ -202,9 +202,33 @@ def build_correlation_report(
         # Task/change/run selectors have no safe join to AuditEvent.
         audit_predicates.append(AuditEvent.id == -1)
     audits = rows(AuditEvent, *audit_predicates)
+    def audited_ids(target_types: set[str]) -> set[int]:
+        """Extract only numeric IDs from known audit target types.
+
+        Audit rows are correlation hints, never authority for an unbounded
+        query.  Restricting the target types and requiring integer IDs lets a
+        request selector follow a recorded workflow without scanning another
+        workspace's task or change tables.
+        """
+        result: set[int] = set()
+        for event in audits:
+            if event.target_type not in target_types:
+                continue
+            try:
+                value = int(event.target_id)
+            except (TypeError, ValueError):
+                continue
+            if value > 0:
+                result.add(value)
+        return result
+
+    audit_task_ids = audited_ids({"content_generation_task", "content_task"})
+    audit_change_ids = audited_ids({"change_request"})
     task_predicates: list[Any] = list(workspace_filter(ContentGenerationTask))
     if task_id is not None:
         task_predicates.append(ContentGenerationTask.id == task_id)
+    elif audit_task_ids:
+        task_predicates.append(ContentGenerationTask.id.in_(audit_task_ids))
     elif any(value is not None for value in (request_id, change_request_id, visibility_run_id)):
         # Request/change/run selectors do not have a foreign key to content
         # tasks. Do not broaden them into a full task-table scan.
@@ -220,6 +244,8 @@ def build_correlation_report(
         change_predicates.append(ChangeRequest.id == change_request_id)
     elif item_change_ids:
         change_predicates.append(ChangeRequest.id.in_(item_change_ids))
+    elif audit_change_ids:
+        change_predicates.append(ChangeRequest.id.in_(audit_change_ids))
     elif task_id is not None or request_id is not None or visibility_run_id is not None or (scope_bounded and workspace_id is None):
         change_predicates.append(ChangeRequest.id == -1)
     changes = rows(ChangeRequest, *change_predicates)

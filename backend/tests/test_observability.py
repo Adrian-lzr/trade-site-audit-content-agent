@@ -287,3 +287,141 @@ def test_correlation_report_request_selector_does_not_scan_unrelated_task_chain(
     assert correlation["content_tasks"] == []
     assert correlation["revisions"] == []
     assert correlation["publication_attempts"] == []
+
+
+def test_correlation_report_request_selector_follows_audited_content_chain():
+    from backend.database import SessionLocal
+    from backend.models import (
+        AuditEvent,
+        ChangeRequest,
+        ChangeRevision,
+        ContentGenerationItem,
+        ContentGenerationTask,
+        ModelCall,
+        Page,
+        PageSnapshot,
+        ProcurementQuestion,
+        ProcurementQuestionSet,
+        ProcurementQuestionSetVersion,
+        PublicationAttempt,
+        Site,
+        Workspace,
+    )
+
+    request_key = "request-content-chain"
+    generation_id = "thread:content-chain:snapshot:draft:0"
+    with SessionLocal() as db:
+        workspace = Workspace(name="correlation-request-chain")
+        db.add(workspace)
+        db.flush()
+        site = Site(workspace_id=workspace.id, name="chain-site", base_url="https://chain.invalid")
+        db.add(site)
+        db.flush()
+        question_set = ProcurementQuestionSet(workspace_id=workspace.id, site_id=site.id, name="chain-set")
+        db.add(question_set)
+        db.flush()
+        version = ProcurementQuestionSetVersion(question_set_id=question_set.id, version=1, state="frozen")
+        db.add(version)
+        db.flush()
+        question = ProcurementQuestion(
+            question_set_version_id=version.id,
+            position=1,
+            question="What is the confirmed pressure?",
+            product="Valve",
+            use_case="Water",
+            buyer_role="Procurement",
+            purchase_stage="Evaluation",
+            target_market="US",
+            language="en",
+        )
+        page = Page(site_id=site.id, canonical_url="https://chain.invalid/valve")
+        db.add_all([question, page])
+        db.flush()
+        snapshot = PageSnapshot(
+            page_id=page.id,
+            url=page.canonical_url,
+            status_code=200,
+            content_hash="c" * 64,
+            content="<html><title>Valve</title></html>",
+        )
+        change = ChangeRequest(workspace_id=workspace.id, site_id=site.id, title="Chain change")
+        task = ContentGenerationTask(
+            workspace_id=workspace.id,
+            site_id=site.id,
+            question_set_version_id=version.id,
+            status="awaiting_review",
+        )
+        db.add_all([snapshot, change, task])
+        db.flush()
+        revision = ChangeRevision(
+            change_request_id=change.id,
+            revision=1,
+            state="draft",
+            content_hash="d" * 64,
+            generation_id=generation_id,
+        )
+        db.add(revision)
+        db.flush()
+        item = ContentGenerationItem(
+            task_id=task.id,
+            question_id=question.id,
+            page_id=page.id,
+            change_request_id=change.id,
+            snapshot_id=snapshot.id,
+            snapshot_hash=snapshot.content_hash,
+            request_summary="Draft pressure details",
+            thread_id="chain-thread",
+            status="awaiting_review",
+        )
+        call = ModelCall(
+            workspace_id=workspace.id,
+            call_key="chain-call",
+            call_type="content_generation",
+            generation_id=generation_id,
+            input_hash="e" * 64,
+            status="succeeded",
+            cost_known=True,
+            amount="0.010000",
+        )
+        publication = PublicationAttempt(
+            change_request_id=change.id,
+            revision_id=revision.id,
+            idempotency_key="chain-publication",
+            status="submitted",
+            target="local-fixture",
+        )
+        db.add_all([item, call, publication])
+        db.add_all(
+            [
+                AuditEvent(
+                    workspace_id=workspace.id,
+                    actor="operator",
+                    action="content_generation_task.created",
+                    target_type="content_generation_task",
+                    target_id=str(task.id),
+                    after_version_json=json.dumps({"site_id": site.id}),
+                    run_id=request_key,
+                ),
+                AuditEvent(
+                    workspace_id=workspace.id,
+                    actor="operator",
+                    action="change.created",
+                    target_type="change_request",
+                    target_id=str(change.id),
+                    after_version_json=json.dumps({"current_revision_id": revision.id}),
+                    run_id=request_key,
+                ),
+            ]
+        )
+        db.commit()
+        report = build_correlation_report(db, request_id=request_key)
+
+    correlation = report["correlation"]
+    assert report["verification"] == "runtime_observed"
+    assert [row["id"] for row in correlation["content_tasks"]] == [task.id]
+    assert [row["id"] for row in correlation["revisions"]] == [revision.id]
+    assert [row["id"] for row in correlation["model_calls"]] == [call.id]
+    assert [row["id"] for row in correlation["publication_attempts"]] == [publication.id]
+    assert report["coverage"]["task_to_revision"] is True
+    assert report["coverage"]["revision_to_model_call"] is True
+    assert report["coverage"]["revision_to_publication"] is True
