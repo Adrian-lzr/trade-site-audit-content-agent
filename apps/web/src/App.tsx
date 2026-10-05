@@ -44,6 +44,12 @@ import {
   RuleResult,
   SnapshotDetail,
   Site,
+  Session,
+  WorkspaceMembership,
+  clearApiContext,
+  getSession,
+  listWorkspaces,
+  setApiContext,
 } from "./api";
 import { ProcurementWorkspace } from "./ProcurementWorkspace";
 import { ContentReviewWorkspace } from "./ContentReviewWorkspace";
@@ -234,6 +240,12 @@ function attentionLabel(summary: RuleSummary) {
 }
 
 export function App() {
+  const [workspaceKey, setWorkspaceKey] = useState(WORKSPACE_ID);
+  const [session, setSession] = useState<Session | null>(null);
+  const [workspaces, setWorkspaces] = useState<WorkspaceMembership[]>([]);
+  const [identityInput, setIdentityInput] = useState(import.meta.env.VITE_LOCAL_USER || "");
+  const [identityError, setIdentityError] = useState("");
+  const [identityBusy, setIdentityBusy] = useState(false);
   const [activeView, setActiveView] = useState<"sites" | "procurement" | "content" | "visibility">("sites");
   const [workspaceDirty, setWorkspaceDirty] = useState(false);
   const [pendingView, setPendingView] = useState<"sites" | "procurement" | "content" | "visibility" | null>(null);
@@ -277,7 +289,7 @@ export function App() {
   const [factSourceId, setFactSourceId] = useState("manual");
   const [factSourceLocator, setFactSourceLocator] = useState("");
   const [factVisibility, setFactVisibility] = useState<Fact["visibility"]>("internal_only");
-  const [factReviewer, setFactReviewer] = useState(WORKSPACE_ID);
+  const [factReviewer, setFactReviewer] = useState(import.meta.env.VITE_LOCAL_USER || "demo-user");
   const [factSaving, setFactSaving] = useState(false);
   const [factActionId, setFactActionId] = useState("");
   const [factNotice, setFactNotice] = useState("");
@@ -304,7 +316,7 @@ export function App() {
     setSitesLoading(true);
     setSitesError("");
     try {
-      const result = await listSites();
+      const result = await listSites(workspaceKey);
       setSites(result);
       setSelectedId((current) => {
         if (preserveSelection && result.some((site) => site.id === current)) return current;
@@ -315,7 +327,7 @@ export function App() {
     } finally {
       setSitesLoading(false);
     }
-  }, []);
+  }, [workspaceKey]);
 
   const refreshHealth = useCallback(async () => {
     setHealthError("");
@@ -331,19 +343,66 @@ export function App() {
     setFactsLoading(true);
     setFactsError("");
     try {
-      setFacts(await listFacts(WORKSPACE_ID));
+      setFacts(await listFacts(workspaceKey));
     } catch (error) {
       setFactsError(messageOf(error));
     } finally {
       setFactsLoading(false);
     }
+  }, [workspaceKey]);
+
+  const refreshSession = useCallback(async () => {
+    setIdentityError("");
+    try {
+      const current = await getSession();
+      const choices = await listWorkspaces();
+      setSession(current);
+      setWorkspaces(choices);
+      setWorkspaceKey((active: string) => choices.some((item) => item.id === active) ? active : (choices[0]?.id || WORKSPACE_ID));
+    } catch (error) {
+      setIdentityError(messageOf(error));
+      setSession(null);
+      setWorkspaces([]);
+    }
   }, []);
 
+  async function applyIdentity() {
+    setIdentityBusy(true);
+    clearApiContext();
+    setApiContext({ localUser: identityInput.trim() || undefined, workspaceKey });
+    setSelectedId("");
+    setSites([]);
+    setPages([]);
+    setFacts([]);
+    setAuditRun(null);
+    setDetailId("");
+    try {
+      await refreshSession();
+      setFactReviewer(identityInput.trim() || "demo-user");
+    } finally {
+      setIdentityBusy(false);
+    }
+  }
+
+  function changeWorkspace(next: string) {
+    setWorkspaceKey(next);
+    setApiContext({ workspaceKey: next });
+    setSelectedId("");
+    setSites([]);
+    setFacts([]);
+    setPages([]);
+    setAuditRun(null);
+    setDetailId("");
+    setWorkspaceDirty(false);
+  }
+
   useEffect(() => {
+    setApiContext({ workspaceKey });
+    void refreshSession();
     void refreshHealth();
     void refreshSites(false);
     void refreshFacts();
-  }, [refreshFacts, refreshHealth, refreshSites]);
+  }, [refreshFacts, refreshHealth, refreshSites, refreshSession, workspaceKey]);
 
   const refreshPages = useCallback(async () => {
     if (!selectedId) {
@@ -353,14 +412,14 @@ export function App() {
     setPagesLoading(true);
     setPagesError("");
     try {
-      setPages(await listPages(selectedId));
+      setPages(await listPages(selectedId, workspaceKey));
     } catch (error) {
       setPagesError(messageOf(error));
       setPages([]);
     } finally {
       setPagesLoading(false);
     }
-  }, [selectedId]);
+  }, [selectedId, workspaceKey]);
 
   useEffect(() => {
     void refreshPages();
@@ -375,12 +434,12 @@ export function App() {
     let cancelled = false;
     setDetailLoading(true);
     setDetailError("");
-    getSnapshot(detailId)
+    getSnapshot(detailId, workspaceKey)
       .then((result) => { if (!cancelled) setDetail(result); })
       .catch((error) => { if (!cancelled) setDetailError(messageOf(error)); })
       .finally(() => { if (!cancelled) setDetailLoading(false); });
     return () => { cancelled = true; };
-  }, [detailId, detailReloadCount]);
+  }, [detailId, detailReloadCount, workspaceKey]);
 
   useEffect(() => {
     if (!detailId) return;
@@ -395,7 +454,7 @@ export function App() {
     if (!auditRun || !isActive(auditRun.status)) return;
     const timer = window.setInterval(async () => {
       try {
-        const current = await getAuditRun(auditRun.id);
+        const current = await getAuditRun(auditRun.id, workspaceKey);
         setAuditRun(current);
         if (!isActive(current.status)) {
           setAuditBusy(false);
@@ -406,7 +465,7 @@ export function App() {
       }
     }, 1800);
     return () => window.clearInterval(timer);
-  }, [auditRun, refreshPages]);
+  }, [auditRun, refreshPages, workspaceKey]);
 
   async function handleCreateSite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -427,7 +486,7 @@ export function App() {
     setSiteSaving(true);
     try {
       const created = await createSite({
-        workspace_id: WORKSPACE_ID,
+        workspace_id: workspaceKey,
         name: siteName.trim() || siteAddress.suggestedName,
         origin: siteAddress.origin,
         allowed_paths: paths,
@@ -456,7 +515,7 @@ export function App() {
     setAuditError("");
     setAuditRun(null);
     try {
-      const run = await createAudit(selectedSite.id);
+      const run = await createAudit(selectedSite.id, workspaceKey);
       setAuditRun(run);
       if (!isActive(run.status)) {
         setAuditBusy(false);
@@ -474,7 +533,7 @@ export function App() {
     setFactSaving(true);
     try {
       await importFact({
-        workspace_id: WORKSPACE_ID,
+        workspace_id: workspaceKey,
         subject: factSubject.trim(),
         predicate: factPredicate.trim(),
         value: factValue.trim(),
@@ -508,7 +567,7 @@ export function App() {
     setFactsError("");
     setFactSaving(true);
     try {
-      const imported = await importFactsCsv(WORKSPACE_ID, file);
+      const imported = await importFactsCsv(workspaceKey, file);
       await refreshFacts();
       setFactNotice(`已导入 ${imported.length} 条待确认事实`);
       window.setTimeout(() => setFactNotice(""), 3600);
@@ -529,8 +588,8 @@ export function App() {
     setFactsError("");
     setFactActionId(`${fact.id}:${action}`);
     try {
-      if (action === "confirm") await confirmFact(fact.id, reviewer, fact.version, WORKSPACE_ID);
-      else await rejectFact(fact.id, reviewer, fact.version, WORKSPACE_ID);
+      if (action === "confirm") await confirmFact(fact.id, reviewer, fact.version, workspaceKey);
+      else await rejectFact(fact.id, reviewer, fact.version, workspaceKey);
       await refreshFacts();
       setFactNotice(action === "confirm" ? "事实已确认。公开改稿还要求可公开且当前有效；确认不会更改可见性。" : "事实已拒绝");
       window.setTimeout(() => setFactNotice(""), 3600);
@@ -651,9 +710,9 @@ export function App() {
           <span className="brand-mark"><Activity size={19} strokeWidth={2.4} /></span>
           <span className="brand-copy"><strong>Trade Visibility</strong><small>站点运营工作台</small></span>
         </a>
-        <div className="workspace-switcher" title={`工作区：${WORKSPACE_ID}`}>
+        <div className="workspace-switcher" title={`工作区：${workspaceKey}`}>
           <span className="workspace-avatar">TV</span>
-          <span className="workspace-label"><small>当前工作区</small><strong>演示工作区</strong></span>
+          <label className="workspace-label"><small>当前工作区</small><select value={workspaceKey} onChange={(event) => changeWorkspace(event.target.value)} aria-label="切换工作区"><option value="" disabled>选择工作区</option>{workspaces.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.role}</option>)}</select></label>
           <ChevronDown size={15} />
         </div>
         <div className="nav-label">工作区</div>
@@ -679,10 +738,11 @@ export function App() {
           <div className="topbar-actions">
             {fixtureMode && <span className="mode-label"><span className="mode-dot" />离线演示数据</span>}
             {activeView === "sites" && <button className="icon-button" type="button" title="刷新数据" aria-label="刷新数据" onClick={() => { void refreshHealth(); void refreshSites(); void refreshPages(); void refreshFacts(); }}><RefreshCw size={16} /></button>}
-            <span className="user-avatar" title="演示工作区">TV</span>
+            <form className="identity-form" onSubmit={(event) => { event.preventDefault(); void applyIdentity(); }}><input value={identityInput} onChange={(event) => setIdentityInput(event.target.value)} placeholder="本地身份（demo/test）" aria-label="本地身份" /><button className="button button-secondary small" type="submit" disabled={identityBusy}>{identityBusy ? "加载中" : "应用身份"}</button></form><span className="user-avatar" title={session?.source || "demo"}>{(session?.user_id || "demo").slice(0, 2).toUpperCase()}</span>
           </div>
         </header>
 
+        {identityError && <div className="alert compact" role="alert"><AlertCircle size={15} /><div><strong>身份或工作区加载失败</strong><span>{identityError}</span></div></div>}
         {activeView === "sites" ? <div className="page-wrap" id="sites">
           <div className="page-heading">
             <div>
@@ -852,7 +912,7 @@ export function App() {
           </section>
 
           <footer className="page-footer"><span>演示结果仅代表当前采集快照，不代表搜索引擎收录或排名。</span><a href="https://developers.google.com/search/docs/appearance/ai-features" target="_blank" rel="noreferrer">关于搜索表现 <ArrowUpRight size={13} /></a></footer>
-        </div> : activeView === "procurement" ? <ProcurementWorkspace workspaceKey={WORKSPACE_ID} onDirtyChange={setWorkspaceDirty} /> : activeView === "content" ? <ContentReviewWorkspace workspaceKey={WORKSPACE_ID} onDirtyChange={setWorkspaceDirty} onOpenFactLibrary={openFactLibrary} /> : <VisibilityWorkspace workspaceKey={WORKSPACE_ID} sites={sites} sitesLoading={sitesLoading} />}
+        </div> : activeView === "procurement" ? <ProcurementWorkspace workspaceKey={workspaceKey} onDirtyChange={setWorkspaceDirty} /> : activeView === "content" ? <ContentReviewWorkspace workspaceKey={workspaceKey} onDirtyChange={setWorkspaceDirty} onOpenFactLibrary={openFactLibrary} /> : <VisibilityWorkspace workspaceKey={workspaceKey} sites={sites} sitesLoading={sitesLoading} />}
       </main>
 
       {pendingView && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) cancelViewChange(); }}>

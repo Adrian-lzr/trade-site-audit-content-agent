@@ -36,7 +36,7 @@
 
 2026-09-30 当前工作树复核已同步工作区必填参数、兼容路由归属校验、内容 Worker revision 持久化前租约校验及前端对应 API 调用；知识库扩展至 29 条，Worker 会把本次改稿要求用于检索。随后新增本地 Git 发布器、发布/回滚 outbox 租约与 Worker、部署回调/本地 commit 复查和带 SHA 保护的 revert commit，并为隔离仓库提交路径补充测试。完整后端命令复跑为 **105 passed、0 warnings**，`npm --prefix apps/web run build` 通过，`git diff --check` 通过。Playwright 在隔离临时 SQLite API 上复核 29 条知识、阀门筛选和无外链内部条目，以及桌面/移动布局；当前视口无横向溢出、控制台无错误或警告。对当前 25 个非空来源 URL 的只读 GET 均返回 HTTP 200；真实站点仍未执行发布。该记录未把 PostgreSQL `0009`、`0010`、`0011` 迁移、并发压力和生产备份恢复写成通过证据。
 
-2026-10-01 历史门禁复跑为 **113 passed**；当时 `0013_visibility_budget_snapshots` 为 Alembic head。随后阶段性门禁为 **118 passed**、**123 passed**、**127 passed**、**129 passed**、**140 passed**、**144 passed**，当前完整门禁为 **233 passed**，当前 head 为 `0019_workflow_review_events`；新增模型边界、本地 readiness、HTTP 可观测性、运行治理、容器静态门禁、生产验收闸门和全 API workspace 角色授权针对性测试通过。Web 构建、评测测试、Compose 默认/demo profile 配置渲染、`0014` 以前的 PostgreSQL API/checkpoint smoke 与备份恢复演练和 `git diff --check` 均有历史记录；当前 head 的 PostgreSQL runtime 尚未验收。两个站点的 20 页只读采样及规则证据分别记录在 Phase 6 报告和 `output/online-audit/` 中。
+2026-10-01 历史门禁复跑为 **113 passed**；当时 `0013_visibility_budget_snapshots` 为 Alembic head。随后阶段性门禁为 **118 passed**、**123 passed**、**127 passed**、**129 passed**、**140 passed**、**144 passed**，当前完整门禁为 **237 passed**（2026-10-05 复跑），当前 head 为 `0019_workflow_review_events`；新增模型边界、本地 readiness、HTTP 可观测性、运行治理、容器静态门禁、生产验收闸门和全 API workspace 角色授权针对性测试通过。Web 构建、评测测试、Compose 默认/demo profile 配置渲染、当前 head 的 PostgreSQL API/checkpoint/concurrency smoke、隔离备份恢复演练和 `git diff --check` 均有记录；Docker 应用镜像构建仍受 Docker Hub token 网络超时阻断，生产运行尚未验收。两个站点的 20 页只读采样及规则证据分别记录在 Phase 6 报告和 `output/online-audit/` 中。
 
 ## 本地启动
 

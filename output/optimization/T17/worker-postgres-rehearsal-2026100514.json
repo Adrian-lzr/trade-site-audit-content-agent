@@ -1,0 +1,16 @@
+{
+  "task_id": "T17",
+  "status": "passed",
+  "evidence_kind": "isolated_runtime_rehearsal",
+  "database": "PostgreSQL 16 isolated tmpfs",
+  "worker_consumed": true,
+  "job_status": "succeeded",
+  "pages": 1,
+  "snapshots": 1,
+  "rule_problem_count": 1,
+  "synthetic": true,
+  "limitations": [
+    "host process API/Worker rehearsal, not container Compose runtime",
+    "synthetic fixture only"
+  ]
+}

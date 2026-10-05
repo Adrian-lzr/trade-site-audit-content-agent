@@ -1,0 +1,33 @@
+{
+  "task_id": "T17",
+  "status": "passed",
+  "evidence_kind": "isolated_runtime_rehearsal",
+  "postgres_image": "postgres:16-alpine (pre-existing local image)",
+  "migration_head": "0019_workflow_review_events",
+  "source_database": "trade_visibility",
+  "target_database": "trade_visibility2_restore",
+  "target_was_empty": true,
+  "row_counts": {
+    "workspaces": 1,
+    "sites": 1,
+    "page_snapshots": 0,
+    "visibility_runs": 0
+  },
+  "backup_bytes": 82133,
+  "backup_sha256": "328041bd160bc98d62063d5cbba9deefe70a8449e037d1fbd7fbd3060e58e8a4",
+  "restore_used_single_transaction": true,
+  "container_data_mount_policy": "tmpfs_only",
+  "database_drop_or_volume_removal": false,
+  "container_tools": true,
+  "verification": [
+    "source database migrated from empty PostgreSQL 16 to repository head",
+    "plain SQL dump completed",
+    "restore into an empty isolated PostgreSQL 16 database completed",
+    "restored migration head and representative row counts matched source"
+  ],
+  "limitations": [
+    "isolated local rehearsal is not production backup evidence",
+    "application image build remains blocked by Docker Hub OAuth token timeout",
+    "full Compose API/Web/Worker consumption remains unverified"
+  ]
+}

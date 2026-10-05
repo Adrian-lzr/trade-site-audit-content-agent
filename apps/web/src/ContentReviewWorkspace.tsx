@@ -316,7 +316,7 @@ export function ContentReviewWorkspace({
     setSitesLoading(true);
     setSitesError("");
     try {
-      const result = await listSites();
+      const result = await listSites(workspaceKey);
       const activeSiteId = siteIdRef.current;
       const activeSiteRemoved = Boolean(activeSiteId && !result.some((site) => site.id === activeSiteId));
       if (activeSiteRemoved && hasUnsavedDraftRef.current) {
@@ -335,7 +335,7 @@ export function ContentReviewWorkspace({
     } finally {
       setSitesLoading(false);
     }
-  }, []);
+  }, [workspaceKey]);
 
   useEffect(() => { void refreshSites(); }, [refreshSites]);
 
@@ -391,7 +391,7 @@ export function ContentReviewWorkspace({
     setQuestionSetsLoading(true);
     setTasksLoading(true);
     void Promise.allSettled([
-      listPages(siteId),
+      listPages(siteId, workspaceKey),
       listFacts(workspaceKey),
       listProcurementQuestionSets(workspaceKey, siteId),
       listContentGenerationTasks(workspaceKey, siteId),
@@ -441,7 +441,7 @@ export function ContentReviewWorkspace({
     setFactsLoading(true);
     setQuestionSetsLoading(true);
     const [pageResult, factResult, setResult] = await Promise.allSettled([
-      listPages(siteId),
+      listPages(siteId, workspaceKey),
       listFacts(workspaceKey),
       listProcurementQuestionSets(workspaceKey, siteId),
     ]);

@@ -1,0 +1,121 @@
+{
+  "blocked": [
+    "required_real_provider",
+    "authorized_site_evidence",
+    "human_annotation_completion",
+    "backup_restore_evidence",
+    "image_build_evidence",
+    "identity_mode",
+    "rollback_evidence",
+    "crm_evidence",
+    "remote_release_adapter"
+  ],
+  "checks": [
+    {
+      "evidence_kind": "unknown",
+      "evidence_refs": [],
+      "id": "required_real_provider",
+      "label": "required real provider",
+      "priority": "P1",
+      "reason": "missing required real provider evidence; Docker/fixture or an unavailable provider is not sufficient",
+      "status": "blocked"
+    },
+    {
+      "evidence_kind": "unknown",
+      "evidence_refs": [],
+      "id": "authorized_site_evidence",
+      "label": "authorized site evidence",
+      "priority": "P0",
+      "reason": "missing authorized site evidence; a site URL alone is not authorization",
+      "status": "blocked"
+    },
+    {
+      "evidence_kind": "unknown",
+      "evidence_refs": [],
+      "id": "human_annotation_completion",
+      "label": "human annotation completion",
+      "priority": "P0",
+      "reason": "missing human annotation completion evidence",
+      "status": "blocked"
+    },
+    {
+      "evidence_kind": "unknown",
+      "evidence_refs": [],
+      "id": "backup_restore_evidence",
+      "label": "backup/restore evidence",
+      "priority": "P0",
+      "reason": "missing backup/restore evidence; no database operation is performed by this gate",
+      "status": "blocked"
+    },
+    {
+      "evidence_kind": "unknown",
+      "evidence_refs": [],
+      "id": "image_build_evidence",
+      "label": "Docker image build evidence",
+      "priority": "P0",
+      "reason": "missing Docker image build evidence; static Dockerfile checks do not prove an image was built",
+      "status": "blocked"
+    },
+    {
+      "evidence_kind": "unknown",
+      "evidence_refs": [],
+      "id": "identity_mode",
+      "label": "production identity mode",
+      "priority": "P0",
+      "reason": "missing identity mode; production must use required/strict identity",
+      "status": "blocked"
+    },
+    {
+      "evidence_kind": "unknown",
+      "evidence_refs": [],
+      "id": "rollback_evidence",
+      "label": "rollback evidence",
+      "priority": "P0",
+      "reason": "missing rollback evidence; a local proposal without a verified rehearsal is not enough",
+      "status": "blocked"
+    },
+    {
+      "evidence_kind": "unknown",
+      "evidence_refs": [],
+      "id": "crm_evidence",
+      "label": "real CRM/inquiry evidence",
+      "priority": "P1",
+      "reason": "missing CRM/analytics evidence; production inquiry claims require an authorized real CRM",
+      "status": "blocked"
+    },
+    {
+      "evidence_kind": "unknown",
+      "evidence_refs": [],
+      "id": "remote_release_adapter",
+      "label": "remote CMS/CI/deployment release adapter",
+      "priority": "P0",
+      "reason": "missing remote CMS/CI/deployment adapter evidence; local Git or not_configured cannot release production",
+      "status": "blocked"
+    }
+  ],
+  "external_side_effects": {
+    "crm_requests": false,
+    "docker_commands": false,
+    "provider_calls": false,
+    "release_or_publish": false,
+    "site_requests": false
+  },
+  "gaps": [
+    "required_real_provider: missing required real provider evidence; Docker/fixture or an unavailable provider is not sufficient",
+    "authorized_site_evidence: missing authorized site evidence; a site URL alone is not authorization",
+    "human_annotation_completion: missing human annotation completion evidence",
+    "backup_restore_evidence: missing backup/restore evidence; no database operation is performed by this gate",
+    "image_build_evidence: missing Docker image build evidence; static Dockerfile checks do not prove an image was built",
+    "identity_mode: missing identity mode; production must use required/strict identity",
+    "rollback_evidence: missing rollback evidence; a local proposal without a verified rehearsal is not enough",
+    "crm_evidence: missing CRM/analytics evidence; production inquiry claims require an authorized real CRM",
+    "remote_release_adapter: missing remote CMS/CI/deployment adapter evidence; local Git or not_configured cannot release production"
+  ],
+  "manifest_mode": "production",
+  "not_evaluated": [],
+  "passed": [],
+  "read_only": true,
+  "real_evidence": [],
+  "status": "blocked",
+  "synthetic_evidence": []
+}

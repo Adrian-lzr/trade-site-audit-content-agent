@@ -21,9 +21,9 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .crawler import CrawlError, allowed_paths_json, normalize_path
 from .database import get_db, init_db
-from .authz import Permission, authorize_workspace, effective_actor
+from .authz import Permission, authorize_workspace, effective_actor, identity_from_request
 from .knowledge import curated_entries, filter_guidance
-from .models import AuditEvent, ChangeApproval, ChangeRequest, ChangeRevision, ChangeState, ContentGenerationItem, ContentGenerationTask, Fact, FactStatus, FactVisibility, Job, JobStatus, OutboxEvent, Page, PageSnapshot, ProcurementQuestion, ProcurementQuestionPageMapping, ProcurementQuestionSet, ProcurementQuestionSetVersion, PublicationAttempt, Site, VisibilityRun, VisibilitySample, Workspace, WorkflowReviewEvent, utcnow
+from .models import AuditEvent, ChangeApproval, ChangeRequest, ChangeRevision, ChangeState, ContentGenerationItem, ContentGenerationTask, Fact, FactStatus, FactVisibility, Job, JobStatus, Membership, OutboxEvent, Page, PageSnapshot, ProcurementQuestion, ProcurementQuestionPageMapping, ProcurementQuestionSet, ProcurementQuestionSetVersion, PublicationAttempt, Site, VisibilityRun, VisibilitySample, Workspace, WorkflowReviewEvent, utcnow
 from .time_utils import as_utc
 from .services.facts import FactResolutionError, assert_binding_current, assert_bindings_current, resolve_current_facts
 from .services.claims import validate_high_risk_claims
@@ -224,6 +224,50 @@ def _fixture_available() -> bool:
 @app.get("/api/health")
 def api_health() -> dict[str, str | bool]:
     return health()
+
+
+def _session_workspaces(db: Session, *, user_id: str | None) -> list[dict[str, object]]:
+    """Return only workspaces visible to the verified/local actor.
+
+    Anonymous demo sessions receive the seeded demo workspace only.  The
+    production path always supplies a verified subject before this helper is
+    called, so a missing or malformed OIDC identity cannot enumerate tenants.
+    """
+
+    if user_id is None:
+        workspace = db.scalar(select(Workspace).where(Workspace.external_id == "demo-workspace"))
+        return ([{"id": workspace.external_id or str(workspace.id), "name": workspace.name, "role": "demo"}] if workspace else [])
+    rows = db.execute(
+        select(Workspace, Membership.role)
+        .join(Membership, Membership.workspace_id == Workspace.id)
+        .where(Membership.user_id == user_id)
+        .order_by(Workspace.name, Workspace.id)
+    ).all()
+    return [
+        {"id": workspace.external_id or str(workspace.id), "name": workspace.name, "role": str(role)}
+        for workspace, role in rows
+    ]
+
+
+@app.get("/api/session")
+def get_session(request: Request, db: Session = Depends(get_db)) -> dict[str, object]:
+    """Describe the current demo/test/OIDC identity and its workspace choices."""
+
+    context = identity_from_request(request)
+    return {
+        "mode": os.getenv("AUTH_MODE", "demo").strip().casefold(),
+        "source": context.source,
+        "authenticated": context.authenticated,
+        "user_id": context.user_id,
+        "workspaces": _session_workspaces(db, user_id=context.user_id),
+    }
+
+
+@app.get("/api/workspaces")
+def list_workspaces(request: Request, db: Session = Depends(get_db)) -> list[dict[str, object]]:
+    """List workspaces available to the current identity for the UI selector."""
+
+    return _session_workspaces(db, user_id=identity_from_request(request).user_id)
 
 
 @app.get("/api/knowledge")

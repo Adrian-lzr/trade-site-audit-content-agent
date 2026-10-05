@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "database": "sqlite",
+  "database_path": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\trade-visibility-readiness-l49bqwvx\\readiness.sqlite",
+  "repository": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\trade-visibility-readiness-l49bqwvx\\repository",
+  "initial_commit": "c307e08bad8df4f3469e9790efb5934ae1915897",
+  "pages": 5,
+  "published_attempts": 5,
+  "deployment_callbacks": 5,
+  "verified_deployments": 0,
+  "verification_unavailable": 5,
+  "rollback": {
+    "source_attempt_id": 1,
+    "source_commit": "47d9c9d614250863315b38359d0a4d945f82d4f0",
+    "status": "blocked_external",
+    "reason": "fresh target-page read is not configured"
+  },
+  "idempotency": {
+    "publication_replay_rejected": true,
+    "publication_outbox_unique": true,
+    "rollback_rejected_without_page_evidence": true
+  },
+  "external_side_effects": {
+    "remote_git_push": false,
+    "cms_write": false,
+    "external_deployment": false,
+    "deployment_callbacks_are_local_state": true
+  },
+  "workdir_retained": false
+}

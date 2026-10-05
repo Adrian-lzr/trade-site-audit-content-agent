@@ -1,0 +1,24 @@
+{
+  "task_id": "T12",
+  "status": "fixture_verified",
+  "source": "local synthetic publication rehearsal only",
+  "code_commit": "7badac08a50529bbe0dfcee1b8df1342d4cd5a59",
+  "checks": [
+    {
+      "command": "backend/.venv/Scripts/python.exe scripts/local_readiness.py --output output/optimization/T12/local_readiness-20261005.json",
+      "exit_code": 0,
+      "result": "five constrained static HTML pages published through the local outbox; duplicate publication replay rejected; five deployment callbacks recorded; target verification unavailable; rollback rejected without fresh target evidence"
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_static_html_publisher.py backend/tests/test_deployment_verification.py -q",
+      "exit_code": 0,
+      "result": "9 passed"
+    }
+  ],
+  "artifacts": [
+    "backend/publishers/static_html.py",
+    "backend/publication_worker.py",
+    "output/optimization/T12/local_readiness-20261005.json"
+  ],
+  "external_blocker": "The rehearsal uses an isolated SQLite database and local Git repository; no remote CMS, staging deployment, fresh target-page observer, or rollback authorization was used. This cannot establish real page application or deployment verification."
+}

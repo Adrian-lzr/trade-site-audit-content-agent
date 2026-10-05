@@ -7,6 +7,20 @@ export type Health = {
   [key: string]: unknown;
 };
 
+export type WorkspaceMembership = {
+  id: string;
+  name: string;
+  role: "viewer" | "operator" | "reviewer" | "admin" | "demo" | string;
+};
+
+export type Session = {
+  mode: "demo" | "test" | "production" | string;
+  source: "anonymous_demo" | "local_header" | "oidc" | string;
+  authenticated: boolean;
+  user_id: string | null;
+  workspaces: WorkspaceMembership[];
+};
+
 export type KnowledgeEntry = {
   id: string;
   entry_type: "external_guidance" | string;
@@ -351,6 +365,19 @@ export type VisibilityRun = {
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 const DEFAULT_WORKSPACE_ID = import.meta.env.VITE_WORKSPACE_ID || "demo-workspace";
+let requestContext: { localUser?: string; token?: string; workspaceKey?: string } = {
+  localUser: import.meta.env.VITE_LOCAL_USER || undefined,
+  token: undefined,
+  workspaceKey: DEFAULT_WORKSPACE_ID,
+};
+
+export function setApiContext(context: { localUser?: string; token?: string; workspaceKey?: string }) {
+  requestContext = { ...requestContext, ...context };
+}
+
+export function clearApiContext() {
+  requestContext = { workspaceKey: DEFAULT_WORKSPACE_ID };
+}
 
 function describeApiError(value: unknown): string {
   if (typeof value === "string") return value;
@@ -387,9 +414,13 @@ function describeApiError(value: unknown): string {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const contextHeaders: Record<string, string> = {};
+  if (requestContext.localUser?.trim()) contextHeaders["X-Local-User"] = requestContext.localUser.trim();
+  if (requestContext.workspaceKey?.trim()) contextHeaders["X-Workspace-Id"] = requestContext.workspaceKey.trim();
+  if (requestContext.token?.trim()) contextHeaders.Authorization = `Bearer ${requestContext.token.trim()}`;
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
+    headers: { "Content-Type": "application/json", ...contextHeaders, ...(init?.headers || {}) },
   });
   if (!response.ok) {
     let detail = `Request failed (${response.status})`;
@@ -418,6 +449,14 @@ function unwrapList<T>(payload: unknown, key: string): T[] {
 
 export async function getHealth() {
   return request<Health>("/api/health");
+}
+
+export async function getSession() {
+  return request<Session>("/api/session");
+}
+
+export async function listWorkspaces() {
+  return request<WorkspaceMembership[]>("/api/workspaces");
 }
 
 export async function listKnowledgeEntries() {

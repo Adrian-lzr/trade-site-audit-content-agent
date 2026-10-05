@@ -50,6 +50,8 @@ The behavior will be converted to regression cases before being marked fixed.
 | B10 | Visibility budgets exist, but content and visibility calls lack a unified durable cost ledger; queue fairness and actual container runtime were not proved by the source gates. | T07, T08, T17 | Model-call/accounting fault cases, queue starvation/load tests, image build and full Compose worker-consumption run. |
 
 No real customer data, live site mutation, real Provider request, PostgreSQL
-integration DSN, or human annotation was used in this baseline. T00 remains in
-progress until the B01-B10 regression inputs and separate synthetic holdout
-manifest have been frozen without relabeling prior fixture cases.
+integration DSN, or human annotation was used in this baseline. The B01-B10
+regression inputs and separate synthetic holdout manifest are now frozen and
+validated; T00 is therefore recorded as fixture_verified. This does not satisfy
+the real holdout, production PostgreSQL, identity, Provider, or business-data
+requirements listed in INPUTS.md.

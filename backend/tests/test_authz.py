@@ -7,6 +7,28 @@ from backend.database import SessionLocal
 from backend.models import Membership
 
 
+def test_session_and_workspace_listing_are_scoped_to_identity(monkeypatch):
+    with TestClient(app) as client:
+        owner = _workspace(client, "session owner", ("alice", "reviewer"))
+        other = _workspace(client, "session other", ("bob", "viewer"))
+        anonymous = client.get("/api/session")
+        assert anonymous.status_code == 200, anonymous.text
+        assert anonymous.json()["source"] == "anonymous_demo"
+        assert [item["id"] for item in anonymous.json()["workspaces"]] == ["demo-workspace"]
+
+        alice = client.get("/api/workspaces", headers={"X-Local-User": "alice"})
+        assert alice.status_code == 200, alice.text
+        assert [item["id"] for item in alice.json()] == [str(owner["id"])]
+        assert alice.json()[0]["role"] == "reviewer"
+        assert str(other["id"]) not in {item["id"] for item in alice.json()}
+
+        monkeypatch.setenv("AUTH_MODE", "production")
+        denied = client.get("/api/session", headers={"X-Local-User": "alice"})
+        assert denied.status_code == 401, denied.text
+        missing = client.get("/api/workspaces")
+        assert missing.status_code == 401, missing.text
+
+
 def _workspace(client: TestClient, name: str, *members: tuple[str, str]) -> dict:
     response = client.post("/api/workspaces", json={"name": name})
     assert response.status_code == 201, response.text

@@ -1,0 +1,54 @@
+{
+  "adoption_rate_claim_allowed": false,
+  "checks": {
+    "content_strategy_comparison": {
+      "complete": false,
+      "evidence": [
+        "same annotation validator and frozen page/question metadata used for the comparison"
+      ],
+      "gaps": [
+        "10.2 cannot pass until an independent complete annotation set exists"
+      ],
+      "name": "10.2 content strategy comparison"
+    },
+    "deliverables": {
+      "complete": true,
+      "evidence": [
+        "evals/visibility_eval.py",
+        "evals/annotations/annotation_tool.py",
+        "evals/annotations/phase6-human-labels.template.json",
+        "evals/annotations/README.md",
+        "evals/tests/test_annotation_tool.py",
+        "docs/phase-6-report.md"
+      ],
+      "gaps": [],
+      "name": "Phase 6 evaluation deliverables"
+    },
+    "human_annotations": {
+      "complete": false,
+      "evidence": [
+        "evals/annotations/phase6-human-labels.template.json",
+        "0 complete case rows"
+      ],
+      "gaps": [
+        "annotation completion gate is false (0/30-50 complete rows)",
+        "22 required fields or freeze checks are incomplete"
+      ],
+      "name": "10.1 human annotation set"
+    },
+    "offline_fixture": {
+      "complete": true,
+      "evidence": [
+        "evals/artifacts/phase6-evaluation.json",
+        "40 synthetic cases: 30 dev and 10 holdout",
+        "all three strategies have sample, holdout, latency, and fixture-cost fields"
+      ],
+      "gaps": [],
+      "name": "10.1 offline fixture regression"
+    }
+  },
+  "human_evaluation_claim_allowed": false,
+  "interpretation": "Synthetic fixture evidence and human-review completion are separate gates. A false human_annotations check forbids human quality or adoption claims.",
+  "matrix_version": "phase6-completion-v1",
+  "overall_complete": false
+}

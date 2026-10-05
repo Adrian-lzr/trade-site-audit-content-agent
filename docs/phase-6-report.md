@@ -9,17 +9,18 @@
 
 | 检查 | 本轮结果 | 证据 |
 | --- | --- | --- |
-| Python 后端测试 | `236 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider backend/tests -q` |
+| Python 后端测试 | `237 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider backend/tests -q` |
 | 评测工具测试 | `10 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider -q evals\\tests` |
 | Web 构建 | 通过，Vite 8.3.1 | `npm --prefix apps/web run build` |
 | 数据库迁移 | 通过，当前 `0019_workflow_review_events (head)` | `backend\\.venv\\Scripts\\python.exe -m alembic -c backend\\alembic.ini upgrade head` 和 `current` |
 | PostgreSQL API + checkpoint smoke | 通过；隔离 PostgreSQL 数据库上检查 migration head、`/health`、`/api/health`、site 注册/列表和 checkpoint 重开 | `backend\\.venv\\Scripts\\python.exe scripts\\postgres_smoke.py --database-url $env:DATABASE_URL` |
-| PostgreSQL 隔离迁移与备份恢复 | 历史 `0001 -> 0014` 证据保留；本轮全新 PostgreSQL 16 空库已从 `0001` 升至当前 `0019_workflow_review_events`，并验证 `0018` 布尔约束按方言生成 | `scripts/migration_head.py`; `output/optimization/T17/evidence.json` |
+| PostgreSQL API/Worker 消费 rehearsal | 通过；隔离 PostgreSQL 16 tmpfs 上宿主机 API 入队一个 synthetic fixture 审计，`JobWorker.run_once()` 实际消费，任务 `succeeded`，持久化 1 页/1 快照；不等同容器 Compose runtime | `output/optimization/T17/worker-postgres-rehearsal-2026100514.json` |
+| PostgreSQL 隔离迁移与备份恢复 | 历史 `0001 -> 0014` 证据保留；本轮全新 PostgreSQL 16 空库已从 `0001` 升至当前 `0019_workflow_review_events`，并验证 `0018` 布尔约束按方言生成；独立 tmpfs 源/目标容器备份恢复通过，目标库为空、单事务恢复、代表性计数一致 | `scripts/migration_head.py`; `scripts/local_postgres_restore.py`; `output/optimization/T17/evidence.json`; `output/optimization/T17/backup-restore-20261005134014b.json` |
 | PostgreSQL 并发与租约恢复 smoke | 通过；当前 head 的 localhost 隔离空库验证预算并发预占仅一笔成功、同一 outbox 事件仅一个 worker 领取，并验证 visibility/outbox 过期租约恢复；通过模拟租约过期，不代表进程崩溃或生产压力测试 | `scripts/postgres_concurrency_smoke.py`; `output/optimization/T17/evidence.json` |
 | 本地五页发布 readiness | 本地制品与回调演练通过；2026-10-01 的旧报告把本地 Git commit 误计为部署验证，2026-10-02 已修正门禁：当前演练记录 5 个 `verification_unavailable`，并在缺少目标页读取时阻止回滚。旧 JSON 不作为 O04 验收证据 | `scripts/local_readiness.py`；`docs/local-readiness.md`；`docs/optimization/STATUS.md` |
 | 运行治理 | 新增验证；单次/工作区日预算上限、原始证据字节限制与保留期、Provider request ID 透传和敏感信息脱敏均有测试；真实 PostgreSQL 同工作区并发预算预占只允许一笔成功 | `backend/tests/test_runtime_governance.py`；临时 PostgreSQL 并发 smoke |
 | HTTP 可观测性 | 新增验证；API 响应回传 `X-Request-ID`，HTTP 日志通过脱敏 helper 输出结构化事件 | `backend/observability.py`；`backend/tests/test_observability.py` |
-| 容器镜像构建 | 未验证；静态 Dockerfile/Compose 门禁和配置渲染通过，Docker Hub OAuth token 请求超时阻断基础镜像 metadata 拉取 | `scripts/container_build_check.py`；`docs/container-runtime.md` |
+| 容器镜像构建 | 未验证；静态 Dockerfile/Compose 门禁和配置渲染通过；`docker compose build --progress plain` 在请求 `https://auth.docker.io/token` 解析 `python:3.12-slim`、`node:22-alpine`、`nginx:1.27-alpine` 时因 TCP 连接超时退出码 1 | `scripts/container_build_check.py`；`docs/container-runtime.md` |
 | 生产验收闸门 | 当前为 `blocked`；闸门本身只读，不调用 Provider、站点、CRM、Docker、Git remote 或部署系统；缺少真实证据时逐项列出阻塞原因 | `scripts/production_readiness.py`；`docs/production-acceptance.md` |
 | 本地 readiness 回归与 Compose 边界 | `4 passed`；Compose 默认/demo profile 静态检查通过，验证 loopback 端口、fixture 隔离、Worker 等待健康 API 和迁移 head | `backend/tests/test_local_readiness.py`；`scripts/local_compose_check.py` |
 | Compose 配置 | 默认与 `demo` profile 均通过 | PowerShell 设置 `$env:POSTGRES_PASSWORD` 后运行 `docker compose [--profile demo] config --quiet` |
@@ -59,10 +60,11 @@ Phase 6 门禁矩阵：
 
 ### 2026-10-05 实时复跑
 
-最新有界实时证据：[`output/online-audit/zoogo-sites-20261005.json`](../output/online-audit/zoogo-sites-20261005.json)。
+最新有界实时证据：[`output/online-audit/zoogo-sites-20261005.json`](../output/online-audit/zoogo-sites-20261005.json)；随后以相同只读策略扩展为每站 15 页、每站 180 条规则结果的复核文件 [`output/online-audit/zoogo-sites-20261005-page15.json`](../output/online-audit/zoogo-sites-20261005-page15.json)。
 
 - `https://zoogo.club`：10 页、120 条规则结果，`pass=96`、`needs_review=8`、`unknown=10`、`not_applicable=6`；首页、robots、`wp-sitemap.xml` 均返回 `200`，job `succeeded`，硬 findings 为 0。
 - `https://zoogosports.com`：10 页、120 条规则结果，`pass=98`、`needs_review=4`、`unknown=10`、`not_applicable=8`；首页、robots、`sitemap_index.xml` 均返回 `200`，job `succeeded`，硬 findings 为 0。
+- 扩展复核文件：`zoogo.club` 和 `zoogosports.com` 各 15 页、各 180 条规则结果；两站 job 均 `succeeded`、硬 findings 均为 0。扩展运行的状态计数分别为 `zoogo.club pass=148 / needs_review=10 / unknown=12 / not_applicable=10`，`zoogosports.com pass=134 / needs_review=19 / unknown=15 / not_applicable=12`。
 - 这是 `live_https_readonly` 的 bounded HTML/robots/sitemap sample。所有请求均为只读 GET；报告明确记录没有调用 CMS、表单、发布、PR 或部署端点，也不测量排名、消费者 AI 引用、流量、询盘或收入。
 - `needs_review` 与 `unknown` 仍需人工或更深层采样复核；`0 findings` 只代表本次有界数据库 finding 数量，不能解释为全站通过或生产验收。
 
@@ -82,9 +84,9 @@ Phase 6 门禁矩阵：
 
 1. 人工标注评测集和人工审核采纳/拒绝记录仍待真实参与者完成。
 2. 真实联网 Visibility Provider 需要已授权的 endpoint、凭据、模型配置和持续采样；当前只验证了 fixture、unavailable 和手工采集边界。
-3. Search Console、分析/CRM 询盘数据、生产 PostgreSQL 并发压力、生产备份策略和线上发布仍未验收；独立临时 PostgreSQL 迁移、双库备份恢复和本地并发/租约 smoke 已通过。
+3. Search Console、分析/CRM 询盘数据、生产 PostgreSQL 并发压力、生产备份策略和线上发布仍未验收；独立临时 PostgreSQL 迁移、tmpfs 双库备份恢复和本地并发/租约 smoke 已通过，恢复证据记录在 `output/optimization/T17/backup-restore-20261005134014b.json`（备份 82,133 bytes，SHA-256 `328041bd...e8a4`）。
 4. 当前演示站已扩展为 20 个明确标记的合成 HTML 页面，但仍不能替代真实业务站点或真实企业资料。
-5. Dockerfile 镜像构建尚未完成：本轮 Docker Hub token 网络请求超时；Compose 配置渲染和 Docker daemon 可用性已验证，未把镜像构建失败写成运行成功。
+5. Dockerfile 镜像构建尚未完成：本轮请求 Docker Hub OAuth token 的 TCP 连接超时；Compose 配置渲染和 Docker daemon 可用性已验证。完整 Compose API/Web/Worker 消费仍需应用镜像构建后执行，未把本地 PostgreSQL rehearsal 写成生产运行证据。
 
 ## 重现
 

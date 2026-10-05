@@ -28,13 +28,27 @@
       "command": "scripts/container_build_check.py; scripts/local_compose_check.py",
       "exit_code": 0,
       "result": "source/Compose gates passed; images_built=false"
+    },
+    {
+      "command": "scripts/local_postgres_restore.py --source-container opt-t17-src-20261005134014 --target-container opt-t17-target-20261005134014b",
+      "exit_code": 0,
+      "result": "isolated PostgreSQL 16 tmpfs source migrated to 0019_workflow_review_events, plain SQL backup restored into an empty tmpfs target; representative row counts matched; backup_bytes=82133; backup_sha256=328041bd160bc98d62063d5cbba9deefe70a8449e037d1fbd7fbd3060e58e8a4"
+    },
+    {
+      "command": "isolated PostgreSQL API + JobWorker synthetic fixture rehearsal",
+      "exit_code": 0,
+      "result": "host-process API enqueued one loopback fixture audit; JobWorker consumed it, job reached succeeded, one page and one snapshot persisted; worker_consumed=true",
+      "evidence_ref": "output/optimization/T17/worker-postgres-rehearsal-2026100514.json"
     }
   ],
   "artifacts": [
     "scripts/migration_head.py",
     "scripts/postgres_smoke.py",
     "scripts/postgres_concurrency_smoke.py",
-    "backend/migrations/versions/0018_model_call_budget_accounting.py"
+    "scripts/local_postgres_restore.py",
+    "backend/migrations/versions/0018_model_call_budget_accounting.py",
+    "output/optimization/T17/backup-restore-20261005134014b.json",
+    "output/optimization/T17/worker-postgres-rehearsal-2026100514.json"
   ],
-  "external_blocker": "Docker image build requires reachable registry metadata; production backup/recovery and worker consumption remain unverified."
+  "external_blocker": "Docker image build requires reachable registry metadata; full Compose API/Web/Worker consumption and production backup retention/recovery policy remain unverified."
 }

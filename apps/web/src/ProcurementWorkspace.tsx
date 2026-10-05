@@ -211,7 +211,7 @@ export function ProcurementWorkspace({
     setSitesLoading(true);
     setSitesError("");
     try {
-      const result = await listSites();
+      const result = await listSites(workspaceKey);
       const activeSiteId = siteIdRef.current;
       const activeSiteRemoved = Boolean(activeSiteId && !result.some((site) => site.id === activeSiteId));
       if (activeSiteRemoved && hasUnsavedDraftRef.current) {
@@ -232,7 +232,7 @@ export function ProcurementWorkspace({
     } finally {
       setSitesLoading(false);
     }
-  }, []);
+  }, [workspaceKey]);
 
   useEffect(() => { void refreshSites(); }, [refreshSites]);
 
@@ -271,7 +271,7 @@ export function ProcurementWorkspace({
     if (!siteId) return () => { cancelled = true; };
     setSetsLoading(true);
     setPagesLoading(true);
-    void Promise.allSettled([listPages(siteId), listProcurementQuestionSets(workspaceKey, siteId)]).then(([pageResult, setResult]) => {
+    void Promise.allSettled([listPages(siteId, workspaceKey), listProcurementQuestionSets(workspaceKey, siteId)]).then(([pageResult, setResult]) => {
       if (cancelled) return;
       if (pageResult.status === "fulfilled") {
         setPages(pageResult.value);
@@ -451,7 +451,7 @@ export function ProcurementWorkspace({
         <p>整理采购者真实会问的问题，并关联能提供依据的本站页面。</p>
       </div>
       <div className="heading-actions">
-        <button className="button button-secondary" type="button" onClick={() => { void refreshSites(); if (siteId) { void refreshSets(); void listPages(siteId).then(setPages).catch((error) => setPagesError(errorMessage(error))); } }} disabled={sitesLoading || setsLoading || pagesLoading} title="刷新站点、问题集和页面列表"><RefreshCw size={15} className={sitesLoading || setsLoading || pagesLoading ? "spin" : ""} />刷新</button>
+        <button className="button button-secondary" type="button" onClick={() => { void refreshSites(); if (siteId) { void refreshSets(); void listPages(siteId, workspaceKey).then(setPages).catch((error) => setPagesError(errorMessage(error))); } }} disabled={sitesLoading || setsLoading || pagesLoading} title="刷新站点、问题集和页面列表"><RefreshCw size={15} className={sitesLoading || setsLoading || pagesLoading ? "spin" : ""} />刷新</button>
       </div>
     </div>
 
@@ -504,7 +504,7 @@ export function ProcurementWorkspace({
             {dirty && <div className="proc-dirty-note" role="status">有未保存的修改；切换时会先确认是否丢弃。</div>}
             <div className="proc-progress-row"><div className="proc-progress-copy"><strong>{questions.length} / 20 条问题</strong><span>{mappedCount} 条已关联页面{dirty ? " · 修改未保存" : ""}</span></div><div className="proc-progress" aria-label={`已填写 ${questions.length} 条，共 20 条`}><span style={{ width: `${Math.min(100, questions.length / 20 * 100)}%` }} /></div></div>
             {version.state === "frozen" && <div className="proc-readonly-note"><ShieldCheck size={14} /><span>冻结版本只读。需要修改时，请从最新冻结版本创建下一版草稿。</span></div>}
-            {pagesError && <div className="alert alert-error compact" role="alert"><AlertCircle size={15} /><span>读取站点页面失败：{pagesError}</span><button type="button" className="button button-secondary small" onClick={() => { setPagesLoading(true); void listPages(siteId).then((result) => { setPages(result); setPagesError(""); }).catch((error) => setPagesError(errorMessage(error))).finally(() => setPagesLoading(false)); }}><RefreshCw size={13} />重试</button></div>}
+            {pagesError && <div className="alert alert-error compact" role="alert"><AlertCircle size={15} /><span>读取站点页面失败：{pagesError}</span><button type="button" className="button button-secondary small" onClick={() => { setPagesLoading(true); void listPages(siteId, workspaceKey).then((result) => { setPages(result); setPagesError(""); }).catch((error) => setPagesError(errorMessage(error))).finally(() => setPagesLoading(false)); }}><RefreshCw size={13} />重试</button></div>}
             {!pagesLoading && !pagesError && pagesWithId.length === 0 && <div className="proc-mapping-warning"><CircleHelp size={15} /><span>本站还没有可映射的页面。完成一次页面采集后刷新此列表。</span></div>}
             {questions.length === 0 ? <div className="proc-questions-empty"><strong>草稿为空</strong><span>选择一个起始方式，后续都可以逐条编辑。</span>{isEditable && <div className="proc-empty-actions"><button className="button button-secondary small" type="button" onClick={loadValveTemplate}><FileText size={14} />载入阀门问题示例（20 条）</button><button className="text-button" type="button" onClick={addQuestion}><Plus size={14} />从空白开始</button></div>}<small>示例只包含采购问题，不代表供应商参数、认证或服务承诺。</small></div> : <div className="proc-question-list">
               {questions.map((question, index) => <article className="proc-question" key={question.rowKey}>
