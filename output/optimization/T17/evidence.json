@@ -1,0 +1,17 @@
+{
+  "task_id": "T17",
+  "status": "blocked_external",
+  "source": "source-level gate only",
+  "code_commit": "3821850634eecc2f914a94cea99bc9f0e5e554a3",
+  "checks": [
+    {
+      "command": "backend/.venv/Scripts/python.exe scripts/container_build_check.py",
+      "exit_code": 0,
+      "result": "source and Compose checks passed; images_built=false"
+    }
+  ],
+  "artifacts": [
+    "scripts/container_build_check.py"
+  ],
+  "external_blocker": "Docker daemon and PostgreSQL 16 integration runtime unavailable; no image or Compose runtime claim."
+}

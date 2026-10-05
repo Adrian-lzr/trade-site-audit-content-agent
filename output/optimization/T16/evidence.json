@@ -1,0 +1,29 @@
+{
+  "task_id": "T16",
+  "status": "blocked_external",
+  "source": "runtime report with no business claim",
+  "code_commit": "3821850634eecc2f914a94cea99bc9f0e5e554a3",
+  "checks": [
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_observability.py -q",
+      "exit_code": 0,
+      "result": "8 passed"
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe scripts/correlation_report.py --output output/optimization/T16/correlation_report.json",
+      "exit_code": 0,
+      "result": "report emitted with blockers"
+    }
+  ],
+  "artifacts": [
+    "backend/observability.py",
+    "scripts/correlation_report.py",
+    "output/optimization/T16/correlation_report.json"
+  ],
+  "blockers": [
+    "no_runtime_rows",
+    "scope_unbounded",
+    "database_query_failed:model_calls table missing"
+  ],
+  "business_data_claim": false
+}

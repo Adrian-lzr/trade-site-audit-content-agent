@@ -1,0 +1,25 @@
+{
+  "task_id": "T13",
+  "status": "fixture_verified",
+  "source": "fixture/protocol only",
+  "code_commit": "3821850634eecc2f914a94cea99bc9f0e5e554a3",
+  "checks": [
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_deployment_verification.py -q",
+      "exit_code": 0,
+      "result": "5 passed"
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m compileall -q backend scripts evals",
+      "exit_code": 0,
+      "result": "passed"
+    }
+  ],
+  "artifacts": [
+    "backend/services/deployment.py",
+    "backend/app.py",
+    "backend/schemas.py",
+    "backend/tests/test_deployment_verification.py"
+  ],
+  "external_blocker": "No authorized staging callback, target observer, deployment target, or rollback environment supplied; production verification remains unavailable."
+}

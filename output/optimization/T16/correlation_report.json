@@ -1,0 +1,62 @@
+{
+  "artifacts": [],
+  "blockers": [
+    {
+      "code": "no_runtime_rows",
+      "reason": "no matching runtime rows were supplied; this report does not invent business activity",
+      "status": "blocked_external"
+    },
+    {
+      "code": "scope_unbounded",
+      "reason": "provide a workspace, request, task, change, or visibility run selector before reading runtime rows",
+      "status": "blocked_external"
+    },
+    {
+      "code": "database_query_failed",
+      "reason": "could not read model_calls (OperationalError); migrate the database before collecting runtime evidence",
+      "status": "blocked_external"
+    }
+  ],
+  "business_data_claim": false,
+  "code_commit": "3821850634eecc2f914a94cea99bc9f0e5e554a3",
+  "command": [
+    "python",
+    "scripts/correlation_report.py",
+    "--output",
+    "output/optimization/T16/correlation_report.json"
+  ],
+  "correlation": {
+    "audit_events": [],
+    "content_items": [],
+    "content_tasks": [],
+    "model_calls": [],
+    "publication_attempts": [],
+    "revisions": [],
+    "visibility_runs": [],
+    "visibility_samples": []
+  },
+  "coverage": {
+    "request_to_audit": false,
+    "request_to_visibility_sample": false,
+    "revision_to_model_call": false,
+    "revision_to_publication": false,
+    "task_to_revision": false
+  },
+  "environment": {
+    "database_engine": "sqlite",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10"
+  },
+  "generated_at": "2026-10-05T04:58:08.949214+00:00",
+  "report_sha256": "4a06da25b9162a76ec4e6cde2c877bcd3869bd0d61952e348eb40b59255fee53",
+  "schema_version": "t16.correlation.v1",
+  "scope": {
+    "change_request_id": null,
+    "request_id": null,
+    "task_id": null,
+    "visibility_run_id": null,
+    "workspace_id": null
+  },
+  "task_id": "T16",
+  "verification": "blocked_external"
+}
