@@ -9,13 +9,13 @@
 
 | 检查 | 本轮结果 | 证据 |
 | --- | --- | --- |
-| Python 后端测试 | `233 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider backend/tests -q` |
+| Python 后端测试 | `236 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider backend/tests -q` |
 | 评测工具测试 | `10 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider -q evals\\tests` |
 | Web 构建 | 通过，Vite 8.3.1 | `npm --prefix apps/web run build` |
 | 数据库迁移 | 通过，当前 `0019_workflow_review_events (head)` | `backend\\.venv\\Scripts\\python.exe -m alembic -c backend\\alembic.ini upgrade head` 和 `current` |
 | PostgreSQL API + checkpoint smoke | 通过；隔离 PostgreSQL 数据库上检查 migration head、`/health`、`/api/health`、site 注册/列表和 checkpoint 重开 | `backend\\.venv\\Scripts\\python.exe scripts\\postgres_smoke.py --database-url $env:DATABASE_URL` |
-| PostgreSQL 隔离迁移与备份恢复 | 通过；独立无卷临时库完成 `0001 -> 0014`，`pg_dump` 经单事务 `psql` 恢复到空目标库后，Alembic head、marker 行、`0014` 字段和代表性行数校验通过；未删除现有 Compose volume | `docs/container-runtime.md` 的恢复门槛；`scripts/local_postgres_restore.py` 输出 |
-| PostgreSQL 并发与租约恢复 smoke | 通过；localhost 隔离空库验证预算并发预占仅一笔成功、同一 outbox 事件仅一个 worker 领取，并验证 visibility/outbox 过期租约恢复；通过模拟租约过期，不代表进程崩溃或生产压力测试 | `scripts/postgres_concurrency_smoke.py`；`docs/local-readiness.md` |
+| PostgreSQL 隔离迁移与备份恢复 | 历史 `0001 -> 0014` 证据保留；本轮全新 PostgreSQL 16 空库已从 `0001` 升至当前 `0019_workflow_review_events`，并验证 `0018` 布尔约束按方言生成 | `scripts/migration_head.py`; `output/optimization/T17/evidence.json` |
+| PostgreSQL 并发与租约恢复 smoke | 通过；当前 head 的 localhost 隔离空库验证预算并发预占仅一笔成功、同一 outbox 事件仅一个 worker 领取，并验证 visibility/outbox 过期租约恢复；通过模拟租约过期，不代表进程崩溃或生产压力测试 | `scripts/postgres_concurrency_smoke.py`; `output/optimization/T17/evidence.json` |
 | 本地五页发布 readiness | 本地制品与回调演练通过；2026-10-01 的旧报告把本地 Git commit 误计为部署验证，2026-10-02 已修正门禁：当前演练记录 5 个 `verification_unavailable`，并在缺少目标页读取时阻止回滚。旧 JSON 不作为 O04 验收证据 | `scripts/local_readiness.py`；`docs/local-readiness.md`；`docs/optimization/STATUS.md` |
 | 运行治理 | 新增验证；单次/工作区日预算上限、原始证据字节限制与保留期、Provider request ID 透传和敏感信息脱敏均有测试；真实 PostgreSQL 同工作区并发预算预占只允许一笔成功 | `backend/tests/test_runtime_governance.py`；临时 PostgreSQL 并发 smoke |
 | HTTP 可观测性 | 新增验证；API 响应回传 `X-Request-ID`，HTTP 日志通过脱敏 helper 输出结构化事件 | `backend/observability.py`；`backend/tests/test_observability.py` |
