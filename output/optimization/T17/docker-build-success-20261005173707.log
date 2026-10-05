@@ -1,0 +1,138 @@
+ Image trade-visibility-api Building 
+ Image trade-visibility-worker Building 
+ Image trade-visibility-web Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.54kB 0.0s done
+#1 DONE 0.0s
+
+#2 [worker internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.03kB done
+#2 DONE 0.0s
+
+#3 [web internal] load build definition from Dockerfile
+#3 transferring dockerfile: 1.09kB done
+#3 DONE 0.0s
+
+#4 [worker internal] load metadata for docker.io/library/python:3.12-slim
+#4 DONE 0.0s
+
+#5 [web internal] load metadata for docker.io/library/nginx:1.27-alpine
+#5 DONE 0.0s
+
+#6 [web internal] load metadata for docker.io/library/node:22-alpine
+#6 DONE 0.0s
+
+#7 [web internal] load .dockerignore
+#7 transferring context: 323B done
+#7 DONE 0.0s
+
+#8 [api 1/7] FROM docker.io/library/python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
+#8 resolve docker.io/library/python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d 0.0s done
+#8 DONE 0.0s
+
+#9 [web stage-1 1/4] FROM docker.io/library/nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
+#9 resolve docker.io/library/nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10 0.0s done
+#9 DONE 0.0s
+
+#10 [web build 1/6] FROM docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+#10 resolve docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 0.0s done
+#10 DONE 0.0s
+
+#11 [api internal] load build context
+#11 ...
+
+#12 [web internal] load build context
+#12 transferring context: 363.56kB 0.1s done
+#12 DONE 0.1s
+
+#13 [web build 3/6] COPY apps/web/package.json apps/web/package-lock.json ./
+#13 CACHED
+
+#14 [web build 4/6] RUN npm ci --no-audit --no-fund
+#14 CACHED
+
+#15 [web stage-1 3/4] COPY --from=build /app/dist /usr/share/nginx/html
+#15 CACHED
+
+#16 [web build 5/6] COPY apps/web ./
+#16 CACHED
+
+#17 [web build 2/6] WORKDIR /app
+#17 CACHED
+
+#18 [web build 6/6] RUN npm run build
+#18 CACHED
+
+#19 [web stage-1 2/4] COPY apps/web/nginx.conf /etc/nginx/nginx.conf
+#19 CACHED
+
+#20 [web stage-1 4/4] RUN mkdir -p       /var/cache/nginx/client_temp       /var/cache/nginx/proxy_temp       /var/cache/nginx/fastcgi_temp       /var/cache/nginx/uwsgi_temp       /var/cache/nginx/scgi_temp     && rm -f /etc/nginx/conf.d/default.conf     && chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx
+#20 CACHED
+
+#11 [api internal] load build context
+#11 ...
+
+#21 [web] exporting to image
+#21 exporting layers 0.0s done
+#21 exporting manifest sha256:b4f37234c95c4ce8a59775118cbea2cd1636a1b39bf71a7ef912b42495827dc0 done
+#21 exporting config sha256:8fd05465e2c91ddf8a313fa6f0bb79b9a2b355a338d3df217176324b166664e6 done
+#21 exporting attestation manifest sha256:8910e98d02a87de037818f3d64ce22a480eee76b7c28af655d7ba7d0e7bcd00b 0.0s done
+#21 exporting manifest list sha256:f31bee8cef59adc06a5250fd872813d835d9ed83953d7b3585dd528769352e44 0.0s done
+#21 naming to docker.io/library/trade-visibility-web:latest done
+#21 unpacking to docker.io/library/trade-visibility-web:latest 0.0s done
+#21 DONE 0.1s
+
+#11 [api internal] load build context
+#11 transferring context: 5.20MB 0.4s done
+#11 transferring context: 5.20MB 0.4s done
+#11 DONE 0.4s
+
+#22 [web] resolving provenance for metadata file
+#22 DONE 0.0s
+
+#23 [worker 3/7] COPY backend/requirements.lock backend/pyproject.toml /app/backend/
+#23 CACHED
+
+#24 [worker 5/7] COPY backend /app/backend
+#24 CACHED
+
+#25 [worker 6/7] COPY demo-site /app/demo-site
+#25 CACHED
+
+#26 [worker 4/7] RUN python -m pip install --no-cache-dir -r /app/backend/requirements.lock
+#26 CACHED
+
+#27 [worker 2/7] WORKDIR /app
+#27 CACHED
+
+#28 [worker 7/7] RUN addgroup --system --gid 10001 app     && adduser --system --uid 10001 --ingroup app --home /home/app app     && mkdir -p /home/app     && chown -R app:app /app /home/app
+#28 CACHED
+
+#29 [api] exporting to image
+#29 exporting layers done
+#29 exporting manifest sha256:225b3ca05671d849c1f7962855eb369792e4bda3a8a7a754e4a8b800f87ec187 done
+#29 exporting config sha256:c0f5b56371f27b88804fe750c82eec045f10ccc8a5649b2287bed35f508ffc0d done
+#29 exporting attestation manifest sha256:d05c30c01918c3118e0580bc2a5deee730a3ed8db7a2325ccdfb6c647819b647 0.0s done
+#29 exporting manifest list sha256:13b0146dff1079b2bc8291bbe5f54ba6defcfe2535fd28b3477aeb4f462a1d8d 0.0s done
+#29 naming to docker.io/library/trade-visibility-api:latest done
+#29 unpacking to docker.io/library/trade-visibility-api:latest 0.0s done
+#29 DONE 0.1s
+
+#30 [worker] exporting to image
+#30 exporting layers done
+#30 exporting manifest sha256:8eb96b58226d0e9f88c78db41d8f0727254ccd86317de945bb2a2d3859f5daf4 done
+#30 exporting config sha256:a7fb41c2ace7d1a6cc578d52a368dfe58aa62bc3fc7afe5b312a7d9025701760 done
+#30 exporting attestation manifest sha256:3d1b925063ac8476c7febfb5f70c42e691ff7c7ecff457d0d62469ec520bc21c 0.0s done
+#30 exporting manifest list sha256:7defe20163a0b5a147a8aebe29479b91e93b9fc327bc21fccf45b27ac44cd058 0.0s done
+#30 naming to docker.io/library/trade-visibility-worker:latest done
+#30 unpacking to docker.io/library/trade-visibility-worker:latest 0.0s done
+#30 DONE 0.1s
+
+#31 [api] resolving provenance for metadata file
+#31 DONE 0.0s
+
+#32 [worker] resolving provenance for metadata file
+#32 DONE 0.0s
+ Image trade-visibility-web Built 
+ Image trade-visibility-api Built 
+ Image trade-visibility-worker Built 

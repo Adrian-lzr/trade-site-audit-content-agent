@@ -1,8 +1,8 @@
 {
   "task_id": "T17",
-  "status": "blocked_external",
-  "source": "runtime plus source gate",
-  "code_commit": "84692d383d3601f243fdf0317b216377676d7180",
+  "status": "fixture_verified",
+  "source": "isolated PostgreSQL plus local image and Compose fixture runtime",
+  "code_commit": "68277524544ab6adb8968bec87138a4c3db3afce",
   "checks": [
     {
       "command": "docker compose -p optvalidation postgres:16-alpine; alembic upgrade head",
@@ -70,6 +70,22 @@
       "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests -q (post-audit changes)",
       "exit_code": 0,
       "result": "248 passed"
+    },
+    {
+      "command": "docker pull mirror.gcr.io/library/python:3.12-slim; docker pull mirror.gcr.io/library/node:22-alpine; docker pull mirror.gcr.io/library/nginx:1.27-alpine; docker tag ...; docker compose --progress plain build api worker web",
+      "exit_code": 0,
+      "result": "API, Worker, and Web images built locally from pinned mirror-resolved base image digests; Dockerfiles and lockfiles unchanged",
+      "evidence_ref": "output/optimization/T17/docker-build-success-20261005173707.json",
+      "log_ref": "output/optimization/T17/docker-build-success-20261005173707.log",
+      "evidence_kind": "fixture_runtime"
+    },
+    {
+      "command": "docker compose -p t17runtime --profile demo up -d api worker web fixture",
+      "exit_code": 0,
+      "result": "isolated fresh PostgreSQL volume, API, Worker, Web, and Fixture all healthy; API/Web HTTP checks passed; synthetic audit job reached succeeded with 3/3 pages and 3 snapshots",
+      "evidence_ref": "output/optimization/T17/compose-runtime-consumption-202610051751.json",
+      "runtime_ps_ref": "output/optimization/T17/compose-ps-202610051751.json",
+      "evidence_kind": "fixture_runtime"
     }
   ],
   "artifacts": [
@@ -79,7 +95,11 @@
     "scripts/local_postgres_restore.py",
     "backend/migrations/versions/0018_model_call_budget_accounting.py",
     "output/optimization/T17/backup-restore-20261005134014b.json",
-    "output/optimization/T17/worker-postgres-rehearsal-2026100514.json"
+    "output/optimization/T17/worker-postgres-rehearsal-2026100514.json",
+    "output/optimization/T17/docker-build-success-20261005173707.json",
+    "output/optimization/T17/docker-build-success-20261005173707.log",
+    "output/optimization/T17/compose-runtime-consumption-202610051751.json",
+    "output/optimization/T17/compose-ps-202610051751.json"
   ],
-  "external_blocker": "Docker Hub OAuth token access remains unavailable; the 2026-10-05 16:11 retry failed while resolving python:3.12-slim, node:22-alpine, and nginx:1.27-alpine. Full Compose API/Web/Worker consumption and production backup retention/recovery policy remain unverified."
+  "external_blocker": "Production backup retention/recovery policy, production identity, and approved immutable production image provenance remain external. The local fixture runtime and mirror-based image build are not production evidence."
 }

@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-10-05T09:37:10.3005283Z",
+  "command": "docker compose --progress plain build api worker web",
+  "exit_code": 0,
+  "log": "output/optimization/T17/docker-build-success-20261005173707.log",
+  "evidence_kind": "real_local_runtime",
+  "base_images_source": "mirror.gcr.io/library/{python:3.12-slim,node:22-alpine,nginx:1.27-alpine}",
+  "images": [
+    {
+      "repo_tags": [
+        "trade-visibility-api:latest"
+      ],
+      "id": "sha256:13b0146dff1079b2bc8291bbe5f54ba6defcfe2535fd28b3477aeb4f462a1d8d",
+      "repo_digests": [
+        "trade-visibility-api@sha256:13b0146dff1079b2bc8291bbe5f54ba6defcfe2535fd28b3477aeb4f462a1d8d"
+      ],
+      "created": "2026-10-05T09:36:13.76159182Z"
+    },
+    {
+      "repo_tags": [
+        "trade-visibility-worker:latest"
+      ],
+      "id": "sha256:7defe20163a0b5a147a8aebe29479b91e93b9fc327bc21fccf45b27ac44cd058",
+      "repo_digests": [
+        "trade-visibility-worker@sha256:7defe20163a0b5a147a8aebe29479b91e93b9fc327bc21fccf45b27ac44cd058"
+      ],
+      "created": "2026-10-05T09:36:13.76159182Z"
+    },
+    {
+      "repo_tags": [
+        "trade-visibility-web:latest"
+      ],
+      "id": "sha256:f31bee8cef59adc06a5250fd872813d835d9ed83953d7b3585dd528769352e44",
+      "repo_digests": [
+        "trade-visibility-web@sha256:f31bee8cef59adc06a5250fd872813d835d9ed83953d7b3585dd528769352e44"
+      ],
+      "created": "2026-10-05T09:34:39.24453939Z"
+    }
+  ],
+  "side_effects": "local image build only"
+}

@@ -21,10 +21,10 @@
 | 运行治理 | 新增验证；单次/工作区日预算上限、原始证据字节限制与保留期、Provider request ID 透传和敏感信息脱敏均有测试；真实 PostgreSQL 同工作区并发预算预占只允许一笔成功 | `backend/tests/test_runtime_governance.py`；临时 PostgreSQL 并发 smoke |
 | HTTP 可观测性 | 新增验证；API 响应回传 `X-Request-ID`，HTTP 日志通过脱敏 helper 输出结构化事件 | `backend/observability.py`；`backend/tests/test_observability.py` |
 | API/Worker 事件审计 | 通过本地回归；事实、问题集、修订及 audit/content/visibility/publication/review Worker 的创建、领取、完成事件记录 initiator/executor、task/thread、租约哈希、attempt、revision、result/error type；租约原文、Provider 响应和错误正文不落库，API 审计 payload 也在持久化前脱敏 | `backend/worker_audit.py`；`backend/tests/test_worker_audit.py`；`output/optimization/T16/evidence.json` |
-| 容器镜像构建 | 未验证；静态 Dockerfile/Compose 门禁和配置渲染通过；2026-10-05 16:11 的 `docker compose --progress plain build api worker web` 在请求 `https://auth.docker.io/token` 解析 `python:3.12-slim`、`node:22-alpine`、`nginx:1.27-alpine` 时因 TCP 连接失败退出码 1 | `scripts/container_build_check.py`；`output/optimization/T17/docker-build-retry-20261005151019.json`；`output/optimization/T17/docker-build-retry-20261005151019.log`；`output/optimization/T17/docker-build-retry-20261005161123.json`；`output/optimization/T17/docker-build-retry-20261005161123.log`；`docs/container-runtime.md` |
+| 容器镜像构建 | 通过 fixture runtime；从 `mirror.gcr.io` 拉取并本地重标记同版本基础镜像后，API/Worker/Web 镜像构建成功并记录 digest；不等同批准的生产镜像来源 | `scripts/container_build_check.py`；`output/optimization/T17/docker-build-success-20261005173707.json`；`output/optimization/T17/docker-build-success-20261005173707.log`；`docs/container-runtime.md` |
 | 生产验收闸门 | 当前为 `blocked`；闸门本身只读，不调用 Provider、站点、CRM、Docker、Git remote 或部署系统；缺少真实证据时逐项列出阻塞原因 | `scripts/production_readiness.py`；`docs/production-acceptance.md` |
 | 本地 readiness 回归与 Compose 边界 | `4 passed`；Compose 默认/demo profile 静态检查通过，验证 loopback 端口、fixture 隔离、Worker 等待健康 API 和迁移 head | `backend/tests/test_local_readiness.py`；`scripts/local_compose_check.py` |
-| Compose 配置 | 默认与 `demo` profile 均通过 | PowerShell 设置 `$env:POSTGRES_PASSWORD` 后运行 `docker compose [--profile demo] config --quiet` |
+| Compose 配置与消费 | 默认/demo profile 静态配置通过；隔离新卷的 API、Worker、Web、Fixture 全部 healthy，合成审计 3/3 页面实际由 Worker 消费并完成 | `scripts/local_compose_check.py`; `output/optimization/T17/compose-runtime-consumption-202610051751.json`; `output/optimization/T17/compose-ps-202610051751.json` |
 | 工作区差异检查 | 通过；仅有 Git 的 LF/CRLF 提示 | `git diff --check` |
 | 工作区路由授权边界 | 通过；工作区范围业务读写路由使用 Membership 角色和跨工作区检查；`LOCAL_AUTH_MODE=required/strict` 缺少身份时返回 `401`，角色不足返回 `403`。健康检查、知识库和创建工作区等公开/引导接口保持公开 | `backend/authz.py`；`backend/tests/test_authz.py` |
 
@@ -88,7 +88,7 @@ Phase 6 门禁矩阵：
 2. 真实联网 Visibility Provider 需要已授权的 endpoint、凭据、模型配置和持续采样；当前只验证了 fixture、unavailable 和手工采集边界。
 3. Search Console、分析/CRM 询盘数据、生产 PostgreSQL 并发压力、生产备份策略和线上发布仍未验收；独立临时 PostgreSQL 迁移、tmpfs 双库备份恢复和本地并发/租约 smoke 已通过，恢复证据记录在 `output/optimization/T17/backup-restore-20261005134014b.json`（备份 82,133 bytes，SHA-256 `328041bd...e8a4`）。
 4. 当前演示站已扩展为 20 个明确标记的合成 HTML 页面，但仍不能替代真实业务站点或真实企业资料。
-5. Dockerfile 镜像构建尚未完成：2026-10-05 16:11 的重试请求 Docker Hub OAuth token 时 TCP 连接被远端关闭；Compose 配置渲染和 Docker daemon 可用性已验证。完整 Compose API/Web/Worker 消费仍需应用镜像构建后执行，未把本地 PostgreSQL rehearsal 写成生产运行证据。
+5. 应用镜像已在本地使用 `mirror.gcr.io` 基础镜像成功构建，隔离 Compose API/Web/Worker/Fixture 消费也已通过；批准的生产镜像来源、生产身份、生产备份保留与恢复策略仍未验收。此前 Docker Hub OAuth 失败记录仍保留在 T17 重试证据中。
 
 ## 重现
 

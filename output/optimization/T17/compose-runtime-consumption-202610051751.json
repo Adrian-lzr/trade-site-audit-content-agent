@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-10-05T09:56:47.7737557Z",
+  "project": "t17runtime",
+  "evidence_kind": "fixture_runtime",
+  "external_side_effects": {
+    "crm_calls": false,
+    "provider_calls": false,
+    "sites_written": false,
+    "remote_release": false
+  },
+  "health": {
+    "status": "ok",
+    "mode": "http",
+    "fixture": false,
+    "fixture_available": true,
+    "version": "0.1.0"
+  },
+  "api_health": {
+    "status": "ok",
+    "mode": "http",
+    "fixture": false,
+    "fixture_available": true,
+    "version": "0.1.0"
+  },
+  "web_http_status": 200,
+  "web_health_status": 200,
+  "audit_job": {
+    "id": "1",
+    "site_id": "2",
+    "status": "succeeded",
+    "error": null,
+    "created_at": "2026-10-05T09:48:33.696331Z",
+    "started_at": "2026-10-05T09:48:34.534166Z",
+    "finished_at": "2026-10-05T09:48:34.678257Z",
+    "progress": 100,
+    "pages_total": 3,
+    "pages_completed": 3,
+    "findings_count": 1,
+    "completed_at": "2026-10-05T09:48:34.678257Z"
+  },
+  "snapshot_count": 3,
+  "snapshots": [
+    {
+      "id": 3,
+      "url": "http://127.0.0.1:58765/applications/selection.html",
+      "status_code": 200,
+      "is_synthetic": true,
+      "content_hash": "70c05547ab4683417e946970209ae322afe32be307f4ffde2602177e42634c83",
+      "finding_count": 0
+    },
+    {
+      "id": 2,
+      "url": "http://127.0.0.1:58765/products/valve-series.html",
+      "status_code": 200,
+      "is_synthetic": true,
+      "content_hash": "70fd208d3d4d0320d0de940ff08b946a73f2bd02f91fdbd910c733dddf6e999a",
+      "finding_count": 0
+    },
+    {
+      "id": 1,
+      "url": "http://127.0.0.1:58765/",
+      "status_code": 200,
+      "is_synthetic": true,
+      "content_hash": "fbba0282f7cb1a45345d3a096ff00fbb0310e419abf6974d0c992dd5f0f4842f",
+      "finding_count": 1
+    }
+  ],
+  "runtime_ports": {
+    "api": 58000,
+    "fixture": 58765,
+    "web": 55173,
+    "postgres": 55434
+  },
+  "identity_mode": "demo/local",
+  "production_claim_allowed": false
+}
