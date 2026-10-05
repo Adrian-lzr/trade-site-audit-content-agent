@@ -1,0 +1,358 @@
+{
+  "generated_at": "2026-10-05T06:22:10.275030+00:00",
+  "limitations": [
+    "Only public GET requests were made; no CMS, form, publication, PR, deployment, or write endpoint was called.",
+    "Full HTML source is intentionally not retained; content_sha256 and parser evidence permit repeat comparison.",
+    "Observed page text is unverified public source material and must not be used as confirmed enterprise facts."
+  ],
+  "mode": "live_https_readonly_source_sample",
+  "parser_version": "2.0.0",
+  "purpose": "parser regression input metadata from public GET responses; not business-fact approval or production authorization",
+  "sample_count": 10,
+  "samples": [
+    {
+      "content_bytes": 80235,
+      "content_sha256": "9ac5427ef0fb89e684f9cd4043d9b13184e1f8174f02bd388e0b1327b770ad67",
+      "content_type": "text/html; charset=UTF-8",
+      "final_url": "https://zoogo.club/",
+      "method": "GET",
+      "origin": "https://zoogo.club",
+      "parser": {
+        "body_hash": "20841fdbbbaeddc1514b5dba7147e1c6e0c9fb84be2bcc00241871ee211e45c7",
+        "canonical": [
+          "https://zoogo.club/"
+        ],
+        "canonical_errors": [
+          null
+        ],
+        "faq_marker_count": 0,
+        "h1": [
+          "Compact Fitness Equipment Manufacturer",
+          "In-House Assembly & Testing",
+          "Mini Elliptical Trainers & Steppers"
+        ],
+        "metadata_hash": "ba9428b69d8d35ba3161399bd2cba0dc17388f99ef9dde5c3c72fe0dc5720737",
+        "normalized_canonicals": [
+          "https://zoogo.club/"
+        ],
+        "requires_render": false,
+        "table_count": 0,
+        "title": "Compact Fitness Equipment Manufacturer | ZOOGO China",
+        "title_values": [
+          "Compact Fitness Equipment Manufacturer | ZOOGO China"
+        ],
+        "visible_text_length": 7799
+      },
+      "parser_version": "2.0.0",
+      "requested_url": "https://zoogo.club/",
+      "source_content_retained": false,
+      "status_code": 200
+    },
+    {
+      "content_bytes": 90786,
+      "content_sha256": "de49a10554d51742799955c2fef3aabc03e6d48a8e28a11b8a43320516375bbe",
+      "content_type": "text/html; charset=UTF-8",
+      "final_url": "https://zoogo.club/products/",
+      "method": "GET",
+      "origin": "https://zoogo.club",
+      "parser": {
+        "body_hash": "cf881fb9a8b9cb7c29a2443b2d18a49cb95a0f1d097b8729c9f2d25f6a597a5b",
+        "canonical": [
+          "https://zoogo.club/products/"
+        ],
+        "canonical_errors": [
+          null
+        ],
+        "faq_marker_count": 0,
+        "h1": [
+          "Wholesale Fitness Products for Importers & Distributors"
+        ],
+        "metadata_hash": "e3dd9f1e6eb6b525b1d55c25cd1680cbf67f9ea741b9fcefbc487499134a3bf9",
+        "normalized_canonicals": [
+          "https://zoogo.club/products/"
+        ],
+        "requires_render": false,
+        "table_count": 0,
+        "title": "Wholesale Fitness Equipment Manufacturer | ZOOGO",
+        "title_values": [
+          "Wholesale Fitness Equipment Manufacturer | ZOOGO"
+        ],
+        "visible_text_length": 9552
+      },
+      "parser_version": "2.0.0",
+      "requested_url": "https://zoogo.club/products/",
+      "source_content_retained": false,
+      "status_code": 200
+    },
+    {
+      "content_bytes": 78634,
+      "content_sha256": "85e1360be2e3528217252c8149ccfed81ff41250e9629ca16278871ee3bef593",
+      "content_type": "text/html; charset=UTF-8",
+      "final_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+      "method": "GET",
+      "origin": "https://zoogo.club",
+      "parser": {
+        "body_hash": "0451e50f107d9e23c12f5dbf2238d8e895ea55f31778ae14c11b8997d7b7c683",
+        "canonical": [],
+        "canonical_errors": [],
+        "faq_marker_count": 0,
+        "h1": [
+          "Mini Elliptical Trainers"
+        ],
+        "metadata_hash": "84aff10a911132985d4009bf73faa2e7dbb9010eaa1e89243293468df47e25ce",
+        "normalized_canonicals": [],
+        "requires_render": false,
+        "table_count": 0,
+        "title": "Wholesale Under-Desk Mini Elliptical Trainers | ZOOGO Factory",
+        "title_values": [
+          "Wholesale Under-Desk Mini Elliptical Trainers | ZOOGO Factory"
+        ],
+        "visible_text_length": 9350
+      },
+      "parser_version": "2.0.0",
+      "requested_url": "https://zoogo.club/product-categories/mini-elliptical-trainers/",
+      "source_content_retained": false,
+      "status_code": 200
+    },
+    {
+      "content_bytes": 77929,
+      "content_sha256": "3138f497d003e33adc971402d29247f9a057fa5b34fabd12bc476861d9ce5663",
+      "content_type": "text/html; charset=UTF-8",
+      "final_url": "https://zoogo.club/product-categories/mechanical-steppers/",
+      "method": "GET",
+      "origin": "https://zoogo.club",
+      "parser": {
+        "body_hash": "ff59e3c38fff7e6d833a94b359ac15736655d1cfe0e326178db031faf445bdbb",
+        "canonical": [],
+        "canonical_errors": [],
+        "faq_marker_count": 0,
+        "h1": [
+          "Mechanical Steppers"
+        ],
+        "metadata_hash": "6303073967d613dd74b628225129d5c412d50196cf66fe594d9cd387fa2d526c",
+        "normalized_canonicals": [],
+        "requires_render": false,
+        "table_count": 0,
+        "title": "Hydraulic Stepper Wholesale & OEM Supplier | ZOOGO",
+        "title_values": [
+          "Hydraulic Stepper Wholesale & OEM Supplier | ZOOGO"
+        ],
+        "visible_text_length": 9351
+      },
+      "parser_version": "2.0.0",
+      "requested_url": "https://zoogo.club/product-categories/mechanical-steppers/",
+      "source_content_retained": false,
+      "status_code": 200
+    },
+    {
+      "content_bytes": 69377,
+      "content_sha256": "f32060d4e3c9efaa36a6865a4dcc9f4438d64bedb74187afe46e8f140d9aa624",
+      "content_type": "text/html; charset=UTF-8",
+      "final_url": "https://zoogo.club/product-categories/vibration-plates/",
+      "method": "GET",
+      "origin": "https://zoogo.club",
+      "parser": {
+        "body_hash": "bd86ad04090a15b16ff5160033655ab42c2554acbfc58c9527b089359233a4cc",
+        "canonical": [],
+        "canonical_errors": [],
+        "faq_marker_count": 0,
+        "h1": [
+          "Vibration Plates"
+        ],
+        "metadata_hash": "d3c7808b14e14e9bf8f52b2361bd8293ff01a4789318d278f71f140c4dcc3304",
+        "normalized_canonicals": [],
+        "requires_render": false,
+        "table_count": 0,
+        "title": "Vibration Plate Wholesale Manufacturer & OEM Supplier | ZOOGO",
+        "title_values": [
+          "Vibration Plate Wholesale Manufacturer & OEM Supplier | ZOOGO"
+        ],
+        "visible_text_length": 8540
+      },
+      "parser_version": "2.0.0",
+      "requested_url": "https://zoogo.club/product-categories/vibration-plates/",
+      "source_content_retained": false,
+      "status_code": 200
+    },
+    {
+      "content_bytes": 73798,
+      "content_sha256": "10279578a032fc93166cad660470e1366f39c1da8a2a619417dfa257ed7f0603",
+      "content_type": "text/html; charset=UTF-8",
+      "final_url": "https://zoogosports.com/",
+      "method": "GET",
+      "origin": "https://zoogosports.com",
+      "parser": {
+        "body_hash": "4886ec706a4e96e2e7ec307fabcd37a0fbf8ec65ee93aa302809470ef6cb115c",
+        "canonical": [
+          "https://zoogosports.com/"
+        ],
+        "canonical_errors": [
+          null
+        ],
+        "faq_marker_count": 1,
+        "h1": [
+          "Knee, Hand & Lumbar Massage Devices from the Manufacturer"
+        ],
+        "metadata_hash": "fa3f103eb97b81667810f0cdf812b0205e3c838798f133053aaa9b1970ee4478",
+        "normalized_canonicals": [
+          "https://zoogosports.com/"
+        ],
+        "requires_render": false,
+        "table_count": 0,
+        "title": "Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO",
+        "title_values": [
+          "Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO"
+        ],
+        "visible_text_length": 10049
+      },
+      "parser_version": "2.0.0",
+      "requested_url": "https://zoogosports.com/",
+      "source_content_retained": false,
+      "status_code": 200
+    },
+    {
+      "content_bytes": 58185,
+      "content_sha256": "1045b255116ac604cc0da15110106c07e72c8e16f7d6855c4b7c71cb57d09e47",
+      "content_type": "text/html; charset=UTF-8",
+      "final_url": "https://zoogosports.com/products/",
+      "method": "GET",
+      "origin": "https://zoogosports.com",
+      "parser": {
+        "body_hash": "30b43f6bf883af2a25d5dbb84967f01dda460df603021a114b159d581a237fbd",
+        "canonical": [
+          "https://zoogosports.com/products/"
+        ],
+        "canonical_errors": [
+          null
+        ],
+        "faq_marker_count": 0,
+        "h1": [
+          "Wholesale Massage Equipment Catalog"
+        ],
+        "metadata_hash": "93d2bf0ee2a98e4e9c11ad4f53f0278ce6686ac062e4cbcde0dac1a21045db17",
+        "normalized_canonicals": [
+          "https://zoogosports.com/products/"
+        ],
+        "requires_render": false,
+        "table_count": 0,
+        "title": "Wholesale Massage Equipment Catalog | ZOOGO",
+        "title_values": [
+          "Wholesale Massage Equipment Catalog | ZOOGO"
+        ],
+        "visible_text_length": 6292
+      },
+      "parser_version": "2.0.0",
+      "requested_url": "https://zoogosports.com/products/",
+      "source_content_retained": false,
+      "status_code": 200
+    },
+    {
+      "content_bytes": 54256,
+      "content_sha256": "c4dbbe656531aa33676e4631672aedc9afba86a7df727872fda29eea53582a6e",
+      "content_type": "text/html; charset=UTF-8",
+      "final_url": "https://zoogosports.com/product-categories/knee-massagers/",
+      "method": "GET",
+      "origin": "https://zoogosports.com",
+      "parser": {
+        "body_hash": "d5e83dc6ec604b9faa6b2784fc80a26be18388e2336764f38925de4f75696cad",
+        "canonical": [
+          "https://zoogosports.com/product-categories/knee-massagers/"
+        ],
+        "canonical_errors": [
+          null
+        ],
+        "faq_marker_count": 0,
+        "h1": [
+          "Knee Massagers"
+        ],
+        "metadata_hash": "9fb9985975519aef17987eb3e935d81d1f327cda6fdddd2a2a421e510d98b59b",
+        "normalized_canonicals": [
+          "https://zoogosports.com/product-categories/knee-massagers/"
+        ],
+        "requires_render": false,
+        "table_count": 0,
+        "title": "Knee Massagers Wholesale & OEM | ZOOGO",
+        "title_values": [
+          "Knee Massagers Wholesale & OEM | ZOOGO"
+        ],
+        "visible_text_length": 5564
+      },
+      "parser_version": "2.0.0",
+      "requested_url": "https://zoogosports.com/product-categories/knee-massagers/",
+      "source_content_retained": false,
+      "status_code": 200
+    },
+    {
+      "content_bytes": 56222,
+      "content_sha256": "0ebc63f381e999512b0aa3130b63d198f7789b5029a4ec0a18c231c0049fe86b",
+      "content_type": "text/html; charset=UTF-8",
+      "final_url": "https://zoogosports.com/product-categories/hand-massagers/",
+      "method": "GET",
+      "origin": "https://zoogosports.com",
+      "parser": {
+        "body_hash": "7e7a4fc904d314683aced57a781a4c9fb961b0fa862f2708933f4ad06f4f2b8e",
+        "canonical": [
+          "https://zoogosports.com/product-categories/hand-massagers/"
+        ],
+        "canonical_errors": [
+          null
+        ],
+        "faq_marker_count": 0,
+        "h1": [
+          "Hand Massagers"
+        ],
+        "metadata_hash": "f7e42ea564004eec784ae8a205811a556bb1fa4b018ffe4cadbec9df9ff58189",
+        "normalized_canonicals": [
+          "https://zoogosports.com/product-categories/hand-massagers/"
+        ],
+        "requires_render": false,
+        "table_count": 0,
+        "title": "Hand Massagers Wholesale & OEM | ZOOGO",
+        "title_values": [
+          "Hand Massagers Wholesale & OEM | ZOOGO"
+        ],
+        "visible_text_length": 5819
+      },
+      "parser_version": "2.0.0",
+      "requested_url": "https://zoogosports.com/product-categories/hand-massagers/",
+      "source_content_retained": false,
+      "status_code": 200
+    },
+    {
+      "content_bytes": 54287,
+      "content_sha256": "15cfd2916816a207b83abb1bee970b22ee61750703652d34c1d6b993bc893b0d",
+      "content_type": "text/html; charset=UTF-8",
+      "final_url": "https://zoogosports.com/product-categories/lumbar-massagers/",
+      "method": "GET",
+      "origin": "https://zoogosports.com",
+      "parser": {
+        "body_hash": "791b79695c0f5a4396fc8ba2079dd45be02b4554df24965d90d61873921218ae",
+        "canonical": [
+          "https://zoogosports.com/product-categories/lumbar-massagers/"
+        ],
+        "canonical_errors": [
+          null
+        ],
+        "faq_marker_count": 0,
+        "h1": [
+          "Lumbar Massagers"
+        ],
+        "metadata_hash": "32f18b01677c3de95409b37e086733179cd5d2539e5745bdf17cf8d0c4fb31e7",
+        "normalized_canonicals": [
+          "https://zoogosports.com/product-categories/lumbar-massagers/"
+        ],
+        "requires_render": false,
+        "table_count": 0,
+        "title": "Lumbar Massagers Wholesale & OEM | ZOOGO",
+        "title_values": [
+          "Lumbar Massagers Wholesale & OEM | ZOOGO"
+        ],
+        "visible_text_length": 5578
+      },
+      "parser_version": "2.0.0",
+      "requested_url": "https://zoogosports.com/product-categories/lumbar-massagers/",
+      "source_content_retained": false,
+      "status_code": 200
+    }
+  ]
+}

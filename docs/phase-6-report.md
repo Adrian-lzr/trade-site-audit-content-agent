@@ -65,6 +65,7 @@ Phase 6 门禁矩阵：
 - `https://zoogo.club`：10 页、120 条规则结果，`pass=96`、`needs_review=8`、`unknown=10`、`not_applicable=6`；首页、robots、`wp-sitemap.xml` 均返回 `200`，job `succeeded`，硬 findings 为 0。
 - `https://zoogosports.com`：10 页、120 条规则结果，`pass=98`、`needs_review=4`、`unknown=10`、`not_applicable=8`；首页、robots、`sitemap_index.xml` 均返回 `200`，job `succeeded`，硬 findings 为 0。
 - 扩展复核文件：`zoogo.club` 和 `zoogosports.com` 各 15 页、各 180 条规则结果；两站 job 均 `succeeded`、硬 findings 均为 0。扩展运行的状态计数分别为 `zoogo.club pass=148 / needs_review=10 / unknown=12 / not_applicable=10`，`zoogosports.com pass=134 / needs_review=19 / unknown=15 / not_applicable=12`。
+- 解析器来源样本：对两站各 5 个公开页面执行 GET，共 10 个样本，均 HTTP 200；只保留 requested/final URL、状态、内容 SHA-256、解析器版本和元数据 hash，未保留原 HTML。该样本用于 T02/T10 的解析回归输入，页面文字仍是未确认公开资料，不能直接进入企业事实库。
 - 这是 `live_https_readonly` 的 bounded HTML/robots/sitemap sample。所有请求均为只读 GET；报告明确记录没有调用 CMS、表单、发布、PR 或部署端点，也不测量排名、消费者 AI 引用、流量、询盘或收入。
 - `needs_review` 与 `unknown` 仍需人工或更深层采样复核；`0 findings` 只代表本次有界数据库 finding 数量，不能解释为全站通过或生产验收。
 
