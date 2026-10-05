@@ -281,8 +281,26 @@ def list_knowledge_entries(
 
 
 @app.post("/api/workspaces", response_model=WorkspaceOut, status_code=status.HTTP_201_CREATED)
-def create_workspace(payload: WorkspaceCreate, db: Session = Depends(get_db)):
+def create_workspace(payload: WorkspaceCreate, request: Request, db: Session = Depends(get_db)):
+    """Create a workspace and bind its creator as the initial administrator.
+
+    The anonymous path is kept for the explicitly demo-only mode used by the
+    local fixtures.  Production always resolves a verified OIDC subject in
+    ``identity_from_request`` and therefore cannot silently provision a
+    workspace for an anonymous caller.  A local identity is never accepted as
+    production authentication because the identity helper rejects it first.
+    """
+
+    identity = identity_from_request(request)
+    auth_mode = os.getenv("AUTH_MODE", "demo").strip().casefold()
+    if auth_mode == "production" and identity.user_id is None:
+        # Defensive guard: production identity_from_request currently raises
+        # before this point, but keep the route fail-closed if that contract
+        # changes.
+        raise HTTPException(401, "verified identity is required to create a workspace")
     workspace = Workspace(name=payload.name)
+    if identity.user_id is not None:
+        workspace.memberships = [Membership(user_id=identity.user_id, role="admin")]
     db.add(workspace)
     db.commit()
     db.refresh(workspace)
@@ -2315,7 +2333,14 @@ def add_change_revision(change_id: int, payload: ChangeRevisionCreate, workspace
     return _change_out(change)
 
 
-def _submit_change(db: Session, change: ChangeRequest, expected_version: int | None, if_match: str | None) -> ChangeRequest:
+def _submit_change(
+    db: Session,
+    change: ChangeRequest,
+    expected_version: int | None,
+    if_match: str | None,
+    *,
+    actor: str,
+) -> ChangeRequest:
     _require_expected_change_version(expected_version, if_match)
     _assert_expected_change_version(change, expected_version, if_match)
     if change.current_revision_id is None:
@@ -2323,7 +2348,7 @@ def _submit_change(db: Session, change: ChangeRequest, expected_version: int | N
     if change.state == ChangeState.pending_approval.value:
         revision = db.get(ChangeRevision, change.current_revision_id)
         _enqueue_outbox(db, event_type="change.pending_approval", aggregate_id=change.id, idempotency_key=f"change:{change.id}:revision:{revision.revision}:pending_approval", payload={"change_request_id": change.id, "revision_id": revision.id, "revision_hash": revision.content_hash})
-        _record_audit(db, workspace_id=change.workspace_id, actor="system", action="change.pending_approval", target_type="change_request", target_id=change.id, after={"revision_id": revision.id, "revision_hash": revision.content_hash})
+        _record_audit(db, workspace_id=change.workspace_id, actor=actor, action="change.pending_approval", target_type="change_request", target_id=change.id, after={"revision_id": revision.id, "revision_hash": revision.content_hash})
         db.commit()
         db.refresh(change)
         return change
@@ -2333,7 +2358,7 @@ def _submit_change(db: Session, change: ChangeRequest, expected_version: int | N
     revision = db.get(ChangeRevision, change.current_revision_id)
     revision.state = ChangeState.pending_approval.value
     _enqueue_outbox(db, event_type="change.pending_approval", aggregate_id=change.id, idempotency_key=f"change:{change.id}:revision:{revision.revision}:pending_approval", payload={"change_request_id": change.id, "revision_id": revision.id, "revision_hash": revision.content_hash})
-    _record_audit(db, workspace_id=change.workspace_id, actor="system", action="change.pending_approval", target_type="change_request", target_id=change.id, after={"revision_id": revision.id, "revision_hash": revision.content_hash})
+    _record_audit(db, workspace_id=change.workspace_id, actor=actor, action="change.pending_approval", target_type="change_request", target_id=change.id, after={"revision_id": revision.id, "revision_hash": revision.content_hash})
     db.commit()
     db.refresh(change)
     return change
@@ -2343,9 +2368,17 @@ def _submit_change(db: Session, change: ChangeRequest, expected_version: int | N
 @app.post("/api/changes/{change_id}/submit", response_model=ChangeRequestOut, include_in_schema=False)
 def submit_change(change_id: int, request: Request, payload: ChangeAction | None = None, expected_version: int | None = None, workspace_id: str = Query(...), if_match: str | None = Header(default=None, alias="If-Match"), db: Session = Depends(get_db)):
     workspace = _change_workspace(db, workspace_id)
-    authorize_workspace(request, db, workspace, Permission.operate)
+    identity = authorize_workspace(request, db, workspace, Permission.operate)
     requested_version = payload.expected_version if payload and payload.expected_version is not None else expected_version
-    return _change_out(_submit_change(db, _change_or_404(db, change_id, workspace_id), requested_version, if_match))
+    return _change_out(
+        _submit_change(
+            db,
+            _change_or_404(db, change_id, workspace_id),
+            requested_version,
+            if_match,
+            actor=effective_actor(identity),
+        )
+    )
 
 
 def _decide_change(db: Session, change: ChangeRequest, payload: ChangeApprovalCreate, if_match: str | None) -> ChangeRequest:

@@ -11,7 +11,7 @@ Updated: 2026-10-05 (Asia/Shanghai)
 | Python | available | Python 3.12.10; locked backend environment exists |
 | Node.js | available | Node 22.16.0; npm 10.9.2 |
 | PostgreSQL 16 integration target | not_configured | No isolated integration DSN supplied; existing tests use a temporary SQLite database |
-| Docker daemon | not_verified | Docker CLI is installed; daemon availability must be recorded by an actual runtime check |
+| Docker daemon | verified_local | Docker Desktop 29.8.1 / BuildKit responded on 2026-10-05; application image build remains blocked by Docker Hub token connectivity |
 | OIDC issuer/audience/JWKS | not_configured | Real identity configuration has not been supplied |
 | Production or staging site write scope | not_configured | Previous site work was read-only; no writable staging target or page mapping is supplied |
 | Real visibility Provider | not_configured | No authorized endpoint/model configuration or budget supplied |

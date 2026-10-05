@@ -39,6 +39,11 @@
       "exit_code": 0,
       "result": "host-process API enqueued one loopback fixture audit; JobWorker consumed it, job reached succeeded, one page and one snapshot persisted; worker_consumed=true",
       "evidence_ref": "output/optimization/T17/worker-postgres-rehearsal-2026100514.json"
+    },
+    {
+      "command": "docker info / docker compose config / docker compose build --progress plain api worker web (2026-10-05 14:34 Asia/Shanghai)",
+      "exit_code": 1,
+      "result": "Docker Desktop 29.8.1 daemon and Compose source interpolation passed with POSTGRES_PASSWORD=local-test-password; application image metadata failed before build because auth.docker.io:443 actively refused the OAuth token request for python:3.12-slim, node:22-alpine, and nginx:1.27-alpine"
     }
   ],
   "artifacts": [
@@ -50,5 +55,5 @@
     "output/optimization/T17/backup-restore-20261005134014b.json",
     "output/optimization/T17/worker-postgres-rehearsal-2026100514.json"
   ],
-  "external_blocker": "Docker image build requires reachable registry metadata; full Compose API/Web/Worker consumption and production backup retention/recovery policy remain unverified."
+  "external_blocker": "Docker Hub OAuth token access remains unavailable (auth.docker.io:443 connection refused during 2026-10-05 retry); full Compose API/Web/Worker consumption and production backup retention/recovery policy remain unverified."
 }

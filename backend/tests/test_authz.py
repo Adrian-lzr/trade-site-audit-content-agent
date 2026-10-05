@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 from backend.app import app
 from backend.database import SessionLocal
-from backend.models import Membership
+from backend.models import AuditEvent, Membership, Site, Workspace
 
 
 def test_session_and_workspace_listing_are_scoped_to_identity(monkeypatch):
@@ -27,6 +27,69 @@ def test_session_and_workspace_listing_are_scoped_to_identity(monkeypatch):
         assert denied.status_code == 401, denied.text
         missing = client.get("/api/workspaces")
         assert missing.status_code == 401, missing.text
+
+
+def test_workspace_creator_is_bound_as_admin_and_production_creation_fails_closed(monkeypatch):
+    with TestClient(app) as client:
+        created = client.post("/api/workspaces", json={"name": "creator workspace"}, headers={"X-Local-User": "creator"})
+        assert created.status_code == 201, created.text
+        workspace_id = created.json()["id"]
+
+        with SessionLocal() as db:
+            membership = db.query(Membership).filter(
+                Membership.workspace_id == int(workspace_id), Membership.user_id == "creator"
+            ).one()
+            assert membership.role == "admin"
+
+        visible = client.get("/api/workspaces", headers={"X-Local-User": "creator"})
+        assert visible.status_code == 200, visible.text
+        assert any(item["id"] == str(workspace_id) and item["role"] == "admin" for item in visible.json())
+
+        monkeypatch.setenv("AUTH_MODE", "production")
+        anonymous = client.post("/api/workspaces", json={"name": "anonymous production workspace"})
+        assert anonymous.status_code == 401, anonymous.text
+        forged = client.post(
+            "/api/workspaces",
+            json={"name": "forged production workspace"},
+            headers={"X-Local-User": "creator"},
+        )
+        assert forged.status_code == 401, forged.text
+
+
+def test_change_submission_audit_uses_the_verified_request_actor():
+    with TestClient(app) as client:
+        workspace_id, site_id = _change_workspace_for_authz("submit actor")
+        created = client.post(
+            f"/api/workspaces/{workspace_id}/sites/{site_id}/changes",
+            json={"workspace_id": workspace_id, "site_id": site_id, "field_diff": {"title": "Updated"}},
+        )
+        assert created.status_code == 201, created.text
+        change = created.json()
+        submitted = client.post(
+            f"/api/changes/{change['id']}/submit-approval?workspace_id={workspace_id}",
+            headers={"X-Local-User": "operator", "X-Workspace-Id": str(workspace_id), "If-Match": '"1"'},
+        )
+        assert submitted.status_code == 200, submitted.text
+
+        with SessionLocal() as db:
+            event = db.query(AuditEvent).filter(
+                AuditEvent.workspace_id == int(workspace_id),
+                AuditEvent.action == "change.pending_approval",
+                AuditEvent.target_id == str(change["id"]),
+            ).one()
+            assert event.actor == "operator"
+
+
+def _change_workspace_for_authz(name: str) -> tuple[int, int]:
+    workspace = Workspace(name=name)
+    with SessionLocal() as db:
+        db.add(workspace)
+        db.flush()
+        db.add(Membership(workspace_id=workspace.id, user_id="operator", role="operator"))
+        site = Site(workspace_id=workspace.id, name=f"{name} site", base_url="https://submit-actor.example.test")
+        db.add(site)
+        db.commit()
+        return workspace.id, site.id
 
 
 def _workspace(client: TestClient, name: str, *members: tuple[str, str]) -> dict:

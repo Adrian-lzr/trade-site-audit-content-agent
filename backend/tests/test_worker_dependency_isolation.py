@@ -32,3 +32,18 @@ def test_publication_progresses_when_optional_langgraph_dependency_is_missing(mo
         change = db.get(ChangeRequest, publication["change_request_id"])
         assert change is not None and change.state == "publishing"
     assert workspace_id > 0
+
+
+def test_worker_rotates_queue_families_to_prevent_audit_starvation(monkeypatch):
+    worker = JobWorker()
+    seen: list[str] = []
+    monkeypatch.setattr(worker, "recover_interrupted", lambda: 0)
+
+    def run_kind(kind: str) -> bool:
+        seen.append(kind)
+        return True
+
+    monkeypatch.setattr(worker, "_run_kind", run_kind)
+    assert worker.run_once() is True
+    assert worker.run_once() is True
+    assert seen == ["audit", "content"]

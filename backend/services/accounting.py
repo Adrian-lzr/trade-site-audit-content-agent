@@ -16,7 +16,7 @@ from typing import Any, Mapping
 
 from sqlalchemy import func, select
 
-from ..models import BudgetReservation, BudgetReservationStatus, ModelCall, ModelCallStatus, utcnow
+from ..models import BudgetReservation, BudgetReservationStatus, ModelCall, ModelCallStatus, Workspace, utcnow
 
 
 class AccountingError(ValueError):
@@ -79,6 +79,14 @@ def reserve_budget(
         raise AccountingError("currency is invalid")
     requested = money(amount)
     limit = money(budget_limit)
+    # Serialize reservations for a workspace on PostgreSQL.  A read-then-insert
+    # check without a lock lets two concurrent callers observe the same active
+    # total and over-commit the configured budget.  SQLite ignores
+    # ``FOR UPDATE`` but still serializes its writes; the explicit workspace
+    # existence check keeps the failure deterministic on both databases.
+    workspace = db.scalar(select(Workspace).where(Workspace.id == workspace_id).with_for_update())
+    if workspace is None:
+        raise AccountingError("workspace not found")
     existing = db.scalar(
         select(BudgetReservation).where(
             BudgetReservation.workspace_id == workspace_id,
@@ -175,6 +183,8 @@ def finish_model_call(
     output_tokens: int | None = None,
     actual_cost: Decimal | int | float | str | None = None,
     cost_known: bool | None = None,
+    price_version: str | None = None,
+    cost_source: str | None = None,
     latency_ms: int | None = None,
     error_code: str | None = None,
     error_message: str | None = None,
@@ -184,7 +194,12 @@ def finish_model_call(
     call = db.get(ModelCall, call_id)
     if call is None:
         raise AccountingError("model call not found")
-    if call.status in (ModelCallStatus.succeeded.value, ModelCallStatus.failed.value, ModelCallStatus.unknown_result.value):
+    if call.status in (ModelCallStatus.succeeded.value, ModelCallStatus.failed.value):
+        return call
+    # An unknown provider result remains reserved until a billing ledger or
+    # provider reconciliation supplies an actual amount.  Reconciliation is
+    # intentionally idempotent and uses this same settlement path.
+    if call.status == ModelCallStatus.unknown_result.value and actual_cost is None and cost_known is not True:
         return call
     if status not in {item.value for item in ModelCallStatus if item is not ModelCallStatus.reserved}:
         raise AccountingError("invalid model call terminal status")
@@ -196,6 +211,10 @@ def finish_model_call(
     call.provider_request_id = provider_request_id
     call.input_tokens = input_tokens
     call.output_tokens = output_tokens
+    if price_version is not None:
+        call.price_version = price_version
+    if cost_source is not None:
+        call.cost_source = cost_source
     call.latency_ms = latency_ms
     call.error_code = error_code
     call.error_message = error_message[:2000] if error_message else None
