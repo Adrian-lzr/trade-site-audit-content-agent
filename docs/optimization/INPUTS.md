@@ -19,7 +19,7 @@ Updated: 2026-10-05 (Asia/Shanghai)
 | Independent evaluation reviewers | not_supplied | No reviewers or real holdout set supplied; synthetic evaluation must remain labeled synthetic |
 | Search Console / analytics / CRM export | not_supplied | No business outcome source or reporting window supplied |
 | Production deployment target | adapter_ready_external_unverified | Signed callback and configurable fresh target observer are implemented; no authorized callback secret, staging target, or rollback environment supplied |
-| Read-only site reachability | observed | Playwright opened `https://zoogo.club/` (title: `Compact Fitness Equipment Manufacturer | ZOOGO China`) and `https://zoogosports.com/` (title: `Knee, Hand & Lumbar Massage Device Manufacturer | ZOOGO`) on 2026-10-02; no write or deployment authorization inferred. Both pages exposed a favicon 404; zoogosports also emitted one preload warning. |
+| Read-only site reachability | observed | Playwright opened both sites on 2026-10-02. A bounded live HTTPS audit on 2026-10-05 sampled 10 pages per site: direct homepage/robots/sitemap checks were all HTTP 200, both jobs succeeded, and no CMS, form, publication, PR, or deployment endpoint was called. Evidence: `output/online-audit/zoogo-sites-20261005.json`. This remains read-only reachability evidence, not production authorization or full-site approval. |
 
 Real secrets must be supplied through environment variables or a secret manager
 when a corresponding authorized test is ready. This file must contain only

@@ -1,6 +1,6 @@
 # Phase 6 实测报告
 
-更新时间：2026-10-01（Asia/Shanghai 环境；在线证据以 JSON 中的 UTC 时间为准）
+更新时间：2026-10-05（Asia/Shanghai 环境；在线证据以 JSON 中的 UTC 时间为准）
 
 这份报告把工程门禁、离线 fixture 评测和两个公开站点的有界只读采样分开记录。
 任何一项都不等同于搜索排名、消费者 AI 引用、流量或询盘增长。
@@ -56,6 +56,15 @@ Phase 6 门禁矩阵：
 `overall_complete=false`。矩阵是机器可检查的当前状态，不把合成 fixture 或模板当作人工完成。
 
 ## 两站只读采样
+
+### 2026-10-05 实时复跑
+
+最新有界实时证据：[`output/online-audit/zoogo-sites-20261005.json`](../output/online-audit/zoogo-sites-20261005.json)。
+
+- `https://zoogo.club`：10 页、120 条规则结果，`pass=96`、`needs_review=8`、`unknown=10`、`not_applicable=6`；首页、robots、`wp-sitemap.xml` 均返回 `200`，job `succeeded`，硬 findings 为 0。
+- `https://zoogosports.com`：10 页、120 条规则结果，`pass=98`、`needs_review=4`、`unknown=10`、`not_applicable=8`；首页、robots、`sitemap_index.xml` 均返回 `200`，job `succeeded`，硬 findings 为 0。
+- 这是 `live_https_readonly` 的 bounded HTML/robots/sitemap sample。所有请求均为只读 GET；报告明确记录没有调用 CMS、表单、发布、PR 或部署端点，也不测量排名、消费者 AI 引用、流量、询盘或收入。
+- `needs_review` 与 `unknown` 仍需人工或更深层采样复核；`0 findings` 只代表本次有界数据库 finding 数量，不能解释为全站通过或生产验收。
 
 三页基础证据：[`output/online-audit/zoogo-sites-readonly-20261001.json`](../output/online-audit/zoogo-sites-readonly-20261001.json)。
 带规则证据详情的复核文件：[`output/online-audit/zoogo-sites-readonly-20261001-evidence.json`](../output/online-audit/zoogo-sites-readonly-20261001-evidence.json)。
