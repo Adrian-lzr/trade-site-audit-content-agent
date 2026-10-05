@@ -1,39 +1,51 @@
 {
   "task_id": "T16",
   "status": "blocked_external",
-  "source": "bounded PostgreSQL runtime report with no business claim",
-  "code_commit": "85b911db03bff9ba1bd4f103ea71ea75da46274a",
+  "source": "bounded local/PostgreSQL correlation reports with no production business claim",
+  "code_commit": "2aa8140b7824aec16662032cbc2211070f771f22",
   "checks": [
     {
       "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_observability.py -q",
       "exit_code": 0,
-      "result": "8 passed"
+      "result": "10 passed; selector and child-table fail-closed isolation regression"
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_worker_audit.py backend/tests/test_observability.py -q",
+      "exit_code": 0,
+      "result": "12 passed; worker lifecycle audit, redaction, and correlation report regression"
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_authz.py::test_audit_event_payload_is_redacted_before_persistence_and_readback -q",
+      "exit_code": 0,
+      "result": "1 passed; API audit payload redaction before persistence/readback"
+    },
+    {
+      "command": "scripts/correlation_report.py --workspace-id 1 --output output/optimization/T16/correlation_report.json",
+      "exit_code": 0,
+      "result": "local SQLite report emitted; fixture rows remain blocked and business_data_claim=false",
+      "evidence_ref": "output/optimization/T16/correlation_report.json"
     },
     {
       "command": "scripts/correlation_report.py --workspace-id 1 --output output/optimization/T16/postgres_correlation_report.json",
       "exit_code": 0,
-      "result": "PostgreSQL report emitted; no matching runtime rows"
-    },
-    {
-      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_worker_audit.py -q",
-      "exit_code": 0,
-      "result": "2 passed; hashed lease and type-only error audit regression"
-    },
-    {
-      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_publication_worker.py -q",
-      "exit_code": 0,
-      "result": "4 passed; publication rollback lifecycle audit"
+      "result": "local PostgreSQL report emitted with fail-closed empty correlation; current target could not be migrated because its stored local credential was unavailable; no business claim",
+      "evidence_ref": "output/optimization/T16/postgres_correlation_report.json"
     }
   ],
   "artifacts": [
     "backend/observability.py",
-    "scripts/correlation_report.py",
-    "output/optimization/T16/postgres_correlation_report.json",
     "backend/worker_audit.py",
-    "backend/tests/test_worker_audit.py"
+    "backend/app.py",
+    "scripts/correlation_report.py",
+    "backend/tests/test_worker_audit.py",
+    "backend/tests/test_observability.py",
+    "backend/tests/test_authz.py",
+    "output/optimization/T16/correlation_report.json",
+    "output/optimization/T16/postgres_correlation_report.json"
   ],
   "blockers": [
-    "no_runtime_rows"
+    "no real production workflow rows in an authorized runtime database; local fixture evidence cannot be promoted to production business evidence",
+    "current local PostgreSQL target requires the operator-managed credential/migration before a fresh runtime report"
   ],
   "business_data_claim": false
 }

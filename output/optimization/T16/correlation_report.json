@@ -2,36 +2,59 @@
   "artifacts": [],
   "blockers": [
     {
-      "code": "no_runtime_rows",
-      "reason": "no matching runtime rows were supplied; this report does not invent business activity",
-      "status": "blocked_external"
-    },
-    {
-      "code": "scope_unbounded",
-      "reason": "provide a workspace, request, task, change, or visibility run selector before reading runtime rows",
-      "status": "blocked_external"
-    },
-    {
-      "code": "database_query_failed",
-      "reason": "could not read model_calls (OperationalError); migrate the database before collecting runtime evidence",
+      "code": "revision_generation_link_missing",
+      "reason": "one or more revisions have no generation_id linking them to a model call",
       "status": "blocked_external"
     }
   ],
   "business_data_claim": false,
-  "code_commit": "3821850634eecc2f914a94cea99bc9f0e5e554a3",
+  "code_commit": "2aa8140b7824aec16662032cbc2211070f771f22",
   "command": [
     "python",
     "scripts/correlation_report.py",
+    "--workspace-id",
+    "1",
     "--output",
     "output/optimization/T16/correlation_report.json"
   ],
   "correlation": {
     "audit_events": [],
-    "content_items": [],
-    "content_tasks": [],
+    "content_items": [
+      {
+        "change_request_id": 1,
+        "created_at": "2026-10-05T05:11:21.558809",
+        "id": 1,
+        "snapshot_hash": "fbba0282f7cb1a45345d3a096ff00fbb0310e419abf6974d0c992dd5f0f4842f",
+        "snapshot_id": 3,
+        "status": "needs_information",
+        "task_id": 1,
+        "thread_id": "content-task-1-item-1"
+      }
+    ],
+    "content_tasks": [
+      {
+        "attempts": 1,
+        "created_at": "2026-10-05T05:11:21.543495",
+        "generation_source": "fixture",
+        "id": 1,
+        "site_id": 4,
+        "status": "needs_information",
+        "workspace_id": 1
+      }
+    ],
     "model_calls": [],
     "publication_attempts": [],
-    "revisions": [],
+    "revisions": [
+      {
+        "change_request_id": 1,
+        "content_hash": "8cac683d6a0156013ff45d0df62e81a2210d128152975ba690a522e0a2ceb71c",
+        "created_at": "2026-10-05T05:11:21.554567",
+        "generation_id": null,
+        "id": 1,
+        "revision": 1,
+        "state": "draft"
+      }
+    ],
     "visibility_runs": [],
     "visibility_samples": []
   },
@@ -40,22 +63,22 @@
     "request_to_visibility_sample": false,
     "revision_to_model_call": false,
     "revision_to_publication": false,
-    "task_to_revision": false
+    "task_to_revision": true
   },
   "environment": {
     "database_engine": "sqlite",
     "platform": "Windows-11-10.0.26200-SP0",
     "python": "3.12.10"
   },
-  "generated_at": "2026-10-05T04:58:08.949214+00:00",
-  "report_sha256": "4a06da25b9162a76ec4e6cde2c877bcd3869bd0d61952e348eb40b59255fee53",
+  "generated_at": "2026-10-05T09:01:29.989923+00:00",
+  "report_sha256": "e0114aa4c0c3d6ffb379171a0fa0946394cd2cc02d1b388bbcebbf7c00828113",
   "schema_version": "t16.correlation.v1",
   "scope": {
     "change_request_id": null,
     "request_id": null,
     "task_id": null,
     "visibility_run_id": null,
-    "workspace_id": null
+    "workspace_id": 1
   },
   "task_id": "T16",
   "verification": "blocked_external"
