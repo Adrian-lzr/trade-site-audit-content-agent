@@ -22,6 +22,7 @@ from .database import SessionLocal
 from .knowledge import runtime_guidance
 from .model_gateway import FixtureModelDraftGateway, ModelGatewayConfig, OpenAICompatibleDraftGateway
 from .models import ContentGenerationItem, ContentGenerationTask, Page, PageSnapshot, ProcurementQuestion, ProcurementQuestionSetVersion, ProcurementQuestionSet, Site, utcnow
+from .worker_audit import append_worker_audit, initiator_for
 
 
 CONTENT_LEASE = timedelta(minutes=5)
@@ -139,6 +140,16 @@ class ContentGenerationWorker:
             if not changed.rowcount:
                 db.rollback()
                 return None
+            initiator, run_id = initiator_for(
+                db, workspace_id=task.workspace_id, target_type="content_generation_task",
+                target_id=task.id, action="content_generation_task.created",
+            )
+            append_worker_audit(
+                db, workspace_id=task.workspace_id, worker="content", action="content_generation_task.claimed",
+                target_type="content_generation_task", target_id=task.id, initiator=initiator,
+                run_id=run_id, task_id=task.id, lease_token=token, attempt=task.attempts + 1,
+                result="running",
+            )
             db.commit()
             return task.id, token
 
@@ -222,9 +233,37 @@ class ContentGenerationWorker:
                             self._renew(db, task_id, token)
                             item.status = "failed"
                             task.last_error = str(exc)[:2000]
+                            initiator, run_id = initiator_for(
+                                db, workspace_id=task.workspace_id, target_type="content_generation_task",
+                                target_id=task.id, action="content_generation_task.created",
+                            )
+                            from .models import ChangeRequest, ChangeRevision
+                            change = db.get(ChangeRequest, item.change_request_id)
+                            revision = db.get(ChangeRevision, change.current_revision_id) if change and change.current_revision_id else None
+                            append_worker_audit(
+                                db, workspace_id=task.workspace_id, worker="content", action="content_generation_item.completed",
+                                target_type="content_generation_item", target_id=item.id, initiator=initiator,
+                                run_id=run_id, task_id=task.id, thread_id=item.thread_id, lease_token=token,
+                                attempt=task.attempts, revision_id=revision.id if revision else None,
+                                result="failed", error_type=type(exc).__name__,
+                            )
                             db.commit()
                             raise
                         self._renew(db, task_id, token)
+                        from .models import ChangeRequest, ChangeRevision
+                        change = db.get(ChangeRequest, item.change_request_id)
+                        revision = db.get(ChangeRevision, change.current_revision_id) if change and change.current_revision_id else None
+                        initiator, run_id = initiator_for(
+                            db, workspace_id=task.workspace_id, target_type="content_generation_task",
+                            target_id=task.id, action="content_generation_task.created",
+                        )
+                        append_worker_audit(
+                            db, workspace_id=task.workspace_id, worker="content", action="content_generation_item.completed",
+                            target_type="content_generation_item", target_id=item.id, initiator=initiator,
+                            run_id=run_id, task_id=task.id, thread_id=item.thread_id, lease_token=token,
+                            attempt=task.attempts, revision_id=revision.id if revision else None,
+                            result=item.status,
+                        )
                         db.commit()
                 self._renew(db, task_id, token)
                 statuses = {item.status for item in items}
@@ -238,6 +277,16 @@ class ContentGenerationWorker:
                     task.status = "succeeded"
                 task.lease_token = None
                 task.lease_expires_at = None
+                initiator, run_id = initiator_for(
+                    db, workspace_id=task.workspace_id, target_type="content_generation_task",
+                    target_id=task.id, action="content_generation_task.created",
+                )
+                append_worker_audit(
+                    db, workspace_id=task.workspace_id, worker="content", action="content_generation_task.completed",
+                    target_type="content_generation_task", target_id=task.id, initiator=initiator,
+                    run_id=run_id, task_id=task.id, lease_token=token, attempt=task.attempts,
+                    result=task.status,
+                )
                 db.commit()
             finally:
                 if owns_gateway:

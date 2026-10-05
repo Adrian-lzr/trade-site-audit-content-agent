@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from backend.app import KNOWLEDGE_ENTRIES, app
 from backend.database import SessionLocal
 from backend.knowledge import curated_entries, select_guidance
-from backend.models import Page, PageSnapshot, utcnow
+from backend.models import AuditEvent, Page, PageSnapshot, utcnow
 
 
 SYNTHETIC_DEMO_VALVE_QUESTIONS = (
@@ -175,6 +175,13 @@ def test_frozen_twenty_question_version_is_mapped_immutable_and_copyable():
         assert frozen.json()["edit_version"] == 2
         assert frozen.json()["frozen_at"] is not None
         assert len(frozen.json()["questions"]) == 20
+        with SessionLocal() as db:
+            event = db.query(AuditEvent).filter(
+                AuditEvent.workspace_id == workspace["id"],
+                AuditEvent.action == "procurement_question_set.version_frozen",
+                AuditEvent.target_id == str(first["id"]),
+            ).one()
+            assert event.actor == "anonymous-demo"
 
         immutable = client.put(
             f"/api/workspaces/{workspace['id']}/sites/{site['id']}/query-sets/{created['id']}/versions/1",

@@ -9,8 +9,9 @@ from sqlalchemy import select, update
 
 from .database import SessionLocal
 from .git_publisher import ChangeSet, GitPublisher, GitPublisherError, IdempotencyConflictError, RollbackConflictError
-from .models import ChangeApproval, ChangeRequest, ChangeRevision, ChangeState, Fact, FactStatus, FactVisibility, OutboxEvent, Page, PageSnapshot, PublicationAttempt, Site, utcnow
+from .models import AuditEvent, ChangeApproval, ChangeRequest, ChangeRevision, ChangeState, Fact, FactStatus, FactVisibility, OutboxEvent, Page, PageSnapshot, PublicationAttempt, Site, utcnow
 from .services.facts import FactResolutionError, assert_bindings_current
+from .worker_audit import append_worker_audit
 
 
 PUBLICATION_LEASE = timedelta(minutes=5)
@@ -77,6 +78,27 @@ class PublicationWorker:
     def __init__(self, lease_duration: timedelta = PUBLICATION_LEASE):
         self.lease_duration = lease_duration
 
+    @staticmethod
+    def _audit(db, event: OutboxEvent, token: str | None, *, result: str, error_type: str | None = None) -> None:
+        payload = json.loads(event.payload_json or "{}")
+        change = db.get(ChangeRequest, int(payload.get("change_request_id", 0)))
+        if change is None:
+            return
+        attempt = db.scalar(select(PublicationAttempt).where(PublicationAttempt.idempotency_key == event.idempotency_key))
+        creator = db.scalar(select(AuditEvent).where(
+            AuditEvent.workspace_id == change.workspace_id,
+            AuditEvent.target_type == "publication_attempt",
+            AuditEvent.target_id == str(attempt.id if attempt else ""),
+            AuditEvent.action == "change.publish_requested",
+        ).order_by(AuditEvent.id.desc()))
+        append_worker_audit(
+            db, workspace_id=change.workspace_id, worker="publication", action="publication.completed",
+            target_type="outbox_event", target_id=event.id, initiator=creator.actor if creator else None,
+            run_id=creator.run_id if creator else None, task_id=event.id, lease_token=token,
+            attempt=event.attempts, revision_id=int(payload.get("revision_id", 0)) or None,
+            result=result, error_type=error_type,
+        )
+
     def recover_interrupted(self) -> int:
         now = utcnow()
         with SessionLocal() as db:
@@ -117,6 +139,27 @@ class PublicationWorker:
                 )
                 .values(lease_token=token, lease_expires_at=now + self.lease_duration, attempts=OutboxEvent.attempts + 1)
             )
+            if result.rowcount == 1:
+                event = db.get(OutboxEvent, event_id)
+                payload = json.loads(event.payload_json or "{}") if event else {}
+                change = db.get(ChangeRequest, int(payload.get("change_request_id", 0)))
+                initiator = None
+                if change is not None:
+                    attempt = db.scalar(select(PublicationAttempt).where(PublicationAttempt.idempotency_key == event.idempotency_key))
+                    creator = db.scalar(select(AuditEvent).where(
+                        AuditEvent.workspace_id == change.workspace_id,
+                        AuditEvent.target_type == "publication_attempt",
+                        AuditEvent.target_id == str(attempt.id if attempt else ""),
+                        AuditEvent.action == "change.publish_requested",
+                    ).order_by(AuditEvent.id.desc()))
+                    initiator = creator.actor if creator else None
+                    append_worker_audit(
+                        db, workspace_id=change.workspace_id, worker="publication", action="publication.claimed",
+                        target_type="outbox_event", target_id=event_id, initiator=initiator,
+                        run_id=creator.run_id if creator else None, task_id=event_id,
+                        lease_token=token, attempt=(event.attempts + 1) if event else None,
+                        revision_id=int(payload.get("revision_id", 0)) or None, result="running",
+                    )
             db.commit()
             return event_id if result.rowcount == 1 else None
 
@@ -268,6 +311,7 @@ class PublicationWorker:
                     db.add(attempt)
                     db.flush()
                 if attempt.status in {"submitted", "not_configured", "failed"}:
+                    self._audit(db, event, token, result=attempt.status)
                     event.published_at = utcnow()
                     event.lease_token = None
                     event.lease_expires_at = None
@@ -278,6 +322,7 @@ class PublicationWorker:
                 if not repository:
                     attempt.status = "not_configured"
                     attempt.error = "GIT_PUBLISH_REPOSITORY is not configured; no external write was attempted"
+                    self._audit(db, event, token, result=attempt.status)
                     marked = db.execute(
                         update(OutboxEvent)
                         .execution_options(synchronize_session=False)
@@ -309,6 +354,7 @@ class PublicationWorker:
                 attempt.commit_sha = result.commit
                 attempt.external_id = result.commit
                 attempt.error = None
+                self._audit(db, event, token, result=attempt.status)
                 marked = db.execute(
                     update(OutboxEvent)
                     .execution_options(synchronize_session=False)
@@ -358,6 +404,10 @@ class PublicationWorker:
                     if attempt is not None:
                         attempt.status = next_attempt_status
                         attempt.error = str(exc)[:1000]
+                    self._audit(
+                        failed_db, event, token, result=next_attempt_status,
+                        error_type=type(exc).__name__,
+                    )
                     failed_db.commit()
 
     def run_once(self) -> bool:

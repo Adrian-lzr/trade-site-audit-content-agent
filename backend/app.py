@@ -659,6 +659,16 @@ def _review_fact(
         if conflicts:
             db.rollback()
             raise HTTPException(409, conflicts[0].reason)
+    _record_audit(
+        db,
+        workspace_id=fact.workspace_id,
+        actor=reviewer or payload.reviewer,
+        action=f"fact.{target_status.value}",
+        target_type="fact",
+        target_id=fact.id,
+        before={"status": FactStatus.proposed.value, "version": fact.version},
+        after={"status": fact.status, "version": fact.version, "reviewer": fact.reviewer},
+    )
     db.commit()
     db.refresh(fact)
     return fact
@@ -938,7 +948,7 @@ def create_procurement_question_set(
     db: Session = Depends(get_db),
 ):
     workspace = _change_workspace(db, workspace_key)
-    authorize_workspace(request, db, workspace, Permission.operate)
+    identity = authorize_workspace(request, db, workspace, Permission.operate)
     site = _site_in_workspace(db, site_id, workspace)
     _validate_question_pages(db, site, payload.questions)
     query_set = ProcurementQuestionSet(
@@ -952,6 +962,18 @@ def create_procurement_question_set(
     db.add(query_set)
     try:
         _add_question_payloads(db, version, payload.questions)
+        # Assign the database identifier before recording the event so the
+        # append-only audit target is never the pre-flush ``None`` value.
+        db.flush()
+        _record_audit(
+            db,
+            workspace_id=workspace.id,
+            actor=effective_actor(identity),
+            action="procurement_question_set.created",
+            target_type="procurement_question_set",
+            target_id=query_set.id,
+            after={"site_id": site.id, "version": version.version, "state": version.state},
+        )
         db.commit()
     except IntegrityError as exc:
         db.rollback()
@@ -1143,7 +1165,7 @@ def freeze_procurement_question_set_version(
     db: Session = Depends(get_db),
 ):
     workspace = _change_workspace(db, workspace_key)
-    authorize_workspace(request, db, workspace, Permission.operate)
+    identity = authorize_workspace(request, db, workspace, Permission.operate)
     site = _site_in_workspace(db, site_id, workspace)
     query_set = _question_set_for_site(db, workspace, site, query_set_id)
     version = _question_set_version_for_site(db, workspace, site, query_set_id, version_number)
@@ -1168,6 +1190,16 @@ def freeze_procurement_question_set_version(
     if updated.rowcount != 1:
         db.rollback()
         raise HTTPException(409, "question set draft changed; refresh before freezing")
+    _record_audit(
+        db,
+        workspace_id=workspace.id,
+        actor=effective_actor(identity),
+        action="procurement_question_set.version_frozen",
+        target_type="procurement_question_set_version",
+        target_id=version.id,
+        before={"state": "draft", "edit_version": payload.expected_version},
+        after={"state": "frozen", "version": version.version, "edit_version": payload.expected_version + 1},
+    )
     db.commit()
     db.refresh(version)
     return _question_set_version_out(version)
@@ -1243,7 +1275,7 @@ def create_content_generation_task(
     db: Session = Depends(get_db),
 ):
     workspace = _change_workspace(db, workspace_key)
-    authorize_workspace(request, db, workspace, Permission.operate)
+    identity = authorize_workspace(request, db, workspace, Permission.operate)
     site = _site_in_workspace(db, site_id, workspace)
     query_set = _question_set_for_site(db, workspace, site, query_set_id)
     version = _question_set_version_for_site(db, workspace, site, query_set_id, version_number)
@@ -1333,6 +1365,7 @@ def create_content_generation_task(
                 expected_version=1,
             ),
             site=site,
+            actor=effective_actor(identity),
         )
         change.revisions.append(revision)
         task.items.append(
@@ -1348,6 +1381,16 @@ def create_content_generation_task(
                 thread_id=f"content-task-{task.id}-item-{position}",
             )
         )
+
+    _record_audit(
+        db,
+        workspace_id=workspace.id,
+        actor=effective_actor(identity),
+        action="content_generation_task.created",
+        target_type="content_generation_task",
+        target_id=task.id,
+        after={"site_id": site.id, "item_count": len(prepared), "question_set_version_id": version.id},
+    )
 
     try:
         db.commit()
@@ -1564,7 +1607,7 @@ def create_visibility_run(
     db: Session = Depends(get_db),
 ):
     workspace = _change_workspace(db, workspace_key)
-    authorize_workspace(request, db, workspace, Permission.operate)
+    identity = authorize_workspace(request, db, workspace, Permission.operate)
     site = _site_in_workspace(db, site_id, workspace)
     question_set, version = _visibility_question_set_for_payload(db, workspace, site, payload)
     if version.state != "frozen":
@@ -1646,6 +1689,16 @@ def create_visibility_run(
         for question in selected_questions
     ]
     db.add(run)
+    db.flush()
+    _record_audit(
+        db,
+        workspace_id=workspace.id,
+        actor=effective_actor(identity),
+        action="visibility_run.created",
+        target_type="visibility_run",
+        target_id=run.id,
+        after={"site_id": site.id, "question_set_version_id": version.id, "planned_samples": len(selected_questions)},
+    )
     try:
         db.commit()
     except IntegrityError as exc:
@@ -1839,9 +1892,19 @@ def _workspace_snapshot_or_404(db: Session, workspace_key: str, snapshot_id: int
     return snapshot
 
 
-def _job_for_site(site: Site, db: Session) -> Job:
+def _job_for_site(site: Site, db: Session, *, actor: str | None = None, run_id: str | None = None) -> Job:
     job = Job(site_id=site.id, status=JobStatus.queued.value)
     db.add(job)
+    db.flush()
+    _record_audit(
+        db,
+        workspace_id=site.workspace_id,
+        actor=actor or "unavailable",
+        action="audit_job.created",
+        target_type="job",
+        target_id=job.id,
+        after={"site_id": site.id},
+    )
     db.commit()
     db.refresh(job)
     return job
@@ -1851,8 +1914,8 @@ def _job_for_site(site: Site, db: Session) -> Job:
 @app.post("/api/sites/{site_id}/audit", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED, include_in_schema=False)
 def create_audit(site_id: int, workspace_id: str, request: Request, db: Session = Depends(get_db)):
     workspace, site = _workspace_site_or_404(db, workspace_id, site_id)
-    authorize_workspace(request, db, workspace, Permission.operate)
-    return _job_response(_job_for_site(site, db))
+    identity = authorize_workspace(request, db, workspace, Permission.operate)
+    return _job_response(_job_for_site(site, db, actor=effective_actor(identity)))
 
 
 @app.post("/api/sites/{site_id}/audit-runs", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
@@ -1866,8 +1929,8 @@ def create_audit_run(site_id: str, workspace_id: str, request: Request, db: Sess
 @app.post("/api/workspaces/{workspace_key}/sites/{site_id}/audit-runs", response_model=JobOut, status_code=status.HTTP_202_ACCEPTED)
 def create_workspace_audit_run(workspace_key: str, site_id: int, request: Request, db: Session = Depends(get_db)):
     workspace, site = _workspace_site_or_404(db, workspace_key, site_id)
-    authorize_workspace(request, db, workspace, Permission.operate)
-    return _job_response(_job_for_site(site, db))
+    identity = authorize_workspace(request, db, workspace, Permission.operate)
+    return _job_response(_job_for_site(site, db, actor=effective_actor(identity)))
 
 
 @app.get("/api/jobs/{job_id}", response_model=JobOut)
@@ -2236,7 +2299,14 @@ def _workflow_review_event(
     return event
 
 
-def _create_revision(db: Session, change: ChangeRequest, payload: ChangeRevisionCreate, *, site: Site) -> ChangeRevision:
+def _create_revision(
+    db: Session,
+    change: ChangeRequest,
+    payload: ChangeRevisionCreate,
+    *,
+    site: Site,
+    actor: str,
+) -> ChangeRevision:
     _assert_expected_change_version(change, payload.expected_version, None)
     _validate_field_diff(payload.field_diff)
     snapshot_id, base_hash = _snapshot_binding(db, site, payload.base_snapshot_id, payload.base_content_hash)
@@ -2256,6 +2326,15 @@ def _create_revision(db: Session, change: ChangeRequest, payload: ChangeRevision
     change.state = ChangeState.draft.value
     db.flush()
     change.current_revision_id = revision.id
+    _record_audit(
+        db,
+        workspace_id=change.workspace_id,
+        actor=actor,
+        action="change.revision_created",
+        target_type="change_revision",
+        target_id=revision.id,
+        after={"change_request_id": change.id, "revision": revision.revision, "content_hash": revision.content_hash},
+    )
     return revision
 
 
@@ -2269,13 +2348,22 @@ def _change_or_404(db: Session, change_id: int, workspace_key: str | int) -> Cha
     return change
 
 
-def _create_change(db: Session, workspace: Workspace, site: Site, payload: ChangeRequestCreate) -> ChangeRequest:
+def _create_change(db: Session, workspace: Workspace, site: Site, payload: ChangeRequestCreate, *, actor: str) -> ChangeRequest:
     if payload.site_id is not None and payload.site_id != site.id:
         raise HTTPException(409, "site does not match change request route")
     change = ChangeRequest(workspace_id=workspace.id, site_id=site.id, title=payload.title, state=ChangeState.draft.value, version=1)
     db.add(change)
     db.flush()
-    _create_revision(db, change, payload, site=site)
+    _create_revision(db, change, payload, site=site, actor=actor)
+    _record_audit(
+        db,
+        workspace_id=workspace.id,
+        actor=actor,
+        action="change.created",
+        target_type="change_request",
+        target_id=change.id,
+        after={"site_id": site.id, "state": change.state, "current_revision_id": change.current_revision_id},
+    )
     db.commit()
     db.refresh(change)
     return change
@@ -2284,11 +2372,11 @@ def _create_change(db: Session, workspace: Workspace, site: Site, payload: Chang
 @app.post("/api/workspaces/{workspace_key}/sites/{site_id}/changes", response_model=ChangeRequestOut, status_code=status.HTTP_201_CREATED)
 def create_change(workspace_key: str, site_id: int, payload: ChangeRequestCreate, request: Request, db: Session = Depends(get_db)):
     workspace = _change_workspace(db, workspace_key)
-    authorize_workspace(request, db, workspace, Permission.operate)
+    identity = authorize_workspace(request, db, workspace, Permission.operate)
     if payload.workspace_id is not None and str(payload.workspace_id) not in {str(workspace.id), workspace.external_id or ""}:
         raise HTTPException(403, "workspace mismatch")
     site = _site_in_workspace(db, site_id, workspace)
-    return _change_out(_create_change(db, workspace, site, payload))
+    return _change_out(_create_change(db, workspace, site, payload, actor=effective_actor(identity)))
 
 
 @app.post("/api/sites/{site_id}/changes", response_model=ChangeRequestOut, status_code=status.HTTP_201_CREATED)
@@ -2299,10 +2387,10 @@ def create_site_change(site_id: int, payload: ChangeRequestCreate, request: Requ
     if site is None:
         raise HTTPException(404, "site not found")
     workspace = _change_workspace(db, payload.workspace_id or site.workspace_id)
-    authorize_workspace(request, db, workspace, Permission.operate)
+    identity = authorize_workspace(request, db, workspace, Permission.operate)
     if site.workspace_id != workspace.id:
         raise HTTPException(404, "site not found")
-    return _change_out(_create_change(db, workspace, site, payload))
+    return _change_out(_create_change(db, workspace, site, payload, actor=effective_actor(identity)))
 
 
 @app.get("/api/changes/{change_id}", response_model=ChangeRequestOut)
@@ -2322,12 +2410,12 @@ def get_workspace_change(workspace_key: str, change_id: int, request: Request, d
 @app.post("/api/changes/{change_id}/revisions", response_model=ChangeRequestOut)
 def add_change_revision(change_id: int, payload: ChangeRevisionCreate, workspace_id: str, request: Request, if_match: str | None = Header(default=None, alias="If-Match"), db: Session = Depends(get_db)):
     workspace = _change_workspace(db, workspace_id)
-    authorize_workspace(request, db, workspace, Permission.operate)
+    identity = authorize_workspace(request, db, workspace, Permission.operate)
     change = _change_or_404(db, change_id, workspace_id)
     _require_expected_change_version(payload.expected_version, if_match)
     _assert_expected_change_version(change, payload.expected_version, if_match)
     site = _site_in_workspace(db, change.site_id, change.workspace)
-    _create_revision(db, change, payload, site=site)
+    _create_revision(db, change, payload, site=site, actor=effective_actor(identity))
     db.commit()
     db.refresh(change)
     return _change_out(change)

@@ -21,6 +21,7 @@ from .models import (
     WorkflowReviewEvent,
     utcnow,
 )
+from .worker_audit import append_worker_audit
 from langgraph.types import Command
 
 
@@ -75,6 +76,18 @@ class ReviewResumeWorker:
             if changed.rowcount != 1:
                 db.rollback()
                 return None
+            event = db.get(OutboxEvent, event_id)
+            payload = json.loads(event.payload_json or "{}") if event else {}
+            review = db.scalar(select(WorkflowReviewEvent).where(WorkflowReviewEvent.decision_id == payload.get("decision_id")))
+            if review is not None:
+                append_worker_audit(
+                    db, workspace_id=review.workspace_id, worker="review", action="workflow_review.claimed",
+                    target_type="workflow_review_event", target_id=review.id, initiator=review.actor,
+                    run_id=event.idempotency_key if event else None, task_id=event_id,
+                    thread_id=review.thread_id, lease_token=token,
+                    attempt=(event.attempts + 1) if event else None, revision_id=review.revision_id,
+                    result="running",
+                )
             db.commit()
             return event_id, token
 
@@ -166,6 +179,13 @@ class ReviewResumeWorker:
                         review = db.scalar(select(WorkflowReviewEvent).where(WorkflowReviewEvent.decision_id == payload.get("decision_id")))
                         if review is not None:
                             review.error = str(exc)[:2000]
+                            append_worker_audit(
+                                db, workspace_id=review.workspace_id, worker="review", action="workflow_review.completed",
+                                target_type="workflow_review_event", target_id=review.id, initiator=review.actor,
+                                run_id=row.idempotency_key, task_id=event_id, thread_id=review.thread_id,
+                                lease_token=token, attempt=row.attempts, revision_id=review.revision_id,
+                                result="failed", error_type=type(exc).__name__,
+                            )
                     db.commit()
             raise
         finally:
@@ -182,6 +202,13 @@ class ReviewResumeWorker:
             if review is not None:
                 review.consumed_at = utcnow()
                 review.error = None
+                append_worker_audit(
+                    db, workspace_id=review.workspace_id, worker="review", action="workflow_review.completed",
+                    target_type="workflow_review_event", target_id=review.id, initiator=review.actor,
+                    run_id=outbox.idempotency_key, task_id=event_id, thread_id=review.thread_id,
+                    lease_token=token, attempt=outbox.attempts, revision_id=review.revision_id,
+                    result=decision or "consumed",
+                )
             if item_id is not None and decision is not None:
                 item = db.get(ContentGenerationItem, item_id)
                 if item is not None:

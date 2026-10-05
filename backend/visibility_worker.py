@@ -30,6 +30,7 @@ from .models import (
 from .time_utils import as_utc
 from .services.visibility_metrics import calculate_visibility_metrics as calculate_visibility_metrics_v2
 from .visibility_provider import VisibilityProvider, VisibilityResponse, build_visibility_provider, redact_sensitive_text
+from .worker_audit import append_worker_audit, initiator_for
 
 
 VISIBILITY_LEASE = timedelta(minutes=5)
@@ -151,6 +152,16 @@ class VisibilityWorker:
             if not changed.rowcount:
                 db.rollback()
                 return None
+            initiator, _ = initiator_for(
+                db, workspace_id=run.workspace_id, target_type="visibility_run",
+                target_id=run.id, action="visibility_run.created",
+            )
+            append_worker_audit(
+                db, workspace_id=run.workspace_id, worker="visibility", action="visibility_run.claimed",
+                target_type="visibility_run", target_id=run.id, initiator=initiator,
+                run_id=run.request_id, task_id=run.id, lease_token=token,
+                attempt=run.attempts + 1, result="running",
+            )
             db.commit()
             return run.id, token
 
@@ -258,6 +269,16 @@ class VisibilityWorker:
                     run.lease_token = None
                     run.lease_expires_at = None
                     run.completed_at = utcnow()
+                    initiator, _ = initiator_for(
+                        db, workspace_id=run.workspace_id, target_type="visibility_run",
+                        target_id=run.id, action="visibility_run.created",
+                    )
+                    append_worker_audit(
+                        db, workspace_id=run.workspace_id, worker="visibility", action="visibility_run.completed",
+                        target_type="visibility_run", target_id=run.id, initiator=initiator,
+                        run_id=run.request_id, task_id=run.id, lease_token=token,
+                        attempt=run.attempts, result=run.status,
+                    )
                     db.commit()
                     return
                 for sample in samples:
@@ -333,6 +354,17 @@ class VisibilityWorker:
                 run.lease_token = None
                 run.lease_expires_at = None
                 run.completed_at = utcnow()
+                initiator, _ = initiator_for(
+                    db, workspace_id=run.workspace_id, target_type="visibility_run",
+                    target_id=run.id, action="visibility_run.created",
+                )
+                append_worker_audit(
+                    db, workspace_id=run.workspace_id, worker="visibility", action="visibility_run.completed",
+                    target_type="visibility_run", target_id=run.id, initiator=initiator,
+                    run_id=run.request_id, task_id=run.id, lease_token=token,
+                    attempt=run.attempts, result=run.status,
+                    error_type="ProviderFailure" if run.status == VisibilityRunStatus.failed.value else None,
+                )
                 db.commit()
             except Exception:
                 db.rollback()
@@ -346,6 +378,16 @@ class VisibilityWorker:
                         current.lease_token = None
                         current.lease_expires_at = None
                         current.completed_at = utcnow()
+                        initiator, _ = initiator_for(
+                            failed_db, workspace_id=current.workspace_id, target_type="visibility_run",
+                            target_id=current.id, action="visibility_run.created",
+                        )
+                        append_worker_audit(
+                            failed_db, workspace_id=current.workspace_id, worker="visibility", action="visibility_run.completed",
+                            target_type="visibility_run", target_id=current.id, initiator=initiator,
+                            run_id=current.request_id, task_id=current.id, lease_token=token,
+                            attempt=current.attempts, result="failed", error_type="WorkerExecutionError",
+                        )
                         failed_db.commit()
                 raise
 
@@ -358,6 +400,16 @@ class VisibilityWorker:
         run.lease_token = None
         run.lease_expires_at = None
         run.completed_at = utcnow()
+        initiator, _ = initiator_for(
+            db, workspace_id=run.workspace_id, target_type="visibility_run",
+            target_id=run.id, action="visibility_run.created",
+        )
+        append_worker_audit(
+            db, workspace_id=run.workspace_id, worker="visibility", action="visibility_run.completed",
+            target_type="visibility_run", target_id=run.id, initiator=initiator,
+            run_id=run.request_id, task_id=run.id, lease_token=token,
+            attempt=run.attempts, result="failed", error_type="InvalidRunConfiguration",
+        )
         db.commit()
 
     def run_once(self, run_id: int | None = None) -> bool:

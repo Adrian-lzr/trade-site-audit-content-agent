@@ -145,6 +145,13 @@ def test_local_identity_enforces_fact_review_roles_and_binds_reviewer():
         )
         assert approved.status_code == 200, approved.text
         assert approved.json()["reviewer"] == "reviewer"
+        with SessionLocal() as db:
+            event = db.query(AuditEvent).filter(
+                AuditEvent.workspace_id == int(workspace["id"]),
+                AuditEvent.action == "fact.confirmed",
+                AuditEvent.target_id == str(fact["id"]),
+            ).one()
+            assert event.actor == "reviewer"
 
 
 def test_local_identity_rejects_cross_workspace_audit_event_and_allows_viewer_reads():
@@ -235,6 +242,36 @@ def test_change_approval_requires_reviewer_or_admin_and_binds_reviewer():
         )
         assert approved.status_code == 200, approved.text
         assert approved.json()["approvals"][0]["reviewer"] == "reviewer"
+
+
+def test_change_create_and_revision_audits_bind_the_verified_operator():
+    with TestClient(app) as client:
+        workspace_id, site_id = _change_workspace_for_authz("revision audit")
+        headers = {"X-Local-User": "operator", "X-Workspace-Id": str(workspace_id)}
+        created = client.post(
+            f"/api/workspaces/{workspace_id}/sites/{site_id}/changes",
+            json={"workspace_id": workspace_id, "site_id": site_id, "field_diff": {"title": "First"}},
+            headers=headers,
+        )
+        assert created.status_code == 201, created.text
+        change = created.json()
+        revision = change["revision"]
+        revised = client.post(
+            f"/api/changes/{change['id']}/revisions?workspace_id={workspace_id}",
+            json={"expected_version": 1, "field_diff": {"title": "Second"}},
+            headers=headers,
+        )
+        assert revised.status_code == 200, revised.text
+        with SessionLocal() as db:
+            events = db.query(AuditEvent).filter(
+                AuditEvent.workspace_id == workspace_id,
+                AuditEvent.action.in_(["change.revision_created", "change.created"]),
+            ).order_by(AuditEvent.id).all()
+            assert [(event.action, event.actor) for event in events] == [
+                ("change.revision_created", "operator"),
+                ("change.created", "operator"),
+                ("change.revision_created", "operator"),
+            ]
 
 
 def test_missing_identity_is_explicit_only_when_local_auth_is_required(monkeypatch):
