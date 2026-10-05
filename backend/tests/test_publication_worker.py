@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from backend.app import app
 from backend.database import SessionLocal
-from backend.models import ChangeRequest, OutboxEvent, Page, PageSnapshot, PublicationAttempt, Site, Workspace, utcnow
+from backend.models import AuditEvent, ChangeRequest, OutboxEvent, Page, PageSnapshot, PublicationAttempt, Site, Workspace, utcnow
 from backend.publication_worker import PublicationWorker
 from backend.worker import JobWorker
 
@@ -188,6 +188,8 @@ def test_publication_worker_creates_guarded_revert_and_keeps_verification_pendin
         assert attempt.branch and attempt.commit_sha
         event = select_rollback_event(db, publication["change_request_id"])
         assert event.published_at is not None
+        lifecycle = db.query(AuditEvent).filter(AuditEvent.action == "publication.rollback.completed").all()
+        assert lifecycle and '"result":"submitted"' in lifecycle[-1].after_version_json
         source = db.get(PublicationAttempt, publication["id"])
         assert source is not None and source.deployment_status == "rollback_pending"
         rollback_commit = attempt.commit_sha

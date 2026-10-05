@@ -14,7 +14,7 @@ from .audit_rules import RULES, RULE_VERSION, evaluate_snapshot, parse_document
 from .crawler import CrawlError, CrawlResult, FixtureCrawler, is_sitemap_url, normalize_path
 from .document_parser import PARSER_VERSION
 from .models import AuditFinding, AuditRuleResult, Job, JobStatus, Page, PageSnapshot, Site, utcnow
-from .worker_audit import append_worker_audit
+from .worker_audit import append_worker_audit, initiator_for
 
 
 class JobAlreadyClaimed(RuntimeError):
@@ -62,10 +62,14 @@ def claim_job(db: Session, job_id: int, lease_duration: timedelta = DEFAULT_JOB_
     job = db.get(Job, job_id)
     site = db.get(Site, job.site_id) if job else None
     if site:
+        initiator, run_id = initiator_for(
+            db, workspace_id=site.workspace_id, target_type="job", target_id=job_id,
+            action="audit_job.created",
+        )
         append_worker_audit(
             db, workspace_id=site.workspace_id, worker="audit", action="audit_job.claimed",
-            target_type="job", target_id=job_id, initiator=None, task_id=job_id,
-            lease_token=token, attempt=1, result="running",
+            target_type="job", target_id=job_id, initiator=initiator, run_id=run_id,
+            task_id=job_id, lease_token=token, attempt=1, result="running",
         )
     db.commit()
     return token
@@ -450,10 +454,14 @@ def execute_claimed_job(db: Session, job_id: int, lease_token: str, crawler: Fix
             raise JobLeaseLost(f"worker lease for job {job_id} expired before commit")
         site = db.get(Site, site_id)
         if site:
+            initiator, run_id = initiator_for(
+                db, workspace_id=site.workspace_id, target_type="job", target_id=job_id,
+                action="audit_job.created",
+            )
             append_worker_audit(
                 db, workspace_id=site.workspace_id, worker="audit", action="audit_job.completed",
-                target_type="job", target_id=job_id, initiator=None, task_id=job_id,
-                lease_token=lease_token, attempt=1, result="succeeded",
+                target_type="job", target_id=job_id, initiator=initiator, run_id=run_id,
+                task_id=job_id, lease_token=lease_token, attempt=1, result="succeeded",
             )
         db.commit()
     except JobLeaseLost:
@@ -465,10 +473,14 @@ def execute_claimed_job(db: Session, job_id: int, lease_token: str, crawler: Fix
             raise JobLeaseLost(f"worker lease for job {job_id} was lost during failure handling") from exc
         site = db.get(Site, site_id)
         if site:
+            initiator, run_id = initiator_for(
+                db, workspace_id=site.workspace_id, target_type="job", target_id=job_id,
+                action="audit_job.created",
+            )
             append_worker_audit(
                 db, workspace_id=site.workspace_id, worker="audit", action="audit_job.completed",
-                target_type="job", target_id=job_id, initiator=None, task_id=job_id,
-                lease_token=lease_token, attempt=1, result="failed", error_type=type(exc).__name__,
+                target_type="job", target_id=job_id, initiator=initiator, run_id=run_id,
+                task_id=job_id, lease_token=lease_token, attempt=1, result="failed", error_type=type(exc).__name__,
             )
             db.commit()
         raise

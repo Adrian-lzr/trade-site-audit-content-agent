@@ -79,7 +79,7 @@ class PublicationWorker:
         self.lease_duration = lease_duration
 
     @staticmethod
-    def _audit(db, event: OutboxEvent, token: str | None, *, result: str, error_type: str | None = None) -> None:
+    def _audit(db, event: OutboxEvent, token: str | None, *, result: str, error_type: str | None = None, rollback: bool = False) -> None:
         payload = json.loads(event.payload_json or "{}")
         change = db.get(ChangeRequest, int(payload.get("change_request_id", 0)))
         if change is None:
@@ -89,10 +89,11 @@ class PublicationWorker:
             AuditEvent.workspace_id == change.workspace_id,
             AuditEvent.target_type == "publication_attempt",
             AuditEvent.target_id == str(attempt.id if attempt else ""),
-            AuditEvent.action == "change.publish_requested",
+            AuditEvent.action.in_(("change.publish_requested", "publication.rollback_requested")),
         ).order_by(AuditEvent.id.desc()))
         append_worker_audit(
-            db, workspace_id=change.workspace_id, worker="publication", action="publication.completed",
+            db, workspace_id=change.workspace_id, worker="publication",
+            action="publication.rollback.completed" if rollback else "publication.completed",
             target_type="outbox_event", target_id=event.id, initiator=creator.actor if creator else None,
             run_id=creator.run_id if creator else None, task_id=event.id, lease_token=token,
             attempt=event.attempts, revision_id=int(payload.get("revision_id", 0)) or None,
@@ -212,6 +213,7 @@ class PublicationWorker:
                 raise GitPublisherError("rollback source is no longer rollback-compatible")
 
             if attempt.status in {"submitted", "not_configured", "failed"}:
+                self._audit(db, event, token, result=attempt.status, rollback=True)
                 marked = db.execute(
                     update(OutboxEvent)
                     .execution_options(synchronize_session=False)
@@ -230,6 +232,7 @@ class PublicationWorker:
             if not repository:
                 attempt.status = "not_configured"
                 attempt.error = "GIT_PUBLISH_REPOSITORY is not configured; no external write was attempted"
+                self._audit(db, event, token, result=attempt.status, rollback=True)
                 marked = db.execute(
                     update(OutboxEvent)
                     .execution_options(synchronize_session=False)
@@ -259,6 +262,7 @@ class PublicationWorker:
             attempt.commit_sha = result.commit
             attempt.external_id = result.commit
             attempt.error = None
+            self._audit(db, event, token, result=attempt.status, rollback=True)
             current_event = db.get(OutboxEvent, event.id)
             if current_event is None or current_event.lease_token != token or current_event.lease_expires_at is None:
                 db.rollback()
@@ -404,10 +408,9 @@ class PublicationWorker:
                     if attempt is not None:
                         attempt.status = next_attempt_status
                         attempt.error = str(exc)[:1000]
-                    self._audit(
-                        failed_db, event, token, result=next_attempt_status,
-                        error_type=type(exc).__name__,
-                    )
+                    self._audit(failed_db, event, token, result=next_attempt_status,
+                                error_type=type(exc).__name__,
+                                rollback=event.event_type == "change.rollback_requested")
                     failed_db.commit()
 
     def run_once(self) -> bool:
