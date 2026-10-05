@@ -114,8 +114,8 @@ $backup = Join-Path (Get-Location) "output/local-readiness/backup.sql"
 ```
 
 The source must already be migrated to the repository head. A passing report
-includes the Alembic head (`0014_memberships_audit_events_snapshot_metadata` in
-the current tree), the SHA-256 and byte size of the dump, and equal row counts
+includes the current single Alembic head from the repository migration graph,
+the SHA-256 and byte size of the dump, and equal row counts
 for `workspaces`, `sites`, `page_snapshots`, and `visibility_runs`. Restore is
 run with `psql --single-transaction -v ON_ERROR_STOP=1` and the target is not
 dropped on failure, so an operator can inspect it before deciding what to do.
@@ -182,7 +182,7 @@ from configuration:
   containers with tmpfs-only data mounts (no persistent Docker volumes);
   source and target were migrated/created on
   localhost ports, and the target database was empty before restore. The
-  report recorded head `0014_memberships_audit_events_snapshot_metadata`, row
+  report recorded the repository migration head, row
   counts `workspaces=1`, `sites=1`, `page_snapshots=1`,
   `visibility_runs=1`, a 66,105-byte dump, and SHA-256
   `899827d8371b3914187894431489f197158630e428153b9d432db720ad1b7f6a`.

@@ -51,7 +51,7 @@ Fixture or protocol evidence is never reported as real business evidence.
 | O07 | blocked_external | JWT protocol tests; local actor is not production identity | configure real OIDC and complete login/workspace role journey |
 | O08 | in_progress | model ledger and worker recovery paths | finish fairness/cost reconciliation under real runtime |
 | O09 | blocked_external | synthetic manifest only; zero independent human cases | run blinded 30-case holdout with independent reviewers |
-| O10 | in_progress | migrations, audit hooks, API/UI builds and tests; 242 tests, web build and source container gate pass | prove clean PostgreSQL/Docker startup, worker consumption and recovery |
+| O10 | in_progress | migrations, audit hooks, API/UI builds and tests; 243 tests, web build and source container gate pass | prove clean PostgreSQL/Docker startup, worker consumption and recovery |
 
 ## Critical Cases
 

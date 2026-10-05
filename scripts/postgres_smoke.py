@@ -16,9 +16,6 @@ from typing import TypedDict
 from uuid import uuid4
 
 
-EXPECTED_MIGRATION = "0014_memberships_audit_events_snapshot_metadata"
-
-
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -35,7 +32,10 @@ def main() -> None:
     if not database_url.startswith(("postgresql://", "postgresql+psycopg://", "postgres://")):
         raise SystemExit("--database-url must be an isolated PostgreSQL DSN")
     os.environ["DATABASE_URL"] = database_url
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    project_root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(project_root))
+
+    from scripts.migration_head import repository_alembic_head
 
     from fastapi.testclient import TestClient
     from langgraph.graph import END, START, StateGraph
@@ -45,10 +45,13 @@ def main() -> None:
     from backend.content_worker import checkpoint_saver
     from backend.database import engine
 
+    expected_migration = repository_alembic_head(project_root)
     with engine.connect() as connection:
         migration = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
-    if migration != EXPECTED_MIGRATION:
-        raise RuntimeError(f"unexpected migration head: {migration!r}")
+    if migration != expected_migration:
+        raise RuntimeError(
+            f"unexpected migration head: {migration!r}; expected repository head {expected_migration!r}"
+        )
 
     site_name = f"postgres-smoke-{uuid4().hex[:8]}"
     with TestClient(app) as client:

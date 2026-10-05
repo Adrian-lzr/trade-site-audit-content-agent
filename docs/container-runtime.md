@@ -112,7 +112,8 @@ docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB
 ```
 
 The restore rehearsal acceptance check is: the command exits successfully,
-`alembic_version` reports `0014_memberships_audit_events_snapshot_metadata`, and representative
+`alembic_version` reports the single head returned by
+`backend/.venv/Scripts/python.exe -m alembic -c backend/alembic.ini heads`, and representative
 row counts for `workspaces`, `sites`, `page_snapshots`, and `visibility_runs`
 match the source database. This repository's PostgreSQL migration evidence uses
 a separate no-volume temporary container; it does not touch the Compose named

@@ -7,7 +7,7 @@ Phase 5 已加入独立的可见性采样边界。采样使用冻结的采购问
 模型、token、费用和错误状态。
 
 后端包括 `VisibilityRun` / `VisibilitySample` 数据模型、迁移 `0012_visibility_monitoring`、
-`0013_visibility_budget_snapshots` 和当前 head `0014_memberships_audit_events_snapshot_metadata`、
+`0013_visibility_budget_snapshots`、后续迁移和当前 repository head、
 持久化租约 Worker 和 API：
 
 - `fixture`：离线、确定性的 synthetic provider，明确标记为演示数据；

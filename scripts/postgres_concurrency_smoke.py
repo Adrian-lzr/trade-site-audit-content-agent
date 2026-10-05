@@ -31,6 +31,7 @@ def main() -> int:
     os.environ["DATABASE_URL"] = args.database_url
     project_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(project_root))
+    from scripts.migration_head import repository_alembic_head
 
     from alembic import command
     from alembic.config import Config
@@ -205,7 +206,7 @@ def main() -> int:
         print(
             json.dumps(
                 {
-                    "alembic_head": "0014_memberships_audit_events_snapshot_metadata",
+                    "alembic_head": repository_alembic_head(project_root),
                     "budget_concurrent_reservations": reservations,
                     "budget_reserved_usd": reserved_amount,
                     "outbox_concurrent_claims": outbox_claims,

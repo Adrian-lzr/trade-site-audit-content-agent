@@ -9,10 +9,10 @@
 
 | 检查 | 本轮结果 | 证据 |
 | --- | --- | --- |
-| Python 后端测试 | `144 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider backend/tests -q` |
-| 评测工具测试 | `7 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider -q evals\\tests` |
+| Python 后端测试 | `233 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider backend/tests -q` |
+| 评测工具测试 | `10 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider -q evals\\tests` |
 | Web 构建 | 通过，Vite 8.3.1 | `npm --prefix apps/web run build` |
-| 数据库迁移 | 通过，当前 `0014_memberships_audit_events_snapshot_metadata (head)` | `backend\\.venv\\Scripts\\python.exe -m alembic -c backend\\alembic.ini upgrade head` 和 `current` |
+| 数据库迁移 | 通过，当前 `0019_workflow_review_events (head)` | `backend\\.venv\\Scripts\\python.exe -m alembic -c backend\\alembic.ini upgrade head` 和 `current` |
 | PostgreSQL API + checkpoint smoke | 通过；隔离 PostgreSQL 数据库上检查 migration head、`/health`、`/api/health`、site 注册/列表和 checkpoint 重开 | `backend\\.venv\\Scripts\\python.exe scripts\\postgres_smoke.py --database-url $env:DATABASE_URL` |
 | PostgreSQL 隔离迁移与备份恢复 | 通过；独立无卷临时库完成 `0001 -> 0014`，`pg_dump` 经单事务 `psql` 恢复到空目标库后，Alembic head、marker 行、`0014` 字段和代表性行数校验通过；未删除现有 Compose volume | `docs/container-runtime.md` 的恢复门槛；`scripts/local_postgres_restore.py` 输出 |
 | PostgreSQL 并发与租约恢复 smoke | 通过；localhost 隔离空库验证预算并发预占仅一笔成功、同一 outbox 事件仅一个 worker 领取，并验证 visibility/outbox 过期租约恢复；通过模拟租约过期，不代表进程崩溃或生产压力测试 | `scripts/postgres_concurrency_smoke.py`；`docs/local-readiness.md` |

@@ -7,7 +7,7 @@
 - `apps/web` 是 React/Vite 工作台，默认端口 `5173`，将 `/api` 代理到 `127.0.0.1:8000`。
 - FastAPI 入口为 `uvicorn backend.app:app --reload --port 8000`；启动时由 `init_db()` 应用 Alembic 迁移并确保 `demo-workspace` 存在。
 - 持久任务由独立命令 `python -m backend.worker` 消费。先等待 API 完成迁移并通过 health 检查，再启动 Worker；API 不在 lifespan 中启动 Worker，Worker 也不执行数据库迁移。
-- `backend/models.py` 定义 Workspace、Site、Page、PageSnapshot、Job、审计结果、版本化 Fact、变更审批、版本化采购问题集、内容生成任务、发布 outbox、Visibility 数据，以及 workspace Membership 和追加式 AuditEvent；首次迁移为 `backend/migrations/versions/0001_initial.py`，当前迁移 head 为 `0014_memberships_audit_events_snapshot_metadata`。
+- `backend/models.py` 定义 Workspace、Site、Page、PageSnapshot、Job、审计结果、版本化 Fact、变更审批、版本化采购问题集、内容生成任务、发布 outbox、Visibility 数据，以及 workspace Membership 和追加式 AuditEvent；首次迁移为 `backend/migrations/versions/0001_initial.py`，当前迁移 head 以仓库 Alembic migration graph 为准（当前为 `0019_workflow_review_events`）。
 - Fixture 命令为 `python -m backend.fixture_server --port 8765`，只监听本机 loopback；注册 loopback 站点需要在 API 与 Worker 进程显式设置 `ALLOW_LOOPBACK=true`。
 - 默认数据库为 SQLite。根 `docker-compose.yml` 只启动 PostgreSQL，不启动 API、Worker 或 Web。
 - 根 `Makefile` 提供 `api`、`worker`、`fixture`、`web`、`db-migrate`、`test`、`web-build` 和 `health` 入口；长运行目标仍需分别在终端启动。
@@ -18,7 +18,7 @@
 | 项目 | 已有证据 | 尚未验收 |
 | --- | --- | --- |
 | Python 测试 | Python 3.12 venv 使用 `backend/requirements.lock`；当前完整运行 `backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests -q` 为 **144 passed**，覆盖审计、工作区作用域路由、多页进度统计、事实可见性、CSV 批量导入整批回滚、知识库来源边界、英中双语主题检索与改稿要求驱动的来源选择、审批版本冲突、采购问题集、内容生成、页面快照上下文、快照 hash 漂移、过期内容租约、租约失效时禁止 revision 写入、隔离 Git 发布器、发布/回滚 outbox Worker、revert 冲突保护、可见性 Provider 边界、预算条件预占/固定精度结算、HTTP request ID/脱敏、容器静态门禁和全 API workspace 角色检查。2026-10-01 较早复跑的历史计数属于历史记录 | 测试通过不代表 PostgreSQL 生产并发压力或自然租约过期已验收 |
-| SQLite / PostgreSQL 迁移 | 空库可从 `0001` 升到 `0014_memberships_audit_events_snapshot_metadata`；旧事实由迁移保守回填为 `internal_only`，另含租约、合成来源标记、版本化规则、事实、带租约 outbox、部署状态、回滚尝试元数据、版本化采购问题集、页面映射、内容生成任务、Visibility 预算快照字段、workspace 角色约束、追加式审计事件及快照 artifact/parser 元数据。历史 PostgreSQL 迁移记录仅覆盖 `0001→0008`；当前已通过隔离 PostgreSQL API/checkpoint smoke 及 `0001→0014` 迁移、双库备份恢复演练 | PostgreSQL 生产并发压力和生产备份策略仍未验收 |
+| SQLite / PostgreSQL 迁移 | 空库可从 `0001` 升到当前 repository head（目前为 `0019_workflow_review_events`）；旧事实由迁移保守回填为 `internal_only`，另含租约、合成来源标记、版本化规则、事实、带租约 outbox、部署状态、回滚尝试元数据、版本化采购问题集、页面映射、内容生成任务、Visibility 预算快照字段、workspace 角色约束、追加式审计事件及快照 artifact/parser 元数据。历史 PostgreSQL 迁移记录仅覆盖 `0001→0008`；此前 `0001→0014` 隔离迁移/备份演练为历史证据，不能替代当前 head 验证 | PostgreSQL 生产并发压力和生产备份策略仍未验收 |
 | 本地演示 | 2026-09-28 站点审计演示由独立 API、Worker、Fixture、Web 进程完成；任务 succeeded，页面快照带 hash 与 `is_synthetic=true`，并产生 `TITLE_MISSING`。2026-09-29 内容改稿 E2E 使用 loopback Fixture 和 `%TEMP%` SQLite；无主题匹配的 comparison 项进入 `needs_information` 且不保存 revision，复数 `materials` 命中事实后进入 `awaiting_review` | 仅为本机隔离 SQLite 演示，不代表生产部署验收。审核后 `content_generation_items.status` 保留生成时的 `awaiting_review`，即使关联变更已 rejected；UI 会同时显示待审标记和退回记录 |
 | 真实 HTTPS 只读检测 | 在已获站点访问授权、限定采集范围和遵守访问频率的前提下，2026-09-28 对 `https://example.com` 完成一次只读检测：job `succeeded`、HTTP `200`、内容 hash `ff67a9d764d6a2367a187734e697f6a53217db9a21c101d410a113ca871a299d`，12 条规则均执行，其中 1 条为 `needs_review` | 这是一次授权范围内的可复现采样，不代表搜索引擎收录、排名、AI 引用或业务增长；真实客户站点需重新确认授权和范围 |
 | API 兼容入口与页面摘要 | 2026-09-29 隔离演示中 `/health` 返回 `status: ok`，并通过 loopback TCP 探测动态报告 `fixture_available: true`；Web 内容改稿页保持 API 已连接；`/api/health` 与页面列表摘要的兼容检查为 2026-09-28 记录 | 未在 PostgreSQL 浏览器演示中复核 |
@@ -36,7 +36,7 @@
 
 2026-09-30 当前工作树复核已同步工作区必填参数、兼容路由归属校验、内容 Worker revision 持久化前租约校验及前端对应 API 调用；知识库扩展至 29 条，Worker 会把本次改稿要求用于检索。随后新增本地 Git 发布器、发布/回滚 outbox 租约与 Worker、部署回调/本地 commit 复查和带 SHA 保护的 revert commit，并为隔离仓库提交路径补充测试。完整后端命令复跑为 **105 passed、0 warnings**，`npm --prefix apps/web run build` 通过，`git diff --check` 通过。Playwright 在隔离临时 SQLite API 上复核 29 条知识、阀门筛选和无外链内部条目，以及桌面/移动布局；当前视口无横向溢出、控制台无错误或警告。对当前 25 个非空来源 URL 的只读 GET 均返回 HTTP 200；真实站点仍未执行发布。该记录未把 PostgreSQL `0009`、`0010`、`0011` 迁移、并发压力和生产备份恢复写成通过证据。
 
-2026-10-01 历史门禁复跑为 **113 passed**；当时 `0013_visibility_budget_snapshots` 为 Alembic head。随后阶段性门禁为 **118 passed**、**123 passed**、**127 passed**、**129 passed**、**140 passed**，当前完整门禁为 **144 passed**，当前 head 为 `0014_memberships_audit_events_snapshot_metadata`；新增模型边界、本地 readiness、HTTP 可观测性、运行治理、容器静态门禁、生产验收闸门和全 API workspace 角色授权针对性测试通过。Web 构建、评测测试、Compose 默认/demo profile 配置渲染、PostgreSQL API/checkpoint smoke、隔离迁移与双库备份恢复演练和 `git diff --check` 均通过；生产 PostgreSQL 并发压力和备份策略仍未验收。两个站点的 20 页只读采样及规则证据分别记录在 Phase 6 报告和 `output/online-audit/` 中。
+2026-10-01 历史门禁复跑为 **113 passed**；当时 `0013_visibility_budget_snapshots` 为 Alembic head。随后阶段性门禁为 **118 passed**、**123 passed**、**127 passed**、**129 passed**、**140 passed**、**144 passed**，当前完整门禁为 **233 passed**，当前 head 为 `0019_workflow_review_events`；新增模型边界、本地 readiness、HTTP 可观测性、运行治理、容器静态门禁、生产验收闸门和全 API workspace 角色授权针对性测试通过。Web 构建、评测测试、Compose 默认/demo profile 配置渲染、`0014` 以前的 PostgreSQL API/checkpoint smoke 与备份恢复演练和 `git diff --check` 均有历史记录；当前 head 的 PostgreSQL runtime 尚未验收。两个站点的 20 页只读采样及规则证据分别记录在 Phase 6 报告和 `output/online-audit/` 中。
 
 ## 本地启动
 
