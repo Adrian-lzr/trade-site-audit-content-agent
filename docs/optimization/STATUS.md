@@ -34,7 +34,7 @@ Fixture or protocol evidence is never reported as real business evidence.
 | milestone | status | evidence |
 | --- | --- | --- |
 | M0 | fixture_verified | T00-T05 have reproducible code/fixture evidence |
-| M1 | blocked_external | T06-T13 and T16 code/fixture evidence; T11 fixture journey and PostgreSQL runtime gates now pass locally, but Docker image build and remaining runtime gates are open |
+| M1 | blocked_external | T06-T13 and T16 code/fixture evidence; T11 fixture journey, T17 image build, and isolated Compose runtime gates pass locally, while real Provider/identity/site/review inputs remain open |
 | M2 | blocked_external | real identity, authorized site, Provider, deployment and independent review inputs are absent |
 | M3 | blocked_external | requires M2 plus a separately measured business observation window |
 
