@@ -1,0 +1,40 @@
+{
+  "task_id": "O08",
+  "status": "fixture_verified",
+  "source": "local SQLite fixture and worker recovery regression",
+  "code_commit": "b068f523ea9acb97a485fef68d92ee477795f644",
+  "checks": [
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_content_worker_recovery.py backend/tests/test_visibility_phase5.py backend/tests/test_model_accounting.py backend/tests/test_runtime_governance.py backend/tests/test_worker_dependency_isolation.py -q",
+      "exit_code": 0,
+      "result": "31 passed; unified ModelCall ledger for content/visibility, unknown cost retention, replay fencing, lease recovery and queue fairness"
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests -q",
+      "exit_code": 0,
+      "result": "251 passed"
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m compileall -q backend scripts evals",
+      "exit_code": 0,
+      "result": "compileall passed"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "passed"
+    }
+  ],
+  "capabilities": {
+    "content_model_calls": true,
+    "visibility_model_calls": true,
+    "unknown_cost_is_not_zero": true,
+    "provider_replay_requires_reconciliation": true,
+    "lease_fencing_before_business_terminal_write": true,
+    "synthetic_fixture_cost_source": "synthetic_fixture",
+    "unavailable_provider_cost_source": "unavailable_provider"
+  },
+  "external_blocker": "Real provider pricing/usage ledger and production runtime concurrency remain external; fixture evidence is not a production cost or throughput claim.",
+  "production_claim_allowed": false,
+  "business_data_claim": false
+}

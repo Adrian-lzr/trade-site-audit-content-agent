@@ -2,7 +2,7 @@
   "task_id": "T17",
   "status": "fixture_verified",
   "source": "isolated PostgreSQL plus local image and Compose fixture runtime",
-  "code_commit": "68277524544ab6adb8968bec87138a4c3db3afce",
+  "code_commit": "b068f523ea9acb97a485fef68d92ee477795f644",
   "checks": [
     {
       "command": "docker compose -p optvalidation postgres:16-alpine; alembic upgrade head",
@@ -69,7 +69,7 @@
     {
       "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests -q (post-audit changes)",
       "exit_code": 0,
-      "result": "249 passed"
+      "result": "251 passed"
     },
     {
       "command": "docker pull mirror.gcr.io/library/python:3.12-slim; docker pull mirror.gcr.io/library/node:22-alpine; docker pull mirror.gcr.io/library/nginx:1.27-alpine; docker tag ...; docker compose --progress plain build api worker web",
@@ -86,6 +86,11 @@
       "evidence_ref": "output/optimization/T17/compose-runtime-consumption-202610051751.json",
       "runtime_ps_ref": "output/optimization/T17/compose-ps-202610051751.json",
       "evidence_kind": "fixture_runtime"
+    },
+    {
+      "command": "backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests/test_content_worker_recovery.py backend/tests/test_visibility_phase5.py backend/tests/test_model_accounting.py backend/tests/test_runtime_governance.py backend/tests/test_worker_dependency_isolation.py -q",
+      "exit_code": 0,
+      "result": "31 passed; unified content/visibility ModelCall ledger and lease/replay accounting"
     }
   ],
   "artifacts": [

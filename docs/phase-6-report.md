@@ -9,7 +9,7 @@
 
 | 检查 | 本轮结果 | 证据 |
 | --- | --- | --- |
-| Python 后端测试 | `249 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider backend/tests -q` |
+| Python 后端测试 | `251 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider backend/tests -q` |
 | 评测工具测试 | `10 passed` | `backend\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider -q evals\\tests` |
 | Web 构建 | 通过，Vite 8.3.1 | `npm --prefix apps/web run build` |
 | 数据库迁移 | 通过，当前 `0019_workflow_review_events (head)` | `backend\\.venv\\Scripts\\python.exe -m alembic -c backend\\alembic.ini upgrade head` 和 `current` |
@@ -18,7 +18,9 @@
 | PostgreSQL 隔离迁移与备份恢复 | 历史 `0001 -> 0014` 证据保留；本轮全新 PostgreSQL 16 空库已从 `0001` 升至当前 `0019_workflow_review_events`，并验证 `0018` 布尔约束按方言生成；独立 tmpfs 源/目标容器备份恢复通过，目标库为空、单事务恢复、代表性计数一致 | `scripts/migration_head.py`; `scripts/local_postgres_restore.py`; `output/optimization/T17/evidence.json`; `output/optimization/T17/backup-restore-20261005134014b.json` |
 | PostgreSQL 并发与租约恢复 smoke | 通过；当前 head 的 localhost 隔离空库验证预算并发预占仅一笔成功、同一 outbox 事件仅一个 worker 领取，并验证 visibility/outbox 过期租约恢复；通过模拟租约过期，不代表进程崩溃或生产压力测试 | `scripts/postgres_concurrency_smoke.py`; `output/optimization/T17/evidence.json` |
 | 本地五页发布 readiness | 本地制品与回调演练通过；2026-10-01 的旧报告把本地 Git commit 误计为部署验证，2026-10-02 已修正门禁：当前演练记录 5 个 `verification_unavailable`，并在缺少目标页读取时阻止回滚。旧 JSON 不作为 O04 验收证据 | `scripts/local_readiness.py`；`docs/local-readiness.md`；`docs/optimization/STATUS.md` |
+| O04 本地 HTML 发布闭环 | 通过 fixture runtime；approved revision → constrained apply → fresh local target read → signed callback → verified → manual-edit rollback conflict → guarded rollback/replay；不等同真实站点发布 | `scripts/local_html_publication_e2e.py`; `output/optimization/O04/local-html-publication-e2e-20261006.json`; `backend/tests/test_local_html_publication_e2e.py` | 真实授权预发布目标与线上回滚仍未验收 |
 | 运行治理 | 新增验证；单次/工作区日预算上限、原始证据字节限制与保留期、Provider request ID 透传和敏感信息脱敏均有测试；真实 PostgreSQL 同工作区并发预算预占只允许一笔成功 | `backend/tests/test_runtime_governance.py`；临时 PostgreSQL 并发 smoke |
+| 统一模型调用账务 | 通过 fixture runtime；content 与 visibility 均写入 ModelCall，fixture/unavailable/unknown cost 分开结算，重放和租约失效路径保留 reconciliation 边界 | `backend/content_worker.py`; `backend/visibility_worker.py`; `backend/services/accounting.py`; `output/optimization/O08/evidence.json` | 真实 Provider 价格、usage 与生产并发仍未验收 |
 | HTTP 可观测性 | 新增验证；API 响应回传 `X-Request-ID`，HTTP 日志通过脱敏 helper 输出结构化事件 | `backend/observability.py`；`backend/tests/test_observability.py` |
 | API/Worker 事件审计 | 通过本地回归；事实、问题集、修订及 audit/content/visibility/publication/review Worker 的创建、领取、完成事件记录 initiator/executor、task/thread、租约哈希、attempt、revision、result/error type；租约原文、Provider 响应和错误正文不落库，API 审计 payload 也在持久化前脱敏 | `backend/worker_audit.py`；`backend/tests/test_worker_audit.py`；`output/optimization/T16/evidence.json` |
 | 容器镜像构建 | 通过 fixture runtime；从 `mirror.gcr.io` 拉取并本地重标记同版本基础镜像后，API/Worker/Web 镜像构建成功并记录 digest；不等同批准的生产镜像来源 | `scripts/container_build_check.py`；`output/optimization/T17/docker-build-success-20261005173707.json`；`output/optimization/T17/docker-build-success-20261005173707.log`；`docs/container-runtime.md` |
