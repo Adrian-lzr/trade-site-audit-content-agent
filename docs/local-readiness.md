@@ -67,6 +67,47 @@ The test proves the local artifact state machine, fail-closed verification gate,
 rollback guard, and cleanup. It does not prove remote PR creation, CMS writes,
 deployment orchestration, or live HTTP content.
 
+## Constrained HTML Apply and Fresh-Read Rehearsal
+
+The adapter-level rehearsal covers the local page path that the five-page API
+readiness run deliberately leaves unavailable: an approved revision is applied
+to an allowlisted HTML field, a process-local observer rereads the exact file,
+the callback signature and commit/revision/content hashes are checked, and a
+manual target edit blocks rollback before a guarded rollback succeeds. The
+repository is temporary and synthetic; no HTTP request or remote push is made.
+
+```powershell
+$py = (Resolve-Path "backend/.venv/Scripts/python.exe")
+& $py scripts/local_html_publication_e2e.py `
+  --output output/optimization/O04/local-html-publication-e2e-20261006.json
+```
+
+The expected report is `verification=fixture_verified`, with
+`external_side_effects.http_requests=0`, `production_site_write=false`, and
+successful `verified` and `rolled_back` stages. This does not authorize or
+verify a customer staging target.
+
+## Unified Model-Call Accounting Rehearsal
+
+Content drafting and visibility sampling write a shared `ModelCall` ledger in
+the local fixture path. Synthetic calls are labeled `synthetic_fixture`;
+unavailable providers are labeled `unavailable_provider`; unknown provider
+charges remain `unknown_result` and keep their budget reservation. Replays of a
+possibly billable call stop for reconciliation.
+
+```powershell
+& $py -m pytest -p no:cacheprovider `
+  backend/tests/test_content_worker_recovery.py `
+  backend/tests/test_visibility_phase5.py `
+  backend/tests/test_model_accounting.py `
+  backend/tests/test_runtime_governance.py `
+  backend/tests/test_worker_dependency_isolation.py -q
+```
+
+The current fixture evidence records 31 passing tests in
+`output/optimization/O08/evidence.json`. Real provider billing and production
+throughput still require authorized runtime inputs.
+
 ## Docker Compose Boundary Check
 
 Render both Compose profiles without starting containers or building images:

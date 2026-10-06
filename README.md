@@ -179,6 +179,22 @@ backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider backend/tests -q
 npm --prefix apps/web run build
 ```
 
+The local adapter and unified accounting rehearsals are also reproducible:
+
+```powershell
+backend/.venv/Scripts/python.exe scripts/local_html_publication_e2e.py `
+  --output output/optimization/O04/local-html-publication-e2e-20261006.json
+backend/.venv/Scripts/python.exe -m pytest -p no:cacheprovider `
+  backend/tests/test_content_worker_recovery.py `
+  backend/tests/test_visibility_phase5.py `
+  backend/tests/test_model_accounting.py `
+  backend/tests/test_runtime_governance.py `
+  backend/tests/test_worker_dependency_isolation.py -q
+```
+
+These commands exercise synthetic local evidence. They do not authorize
+production site writes, real provider billing, or remote deployment.
+
 Phase 3 内容任务的专项测试文件及其覆盖边界见[第 3 阶段状态](docs/phase-3.md)。不要用历史测试计数代替当前命令输出。
 
 健康检查由 `/health` 与 `/api/health` 提供；`fixture_available` 会实际探测 `127.0.0.1:FIXTURE_PORT`，不会在 Fixture 未启动时误报可用。页面列表摘要 `/api/sites/{site_id}/pages` 返回规则总数、失败、待复核和未知结果数量。
@@ -198,6 +214,8 @@ GitHub 参考项目、许可证核对和选择性借鉴边界见[参考项目选
 - [Phase 6 实测报告](docs/phase-6-report.md)：本轮测试、两个公开站点的只读采样和未完成验收项。
 - [生产验收闸门](docs/production-acceptance.md)：真实 Provider、站点授权、人工评测、备份恢复、镜像、身份、回滚、CRM 和远程发布证据的只读检查。
 - [本地 readiness 与备份恢复说明](docs/local-readiness.md)：隔离 Git 发布/回滚、Compose 边界和临时 PostgreSQL 恢复演练。
+- [O04 本地 HTML 发布闭环证据](output/optimization/O04/local-html-publication-e2e-20261006.json)：受控字段、fresh observer、验证和回滚冲突保护。
+- [O08 统一账务证据](output/optimization/O08/evidence.json)：内容/Visibility `ModelCall` 台账、未知费用和重放边界。
 - [评测结果](evals/artifacts/phase6-evaluation.json) 与 [人工标注格式](evals/annotations/README.md)：合成 fixture 与待人工复核数据明确分开。
 - [架构图](docs/architecture.md)、[架构决策记录](docs/adr/) 与 [五分钟演示脚本](docs/demo-script.md)。
 - [依赖与许可证边界](docs/licenses.md)、[许可证清单](docs/license-inventory.md) 与 [据实项目条目](docs/resume-entry.md)。
