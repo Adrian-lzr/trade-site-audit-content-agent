@@ -84,6 +84,15 @@ Phase 6 门禁矩阵：
 - 二十页扩展采样中，`zoogo.club` 为 20 页、240 条规则结果（`pass=182`、`needs_review=31`、`unknown=15`、`not_applicable=12`）；`zoogosports.com` 为 20 页、240 条规则结果（`pass=168`、`fail=20`、`needs_review=26`、`unknown=8`、`not_applicable=18`）。20 条规则失败包含 19 条 `internal_links` 和 1 条 `http_status_redirect`，证据指向 `https://zoogosports.com/cdn-cgi/l/email-protection` 返回 `404`；这些是规则层失败，数据库中的 `AuditFinding` 记录仍为 0，不能混写为“0 问题”。
 - 所有在线报告均为有界 HTML/robots/sitemap 采样，不是全站审计；没有调用 CMS、Git、PR、表单或发布接口，也不测量排名、消费者 AI 引用、流量或询盘。
 
+### 2026-10-06 实时复跑
+
+最新 5 页/站有界只读证据：`output/online-audit/zoogo-sites-20261006-page5.json`。
+
+- `https://zoogo.club`：5 页、60 条规则结果，`pass=47`、`needs_review=5`、`unknown=5`、`not_applicable=3`，job `succeeded`，硬 findings 为 0。
+- `https://zoogosports.com`：5 页、60 条规则结果，`pass=50`、`needs_review=4`、`unknown=5`、`not_applicable=1`，job `succeeded`，硬 findings 为 0。
+- 所有请求仍为 HTTPS `GET`，没有 CMS、表单、发布、PR 或部署调用；该证据仍是有界只读可达性与解析器回归输入，不是授权、生产事实、排名、AI 引用或业务结果。
+
+
 ## 未完成验收
 
 1. 人工标注评测集和人工审核采纳/拒绝记录仍待真实参与者完成。
