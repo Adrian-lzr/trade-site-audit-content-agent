@@ -5,7 +5,9 @@ import os
 import uuid
 from contextlib import contextmanager
 from datetime import timedelta
+from decimal import Decimal
 from pathlib import Path
+from time import perf_counter
 from typing import Iterator
 
 from sqlalchemy import select, update
@@ -21,7 +23,8 @@ from .content_workflow import (
 from .database import SessionLocal
 from .knowledge import runtime_guidance
 from .model_gateway import FixtureModelDraftGateway, ModelGatewayConfig, OpenAICompatibleDraftGateway
-from .models import ContentGenerationItem, ContentGenerationTask, Page, PageSnapshot, ProcurementQuestion, ProcurementQuestionSetVersion, ProcurementQuestionSet, Site, utcnow
+from .models import ContentGenerationItem, ContentGenerationTask, ModelCall, Page, PageSnapshot, ProcurementQuestion, ProcurementQuestionSetVersion, ProcurementQuestionSet, Site, utcnow
+from .services.accounting import finish_model_call, start_model_call
 from .worker_audit import append_worker_audit, initiator_for
 
 
@@ -105,6 +108,116 @@ def _procurement_context(db, item: ContentGenerationItem, task: ContentGeneratio
     }
 
 
+class _AccountingDraftGateway:
+    """Record each provider attempt without holding the task lease transaction.
+
+    The content workflow owns revision persistence and checkpointing, while this
+    wrapper owns the durable model-call ledger.  A fixture has an explicit zero
+    price; a configured provider without a returned charge remains
+    ``unknown_result`` so a restart cannot silently retry a possibly billable
+    request.
+    """
+
+    def __init__(self, gateway, *, workspace_id: int):
+        self._gateway = gateway
+        self._workspace_id = workspace_id
+        self._synthetic = isinstance(gateway, FixtureModelDraftGateway) or bool(
+            getattr(gateway, "is_synthetic", False)
+        )
+
+    def draft(self, request):
+        call_key = f"content:{self._workspace_id}:{request.generation_id}"
+        estimated_cost = Decimal("0") if self._synthetic else None
+        with SessionLocal() as ledger_db:
+            existing = ledger_db.scalar(
+                select(ModelCall).where(
+                    ModelCall.workspace_id == self._workspace_id,
+                    ModelCall.call_key == call_key,
+                )
+            )
+            if existing is not None:
+                # A reserved row may represent a process crash after the
+                # provider request was sent.  Treat that window as uncertain
+                # and never issue a blind duplicate request.  Deterministic
+                # zero-cost fixtures are the only safe replay exception.
+                if existing.status == "reserved" and self._synthetic:
+                    call_id = existing.id
+                    ledger_db.commit()
+                else:
+                    if existing.status == "reserved":
+                        finish_model_call(
+                            ledger_db,
+                            existing.id,
+                            status="failed",
+                            actual_cost=None,
+                            cost_known=False,
+                            error_code="uncertain_prior_attempt",
+                            error_message=None,
+                        )
+                    ledger_db.commit()
+                    raise RuntimeError(
+                        f"model call {call_key} is already {existing.status}; reconcile before retry"
+                    )
+            else:
+                call = start_model_call(
+                    ledger_db,
+                    workspace_id=self._workspace_id,
+                    call_key=call_key,
+                    call_type="content_generation",
+                    input_value=request,
+                    estimated_cost=estimated_cost,
+                    budget_limit=Decimal("0"),
+                    generation_id=request.generation_id,
+                    attempt=1,
+                    price_version="fixture-v1" if self._synthetic else None,
+                    cost_source="synthetic_fixture" if self._synthetic else None,
+                    strict_budget=False,
+                )
+                call_id = call.id
+                ledger_db.commit()
+
+        # A settled call has no replayable provider body in ModelCall.  Refuse
+        # to invoke the provider again; LangGraph checkpoints normally avoid
+        # this path, while a stale checkpoint gets an explicit reconciliation
+        # error instead of a duplicate billable attempt.
+        started = perf_counter()
+        try:
+            result = self._gateway.draft(request)
+        except Exception as exc:
+            self._finish(
+                call_id,
+                status="failed",
+                output_value=None,
+                actual_cost=Decimal("0") if self._synthetic else None,
+                cost_known=self._synthetic,
+                cost_source="synthetic_fixture" if self._synthetic else None,
+                error_code=type(exc).__name__,
+                latency_ms=_elapsed_ms(started),
+            )
+            raise
+
+        self._finish(
+            call_id,
+            status="succeeded",
+            output_value=result,
+            actual_cost=Decimal("0") if self._synthetic else None,
+            cost_known=self._synthetic,
+            cost_source="synthetic_fixture" if self._synthetic else "provider_response",
+            latency_ms=_elapsed_ms(started),
+        )
+        return result
+
+    @staticmethod
+    def _finish(call_id: int, **kwargs) -> None:
+        with SessionLocal() as ledger_db:
+            finish_model_call(ledger_db, call_id, **kwargs)
+            ledger_db.commit()
+
+
+def _elapsed_ms(started: float) -> int:
+    return max(0, round((perf_counter() - started) * 1000))
+
+
 class ContentGenerationWorker:
     def __init__(self, gateway=None, lease_duration: timedelta = CONTENT_LEASE):
         self.gateway = gateway
@@ -182,9 +295,10 @@ class ContentGenerationWorker:
             )
             owns_gateway = self.gateway is None
             gateway = self.gateway or configured_draft_gateway()
+            accounting_gateway = _AccountingDraftGateway(gateway, workspace_id=task.workspace_id)
             try:
                 with checkpoint_saver() as saver:
-                    graph = build_content_workflow(repository, gateway, saver)
+                    graph = build_content_workflow(repository, accounting_gateway, saver)
                     for item in items:
                         # A task lease can expire after an item has committed its
                         # revision and item status but before the batch is finalized.

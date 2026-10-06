@@ -1,0 +1,62 @@
+{
+  "status": "passed",
+  "verification": "fixture_verified",
+  "source": "local synthetic fixture only",
+  "target": "fixture:home",
+  "repository": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\trade-visibility-html-e2e-5oxei3r9\\site-repository",
+  "page": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\trade-visibility-html-e2e-5oxei3r9\\site-repository\\index.html",
+  "stages": {
+    "approved_revision": {
+      "state": "approved",
+      "revision_hash": "6c786b107f1a8eab85ed79f448983433936278c751ea04999a3cda5046d17028",
+      "approval_id": "fixture-approval-1",
+      "approver": "fixture-reviewer",
+      "base_content_hash": "c199447dcca29fb5a4b43dd823ca880d7a5d2416c847c5eb000b41e417f0133c",
+      "base_commit": "5b27ad787f0be6793345d68966b3e74f1fb5c8bb",
+      "fact_set_hash": "08fa8209315423e63e5d1bbd18cd7ad67dc1c62b752e80fe0b2700b09f7a3809",
+      "is_synthetic": true
+    },
+    "constrained_html_apply": {
+      "status": "applied",
+      "changed": true,
+      "replayed": false,
+      "applied_content_hash": "7dc7cf98a9f243d5dd265b2a227dabd27200f0067ea743c57b28cee1985dd8f2",
+      "unrelated_content_preserved": true
+    },
+    "fresh_target_observation": {
+      "target": "fixture:home",
+      "commit": "420f3a43ace2a45f16603844f14b18c257f9dbb4",
+      "revision_hash": "6c786b107f1a8eab85ed79f448983433936278c751ea04999a3cda5046d17028",
+      "content_hash": "7dc7cf98a9f243d5dd265b2a227dabd27200f0067ea743c57b28cee1985dd8f2",
+      "deployment_commit": "420f3a43ace2a45f16603844f14b18c257f9dbb4",
+      "evidence": {
+        "source": "local-fixture-target-file",
+        "is_synthetic": true,
+        "fresh_read": true,
+        "representation": "exact UTF-8 index.html bytes",
+        "attempt_id": null
+      }
+    },
+    "verified": {
+      "status": "verified",
+      "commit_matches": true,
+      "revision_matches": true,
+      "content_matches": true,
+      "callback_signature_verified": true
+    },
+    "guarded_rollback": {
+      "manual_edit_conflict_rejected": true,
+      "status": "rolled_back",
+      "restored_content_hash": "c199447dcca29fb5a4b43dd823ca880d7a5d2416c847c5eb000b41e417f0133c",
+      "replay_rejected_as_new_write": true
+    }
+  },
+  "external_side_effects": {
+    "http_requests": 0,
+    "remote_git_push": false,
+    "cms_write": false,
+    "production_site_write": false,
+    "is_synthetic": true
+  },
+  "workdir_retained": false
+}

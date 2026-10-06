@@ -15,6 +15,7 @@ from backend.models import (
     Site,
     VisibilityRun,
     VisibilitySample,
+    ModelCall,
     Workspace,
     utcnow,
 )
@@ -88,6 +89,12 @@ def test_fixture_visibility_run_persists_raw_answer_citations_and_metrics():
         assert all(sample["status"] == "succeeded" for sample in body["samples"])
         assert all(sample["raw_response"] for sample in body["samples"])
         assert all("acme.example" in sample["citations"][0] for sample in body["samples"])
+        with SessionLocal() as db:
+            calls = db.scalars(select(ModelCall).where(ModelCall.workspace_id == workspace_id).order_by(ModelCall.id)).all()
+            assert len(calls) == 2
+            assert all(call.call_type == "visibility_sample" for call in calls)
+            assert all(call.status == "succeeded" and call.cost_known for call in calls)
+            assert all(call.cost_source == "synthetic_fixture" for call in calls)
 
         duplicate = _create_run(client, workspace_id, site_id, version_id)
         assert duplicate.status_code == 202
@@ -115,6 +122,83 @@ def test_structured_provider_without_credentials_is_unavailable_and_not_success(
         assert body["capability"]["available"] is False
         assert all(sample["status"] == "unavailable" for sample in body["samples"])
         assert body["metrics"]["sampling_success_rate"] == 0.0
+        with SessionLocal() as db:
+            calls = db.scalars(select(ModelCall).where(ModelCall.workspace_id == workspace_id).order_by(ModelCall.id)).all()
+            assert len(calls) == 2
+            assert all(call.call_type == "visibility_sample" for call in calls)
+            assert all(call.status == "failed" and call.cost_known and call.amount == Decimal("0.000000") for call in calls)
+            assert all(call.cost_source == "unavailable_provider" for call in calls)
+
+
+def test_unknown_provider_cost_stays_unknown_and_keeps_run_reservation():
+    workspace_id, site_id, query_set_id, version_id = _records()
+    with SessionLocal() as db:
+        question = db.scalar(select(ProcurementQuestion).where(ProcurementQuestion.question_set_version_id == version_id))
+        run = VisibilityRun(
+            workspace_id=workspace_id,
+            site_id=site_id,
+            question_set_id=query_set_id,
+            question_set_version_id=version_id,
+            provider="unknown-cost-fixture",
+            provider_kind="model_api",
+            provider_model="unknown-cost-v1",
+            is_synthetic=False,
+            market="US",
+            language="en",
+            status="queued",
+            budget_usd="1.000000",
+            planned_samples=1,
+            total_cost_usd="0.000000",
+            reserved_cost_usd="0.000000",
+            brand_terms_json="[]",
+        )
+        run.samples = [VisibilitySample(question_id=question.id, position=question.position, status="failed", brand_query=False)]
+        db.add(run)
+        db.commit()
+        run_id = run.id
+
+    class UnknownCostProvider:
+        name = "unknown-cost-fixture"
+        kind = "model_api"
+        model = "unknown-cost-v1"
+        is_synthetic = False
+
+        def capabilities(self):
+            return {"available": True, "synthetic": False}
+
+        def estimate_cost(self, question):
+            return Decimal("0.010000")
+
+        def sample(self, question, *, market, language, target_domain):
+            return VisibilityResponse(answer_text="answer", raw_response="{}", cost_usd=None)
+
+    assert VisibilityWorker(provider_factory=lambda _: UnknownCostProvider()).run_once(run_id=run_id)
+    with SessionLocal() as db:
+        run = db.get(VisibilityRun, run_id)
+        sample = db.scalar(select(VisibilitySample).where(VisibilitySample.run_id == run_id))
+        call = db.scalar(select(ModelCall).where(ModelCall.workspace_id == workspace_id))
+        assert sample.status == "succeeded"
+        assert sample.cost_usd is None
+        assert run.reserved_cost_usd == "0.010000"
+        assert "cost is unknown" in (run.error or "")
+        assert call is not None
+        assert call.status == "unknown_result"
+        assert call.cost_known is False
+        assert call.amount is None
+
+        # A recovered run must not release a fresh reservation merely because
+        # an earlier attempt already has a ledger row without replayable body.
+        run.status = "queued"
+        run.lease_token = None
+        run.lease_expires_at = None
+        run.completed_at = None
+        sample.status = "failed"
+        db.commit()
+
+    assert VisibilityWorker(provider_factory=lambda _: UnknownCostProvider()).run_once(run_id=run_id)
+    with SessionLocal() as db:
+        recovered = db.get(VisibilityRun, run_id)
+        assert recovered.reserved_cost_usd == "0.020000"
 
 
 def test_visibility_run_rejects_cross_workspace_site_and_worker_budget():

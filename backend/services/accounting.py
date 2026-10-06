@@ -129,8 +129,16 @@ def start_model_call(
     price_version: str | None = None,
     cost_source: str | None = None,
     strict_budget: bool = True,
+    reserve: bool = True,
 ) -> ModelCall:
-    """Persist a call and its reservation; commit before doing network work."""
+    """Persist a call and (optionally) its reservation before network work.
+
+    Visibility runs already reserve their estimate atomically on the run row so
+    that per-run and workspace-daily limits can be enforced together.  They
+    still use this helper as the unified call ledger, with ``reserve=False`` to
+    avoid double-counting the same in-flight amount.  Content generation keeps
+    the default reservation path.
+    """
     if not call_key.strip() or not call_type.strip():
         raise AccountingError("call_key and call_type are required")
     if attempt < 1:
@@ -160,15 +168,16 @@ def start_model_call(
     )
     db.add(call)
     db.flush()
-    reserve_budget(
-        db,
-        workspace_id=workspace_id,
-        reservation_key=call_key,
-        amount=estimate,
-        budget_limit=budget_limit,
-        currency=call.currency,
-        model_call_id=call.id,
-    )
+    if reserve:
+        reserve_budget(
+            db,
+            workspace_id=workspace_id,
+            reservation_key=call_key,
+            amount=estimate,
+            budget_limit=budget_limit,
+            currency=call.currency,
+            model_call_id=call.id,
+        )
     return call
 
 

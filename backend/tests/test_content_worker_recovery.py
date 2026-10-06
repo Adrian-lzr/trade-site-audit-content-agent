@@ -25,6 +25,7 @@ from backend.models import (
     ChangeRevision,
     ContentGenerationItem,
     ContentGenerationTask,
+    ModelCall,
     Fact,
     Page,
     PageSnapshot,
@@ -152,7 +153,7 @@ def test_worker_maps_fixture_evidence_match_to_review_or_needs_information(
     expected_status,
 ):
     factory, path = isolated_database
-    task_id, item_id, _, _, change_id, fact_id = _records(factory)
+    task_id, item_id, workspace_id, _, change_id, fact_id = _records(factory)
     with factory() as db:
         item = db.get(ContentGenerationItem, item_id)
         question = db.get(ProcurementQuestion, item.question_id)
@@ -179,8 +180,14 @@ def test_worker_maps_fixture_evidence_match_to_review_or_needs_information(
         task = db.get(ContentGenerationTask, task_id)
         item = db.get(ContentGenerationItem, item_id)
         change = db.get(ChangeRequest, change_id)
+        calls = db.query(ModelCall).filter(ModelCall.workspace_id == workspace_id).all()
         assert task.status == expected_status
         assert item.status == expected_status
+        assert len(calls) == 1
+        assert calls[0].call_type == "content_generation"
+        assert calls[0].status == "succeeded"
+        assert calls[0].cost_known is True
+        assert calls[0].cost_source == "synthetic_fixture"
         if expected_status == "needs_information":
             assert change.current_revision_id is None
         else:

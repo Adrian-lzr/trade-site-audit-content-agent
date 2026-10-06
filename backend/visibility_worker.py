@@ -7,6 +7,7 @@ import logging
 import uuid
 from datetime import datetime, time, timedelta, timezone
 from decimal import Decimal, InvalidOperation
+from time import perf_counter
 from typing import Callable
 from urllib.parse import urlsplit
 
@@ -21,6 +22,7 @@ from .models import (
     ProcurementQuestionSetVersion,
     Site,
     Workspace,
+    ModelCall,
     VisibilityRun,
     VisibilityRunStatus,
     VisibilitySample,
@@ -29,6 +31,7 @@ from .models import (
 )
 from .time_utils import as_utc
 from .services.visibility_metrics import calculate_visibility_metrics as calculate_visibility_metrics_v2
+from .services.accounting import finish_model_call, start_model_call
 from .visibility_provider import VisibilityProvider, VisibilityResponse, build_visibility_provider, redact_sensitive_text
 from .worker_audit import append_worker_audit, initiator_for
 
@@ -299,6 +302,45 @@ class VisibilityWorker:
                             run.error = "sampling budget exhausted"
                         db.commit()
                         continue
+                    # Commit the run-level reservation before opening the
+                    # independent model-call ledger transaction.  This keeps
+                    # the workspace/run lock short and releases it before any
+                    # provider network work begins.
+                    db.commit()
+                    ledger_call_id, ledger_error = _start_visibility_model_call(
+                        workspace_id=run.workspace_id,
+                        run_id=run.id,
+                        sample_id=sample.id,
+                        attempt=run.attempts,
+                        request_id=sample.request_id,
+                        provider=provider,
+                        estimate=estimate,
+                    )
+                    if ledger_error is not None or ledger_call_id is None:
+                        _set_failed(
+                            sample,
+                            ledger_error or "model_call_accounting_error",
+                            "provider call requires reconciliation before retry",
+                        )
+                        run.error = "model call requires reconciliation before retry"
+                        # A prior ledger row means the provider outcome may be
+                        # unknown.  Keep this attempt's reservation until an
+                        # explicit reconciliation; only a fresh accounting
+                        # setup failure may safely release it.
+                        unresolved = ledger_error == "model_call_replay_required"
+                        _settle_sample_cost(
+                            db,
+                            run.id,
+                            sample.id,
+                            None if unresolved else Decimal("0"),
+                            estimate,
+                            token,
+                        )
+                        db.commit()
+                        continue
+                    attempted = bool(capabilities.get("available", True)) if isinstance(capabilities, dict) else True
+                    synthetic = bool(getattr(provider, "is_synthetic", False))
+                    started = perf_counter()
                     try:
                         response = _sample_provider(
                             provider,
@@ -314,8 +356,20 @@ class VisibilityWorker:
                             error_code="provider_exception",
                             error_message=f"provider raised {type(exc).__name__}",
                         )
+                    elapsed_ms = max(0, round((perf_counter() - started) * 1000))
+                    _finish_visibility_model_call(
+                        ledger_call_id,
+                        response,
+                        elapsed_ms=elapsed_ms,
+                        attempted=attempted,
+                        synthetic=synthetic,
+                    )
+                    # A provider may outlive the worker lease.  Persist the
+                    # provider ledger result above, but leave sample/run
+                    # business state untouched when fencing rejects the lease.
+                    self._renew(db, run.id, token)
                     _apply_response(sample, response, max_raw_bytes=self.raw_max_bytes)
-                    observed_cost = _decimal(response.cost_usd)
+                    observed_cost = _decimal(response.cost_usd) if response.cost_usd is not None else None
                     # SessionLocal deliberately disables autoflush. Flush the
                     # evidence before the SQL accounting update, then read the
                     # updated totals without refreshing the run relationship;
@@ -330,6 +384,11 @@ class VisibilityWorker:
                     )
                     run.total_cost_usd = _money(new_total)
                     run.reserved_cost_usd = _money(new_reserved)
+                    if observed_cost is None and attempted:
+                        # Preserve the estimate as an in-flight reservation
+                        # until a provider billing record reconciles it.  A
+                        # missing provider charge must never become free.
+                        run.error = "provider cost is unknown; reservation retained pending reconciliation"
                     if budget > 0 and new_total > budget and sample.status == VisibilitySampleStatus.succeeded.value:
                         _set_failed(sample, "budget_exceeded", "provider response exceeded the sampling budget")
                         run.error = "sampling budget exceeded"
@@ -434,6 +493,100 @@ class VisibilityWorker:
         while not stop_event.is_set():
             if not self.run_once():
                 stop_event.wait(poll_interval)
+
+
+def _start_visibility_model_call(
+    *,
+    workspace_id: int,
+    run_id: int,
+    sample_id: int,
+    attempt: int,
+    request_id: str | None,
+    provider: VisibilityProvider,
+    estimate: Decimal,
+) -> tuple[int | None, str | None]:
+    """Create one ledger row, refusing a provider retry after an uncertain call.
+
+    VisibilityRun already owns the conditional per-run/daily reservation.  The
+    ModelCall row therefore records the same attempt with ``reserve=False``;
+    keeping one reservation authority avoids charging an estimate twice while
+    still giving content and visibility a common ledger.
+    """
+
+    prefix = f"visibility:run:{run_id}:sample:{sample_id}:"
+    current_key = f"{prefix}attempt:{attempt}"
+    synthetic = bool(getattr(provider, "is_synthetic", False))
+    capabilities = provider.capabilities() if callable(getattr(provider, "capabilities", None)) else {}
+    available = bool(capabilities.get("available", True)) if isinstance(capabilities, dict) else True
+    # A provider that is unavailable did not make a billable network attempt;
+    # its explicit zero disposition is recorded after the response below.
+    estimated = _decimal(estimate) if synthetic or (available and _decimal(estimate) > 0) else None
+    with SessionLocal() as ledger_db:
+        previous = ledger_db.scalars(
+            select(ModelCall).where(
+                ModelCall.workspace_id == workspace_id,
+                ModelCall.call_key.like(prefix + "%"),
+            ).order_by(ModelCall.id)
+        ).all()
+        if previous:
+            # No output body is retained in the accounting table.  A replay
+            # must therefore wait for reconciliation instead of calling a
+            # potentially billable provider twice.
+            return None, "model_call_replay_required"
+        call = start_model_call(
+            ledger_db,
+            workspace_id=workspace_id,
+            call_key=current_key,
+            call_type="visibility_sample",
+            input_value={"run_id": run_id, "sample_id": sample_id, "request_id": request_id},
+            estimated_cost=estimated,
+            budget_limit=Decimal("0"),
+            currency="USD",
+            generation_id=request_id,
+            sample_id=request_id,
+            attempt=attempt,
+            price_version="fixture-v1" if synthetic else None,
+            cost_source="synthetic_fixture" if synthetic else None,
+            strict_budget=False,
+            reserve=False,
+        )
+        call_id = call.id
+        if call.status != "reserved":
+            return None, "model_call_replay_required"
+        ledger_db.commit()
+        return call_id, None
+
+
+def _finish_visibility_model_call(
+    call_id: int,
+    response: VisibilityResponse,
+    *,
+    elapsed_ms: int,
+    attempted: bool,
+    synthetic: bool,
+) -> None:
+    known_cost = synthetic or not attempted or response.cost_usd is not None
+    actual_cost = _decimal(response.cost_usd) if attempted and response.cost_usd is not None else Decimal("0") if not attempted or synthetic else None
+    source = "synthetic_fixture" if synthetic else "unavailable_provider" if not attempted else "provider_response"
+    with SessionLocal() as ledger_db:
+        finish_model_call(
+            ledger_db,
+            call_id,
+            status="succeeded" if response.status == VisibilitySampleStatus.succeeded.value else "failed",
+            output_value={"answer": response.answer_text, "citations": response.citations},
+            provider_request_id=response.provider_request_id,
+            input_tokens=response.input_tokens,
+            output_tokens=response.output_tokens,
+            actual_cost=actual_cost,
+            cost_known=known_cost,
+            cost_source=source,
+            latency_ms=elapsed_ms,
+            error_code=response.error_code,
+            # Provider error text is already persisted in the bounded sample
+            # evidence; the ledger keeps only the typed error to avoid secrets.
+            error_message=None,
+        )
+        ledger_db.commit()
 
 
 def _question_text(db, question_id: int) -> str:
@@ -569,12 +722,23 @@ def _reserve_sample_budget(
     return bool(result.rowcount)
 
 
-def _settle_sample_cost(db, run_id: int, sample_id: int, observed: Decimal, estimate: Decimal, token: str) -> None:
-    """Release the reservation and atomically add the provider-reported cost."""
+def _settle_sample_cost(db, run_id: int, sample_id: int, observed: Decimal | None, estimate: Decimal, token: str) -> None:
+    """Settle known cost, or retain the reservation for an unknown result."""
     del sample_id  # The sample row carries the detailed estimate and actual amount.
-    observed = _decimal(observed).quantize(Decimal("0.000001"))
     estimate = _decimal(estimate).quantize(Decimal("0.000001"))
-    db.execute(
+    if observed is None:
+        # The lease guard still fences the update, while retaining the amount
+        # makes the unresolved billing window visible to budget checks.
+        changed = db.execute(
+            update(VisibilityRun)
+            .where(VisibilityRun.id == run_id, VisibilityRun.lease_token == token)
+            .values(reserved_cost_usd=VisibilityRun.reserved_cost_usd)
+        )
+        if not changed.rowcount:
+            raise RuntimeError("visibility run lease was lost before cost settlement")
+        return
+    observed = _decimal(observed).quantize(Decimal("0.000001"))
+    changed = db.execute(
         update(VisibilityRun)
         .where(VisibilityRun.id == run_id, VisibilityRun.lease_token == token)
         .values(
@@ -582,6 +746,8 @@ def _settle_sample_cost(db, run_id: int, sample_id: int, observed: Decimal, esti
             reserved_cost_usd=_sql_money_expression(db, VisibilityRun.reserved_cost_usd, -estimate),
         )
     )
+    if not changed.rowcount:
+        raise RuntimeError("visibility run lease was lost before cost settlement")
 
 
 def _sql_money_expression(db, column, delta: Decimal):
