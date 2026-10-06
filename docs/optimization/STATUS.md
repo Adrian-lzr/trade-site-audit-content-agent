@@ -51,7 +51,7 @@ Fixture or protocol evidence is never reported as real business evidence.
 | O07 | blocked_external | JWT protocol tests; local actor is not production identity | configure real OIDC and complete login/workspace role journey |
 | O08 | fixture_verified | unified ModelCall ledger for content and visibility, unknown-cost retention, replay fencing, lease recovery, queue fairness and local idempotency evidence | reconcile a real provider ledger and run production-like concurrency/throughput checks |
 | O09 | blocked_external | synthetic manifest only; zero independent human cases | run blinded 30-case holdout with independent reviewers |
-| O10 | in_progress | 251 backend tests, 10 eval tests, Web build, PostgreSQL head/smoke/concurrency, isolated tmpfs backup/restore, source and Compose gates pass | verify approved production image provenance, production identity, backup retention/recovery policy, and authorized runtime |
+| O10 | fixture_verified | 251 backend tests, 10 eval tests, Web build, PostgreSQL head/smoke/concurrency, isolated tmpfs backup/restore, local image build, full Compose Worker consumption and UI fixture journey pass | verify approved production image provenance, production identity, backup retention/recovery policy, and authorized runtime |
 
 ## Critical Cases
 
